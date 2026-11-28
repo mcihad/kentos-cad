@@ -262,14 +262,7 @@ fn unit(v: V) -> Option<V> {
 }
 
 fn signed_area(ring: &[V]) -> f64 {
-    let n = ring.len();
-    (0..n)
-        .map(|i| {
-            let (a, b) = (ring[i], ring[(i + 1) % n]);
-            a.x * b.y - b.x * a.y
-        })
-        .sum::<f64>()
-        / 2.0
+    kentos_geometry_core::geometry::ring_area(ring)
 }
 
 fn orient(a: V, b: V, c: V) -> f64 {
@@ -973,5 +966,27 @@ mod tests {
             stair_name(Some("Merdiven evi"), None) && stair_name(Some("Yangın merdiveni"), None)
         );
         assert!(!stair_name(Some("Merdiven altı deposu"), None));
+    }
+}
+
+#[cfg(test)]
+mod area_tests {
+    /// A ring's area at Transverse Mercator coordinates keeps its decimals (docs/adr/9401 §9): products of raw
+    /// coordinates lose the fourth, a 10 m square came 99.99976 m².
+    #[test]
+    fn an_area_at_large_coordinates_keeps_its_decimals() {
+        use kentos_geometry_core::Vec2 as V;
+        let (e, n) = (486_512.34, 4_420_187.52);
+        let square = [
+            V::new(e, n),
+            V::new(e + 10.0, n),
+            V::new(e + 10.0, n + 10.0),
+            V::new(e, n + 10.0),
+        ];
+        assert!(
+            (super::signed_area(&square) - 100.0).abs() < 1e-9,
+            "{}",
+            super::signed_area(&square)
+        );
     }
 }

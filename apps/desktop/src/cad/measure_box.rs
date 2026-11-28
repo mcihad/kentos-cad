@@ -72,13 +72,16 @@ fn note<'a>(what: &'a str, how: String) -> Element<'a, Message> {
 /// A ring's area (shoelace) and perimeter, closed.
 fn ring_measures(ring: &[kentos_interaction::Vec2]) -> (f64, f64) {
     let n = ring.len();
-    let (mut twice, mut perimeter) = (0.0, 0.0);
-    for i in 0..n {
-        let (a, b) = (ring[i], ring[(i + 1) % n]);
-        twice += a.x * b.y - b.x * a.y;
-        perimeter += (b.x - a.x).hypot(b.y - a.y);
-    }
-    ((twice / 2.0).abs(), perimeter)
+    let perimeter: f64 = (0..n)
+        .map(|i| {
+            let (a, b) = (ring[i], ring[(i + 1) % n]);
+            (b.x - a.x).hypot(b.y - a.y)
+        })
+        .sum();
+    (
+        kentos_geometry_core::geometry::ring_area(ring).abs(),
+        perimeter,
+    )
 }
 
 impl App {

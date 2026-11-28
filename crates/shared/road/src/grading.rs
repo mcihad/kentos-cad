@@ -137,13 +137,7 @@ pub fn plane_z(p: &Platform, x: f64, y: f64, offset: f64) -> f64 {
 }
 
 fn area2(ring: &[[f64; 2]]) -> f64 {
-    let n = ring.len();
-    (0..n)
-        .map(|i| {
-            let (a, b) = (ring[i], ring[(i + 1) % n]);
-            a[0] * b[1] - b[0] * a[1]
-        })
-        .sum()
+    2.0 * kentos_geometry_core::geometry::ring_area(ring)
 }
 
 /// Whether segments ab and cd cross or touch (sharing no end).

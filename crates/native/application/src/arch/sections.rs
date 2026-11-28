@@ -1700,14 +1700,7 @@ fn face_ahead(m: &Model, from: P, dir: P, z: f64, reach: f64) -> Option<f64> {
 
 /// A ring's signed area, counter-clockwise positive.
 fn area(ring: &[P]) -> f64 {
-    let n = ring.len();
-    (0..n)
-        .map(|i| {
-            let (a, b) = (ring[i], ring[(i + 1) % n]);
-            a.x * b.y - b.x * a.y
-        })
-        .sum::<f64>()
-        / 2.0
+    kentos_geometry_core::geometry::ring_area(ring)
 }
 
 /// A stair (docs/adr/8042 §3): its body as the geometry core builds it (`stair_body`: each straight leg a flight, a

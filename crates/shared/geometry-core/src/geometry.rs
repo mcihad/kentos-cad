@@ -46,16 +46,23 @@ pub fn is_empty_bounds(b: &Bounds) -> bool {
 /// are taken relative to the first vertex: products of raw TM coordinates
 /// (4.4·10⁶ m) would cancel away the fourth decimal of a parcel area.
 pub fn signed_area(pts: &[Vec2]) -> f64 {
-    if pts.len() < 3 {
+    ring_area(pts)
+}
+
+/// [`signed_area`] for any point type that gives its `[x, y]` (this core's `Vec2`, the contracts' `Vec2`, a pair of
+/// numbers): the sum is written once, so no crate keeps a copy that multiplies raw coordinates (a 10 m square at
+/// Transverse Mercator coordinates came 99.99976 m² from such a copy; docs/adr/9401 §9).
+pub fn ring_area<P: Copy + Into<[f64; 2]>>(ring: &[P]) -> f64 {
+    if ring.len() < 3 {
         return 0.0;
     }
-    let ox = pts[0].x;
-    let oy = pts[0].y;
+    let [ox, oy] = ring[0].into();
+    let [mut jx, mut jy] = ring[ring.len() - 1].into();
     let mut a = 0.0;
-    let mut j = pts.len() - 1;
-    for i in 0..pts.len() {
-        a += (pts[j].x - ox) * (pts[i].y - oy) - (pts[i].x - ox) * (pts[j].y - oy);
-        j = i;
+    for &q in ring {
+        let [ix, iy] = q.into();
+        a += (jx - ox) * (iy - oy) - (ix - ox) * (jy - oy);
+        (jx, jy) = (ix, iy);
     }
     a / 2.0
 }

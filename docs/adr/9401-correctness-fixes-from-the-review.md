@@ -409,8 +409,7 @@ biçimlemeleri BK-50'dedir.
   - NCZ okuyucusu (`ncz/src/emit.rs`): dosya başka bir programın adını 26 yerde anıyor; dosyaya dokunan iş onları da
     temizlemek zorundadır. Ayrı iş.
   - Kesişimin kendi değerini kullanan tarama ve kesme hesapları: içerme sınaması değildir.
-- **Yapılmayan:** alan hesabının ilk köşeye kaydırmayan kopyaları (`geom/column_join.rs` ve benzerleri). BK-17'nin
-  kalanıdır.
+- Alan hesabının kopyaları §9.3'tedir.
 
 **Bağımsız başvuru.** `scripts/fixtures/point_in_rings_cases.py` kuralı kesirlerle (`fractions`) uygular ve
 `fixtures/geometry/v1/point_in_rings.json`'u yazar: 222 ortak kenar durumu (120'sinde yuvarlanmış yazım yanılıyor;
@@ -419,6 +418,27 @@ biçimlemeleri BK-50'dedir.
 **Sınama.** Çekirdek başvuruyla 239 durumda aynı sonucu veriyor (`tests/all/point_in_rings.rs`). Üç kopyanın sınaması
 düzeltmeden önce kırmızıydı (domain, application, interaction). Dokunulan on crate'in bütün sınamaları koşuldu;
 geometri çekirdeğinin (800 + 377), etiket motorunun ve stilin altın dosyaları değişmedi.
+
+#### 9.3 Bir halkanın alanı: koordinatlar ilk köşeye göre alınır
+
+**Bulgu.** Çekirdeğin alan toplamı koordinatları ilk köşeye göre alır ve nedenini söyler: ham Transverse Mercator
+koordinatlarının çarpımı parsel alanının dördüncü ondalığını yitirir. Depoda aynı toplamı ham koordinatlarla yapan
+39 yer vardı (sınama dışı). Ölçüm (486 512,34; 4 420 187,52 çevresinde, kesirlerle hesaplanan kesin değere göre):
+
+| Halka | Kesin | Ham koordinatla | Kaydırılmış |
+|---|---|---|---|
+| 10 × 10 m kare | 100,000 000 000 | 99,999 755 859 (−2,4·10⁻⁴) | 100,000 000 000 |
+| ADR 0004'ün parseli | 748,515 093 505 | 748,515 136 719 (+4,3·10⁻⁵) | 748,515 093 505 |
+
+**Karar.** Çekirdekte `ring_area` (her nokta türü için; `signed_area` onu çağırır). Çizimin alanını bildiren on kopya
+ona bağlandı: Ölç kutusu, parselin alanı (imar hesabının girdisi), kaçış yolu, kapı denetimi, kesit, kolon birleşimi,
+atlas, Yol'un korunan alan, tesviye ve yüzey analizi hesapları.
+
+**Kalan.** Öbür 29 yer tek tek okunmadı. Çoğu yalnız yönü (toplamın işaretini) kullanır ya da yerel koordinatlıdır
+(merdiven basamağı, yazı tipi çerçevesi, SVG yolu); alan bildirenleri varsa BK-17'nin kalanıdır.
+
+**Sınama.** Üç kopyanın sınaması düzeltmeden önce kırmızıydı (10 m'lik kare 99,999 756 çıkıyordu); çekirdeğin altın
+dosyaları ve dokunulan crate'lerin bütün sınamaları değişmeden geçti.
 
 **Bu sırada bulunan, bu işten bağımsız kırmızı sınamalar.**
 

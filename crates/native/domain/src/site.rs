@@ -72,12 +72,7 @@ impl SiteReport {
 
 /// Twice the signed area of a ring (anticlockwise positive).
 fn signed2(pts: &[Vec2]) -> f64 {
-    (0..pts.len())
-        .map(|i| {
-            let (p, q) = (pts[i], pts[(i + 1) % pts.len()]);
-            p.x * q.y - q.x * p.y
-        })
-        .sum()
+    2.0 * kentos_geometry_core::geometry::ring_area(pts)
 }
 
 fn crosses(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> bool {

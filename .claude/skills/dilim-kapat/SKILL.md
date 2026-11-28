@@ -33,5 +33,7 @@ olması gerektiğini söyler (ADR 9401 §3.5'te ilk yazım ADR 0560'la çelişti
 6. **Belgeler.** İşin ADR'si; plan maddesi `[x]` ya da `[~]` (kalanıyla); `docs/kilavuz/00-guncel-karar-ozeti.md`'ye bir
    madde; gerekiyorsa `TODOS.md`.
 7. **Commit.** `git status` ile `??` satırlarına bakılır; yalnız bu dilimin dosyaları eklenir (`git add -A` yok).
+   Commit iletisi commit'le aynı komutta yazılır; önceki komuttan kalan bir ileti dosyası kullanılmaz (bir düzeltme
+   bu yüzden başka commit'in başlığıyla itildi ve geri alınıp yeniden işlendi). Clippy ile commit `&&` ile bağlanır.
    Başlık İngilizce, ne yapıldığını söyleyen tek cümle, sonunda madde ve ADR: `… (BK-10, ADR 9401)`. Refactor ile
    doğruluk düzeltmesi ayrı commit'tir; doğruluk düzeltmesi, düzeltmeden önce kırmızı olan bir sınamayla gelir.

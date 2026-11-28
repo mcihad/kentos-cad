@@ -247,7 +247,9 @@ düzenlenir.
   çekirdekte tek (`ray_crosses`, `point_in_ring`, `point_in_rings`; iki nokta türü için) ve 23 kopya ona bağlı;
   bağımsız başvuru `point_in_rings_cases.py` (239 durum). Ölçüm: çizim ölçeğinde ortak kenardaki orta noktaların
   %4,3'ü yuvarlanmış yazımda iki alana ya da hiçbirine düşüyordu.
-  - Kalan: alan hesabının kaydırmasız kopyaları (`geom/column_join.rs` ve benzerleri).
+  - Alan: çekirdekte `ring_area`; çizimin alanını bildiren on kopya ona bağlı (TM koordinatında 10 m'lik kare
+    99,99976 çıkıyordu). Kalan: ham koordinatla toplayan öbür 29 yer tek tek okunmadı (çoğu yalnız yön ya da yerel
+    koordinat).
   - Kalan: NCZ okuyucusundaki kopya (`ncz/src/emit.rs`); dosyadaki 26 ad atfıyla birlikte temizlenir.
   - Gerekçesiyle bırakılan üç kopya ADR'de yazılı.
 - [x] **BK-18** (A11; ADR 9401 §7) Üç değil sekiz metin: bekçi arayüz kitlerinin crate'lerini taramıyordu. Metinler

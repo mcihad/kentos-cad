@@ -94,14 +94,7 @@ fn wall_rings(w: &kentos_commands::WallFields) -> Option<(Vec<V>, Vec<Vec<V>>)> 
 }
 
 fn area(ring: &[V]) -> f64 {
-    let n = ring.len();
-    (0..n)
-        .map(|i| {
-            let (a, b) = (ring[i], ring[(i + 1) % n]);
-            a.x * b.y - b.x * a.y
-        })
-        .sum::<f64>()
-        / 2.0
+    kentos_geometry_core::geometry::ring_area(ring)
 }
 
 fn cross(o: V, a: V, b: V) -> f64 {
@@ -692,5 +685,19 @@ mod shared_edge_tests {
         let left = vec![a, b, V::new(-34.45, 42.08), V::new(-34.45, 34.25)];
         let right = vec![b, a, V::new(33.35, 34.25), V::new(33.35, 42.08)];
         assert_ne!(point_in_polygon(p, &left), point_in_polygon(p, &right));
+    }
+
+    /// A ring's area at Transverse Mercator coordinates keeps its decimals (docs/adr/9401 §9): products of raw
+    /// coordinates lose the fourth, a 10 m square came 99.99976 m².
+    #[test]
+    fn an_area_at_large_coordinates_keeps_its_decimals() {
+        let (e, n) = (486_512.34, 4_420_187.52);
+        let square = [
+            V::new(e, n),
+            V::new(e + 10.0, n),
+            V::new(e + 10.0, n + 10.0),
+            V::new(e, n + 10.0),
+        ];
+        assert!((area(&square) - 100.0).abs() < 1e-9, "{}", area(&square));
     }
 }

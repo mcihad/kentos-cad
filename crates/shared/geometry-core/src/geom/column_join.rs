@@ -316,14 +316,7 @@ fn cut_body(body: &Body, feet: &[&Foot]) -> Option<Vec<Body>> {
 }
 
 fn ring_area(pts: &[Vec2]) -> f64 {
-    let n = pts.len();
-    (0..n)
-        .map(|i| {
-            let (p, q) = (pts[i], pts[(i + 1) % n]);
-            p.x * q.y - q.x * p.y
-        })
-        .sum::<f64>()
-        / 2.0
+    crate::geometry::signed_area(pts)
 }
 
 fn area_of(a: &Area) -> f64 {

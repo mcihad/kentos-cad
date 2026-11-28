@@ -855,16 +855,8 @@ fn with_rows(
 fn outline_of(shape: &Shape, bbox: [f64; 4]) -> Option<Vec<kentos_geometry_core::Vec2>> {
     use kentos_geometry_core::geom::plot_outline;
     let tol = ((bbox[2] - bbox[0]).hypot(bbox[3] - bbox[1]) / 2000.0).max(1e-3);
-    let area = |r: &[kentos_geometry_core::Vec2]| {
-        let n = r.len();
-        (0..n)
-            .map(|i| {
-                let (a, b) = (r[i], r[(i + 1) % n]);
-                a.x * b.y - b.x * a.y
-            })
-            .sum::<f64>()
-            .abs()
-    };
+    let area =
+        |r: &[kentos_geometry_core::Vec2]| kentos_geometry_core::geometry::signed_area(r).abs();
     let ring = match shape {
         Shape::Polygon {
             pts, bulges, parts, ..

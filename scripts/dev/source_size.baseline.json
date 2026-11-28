@@ -10,7 +10,7 @@
   "apps/ui-showcase/src/gallery.rs": 2135,
   "crates/native/application/src/arch/arch_audit.rs": 2431,
   "crates/native/application/src/arch/arch_elements.rs": 2131,
-  "crates/native/application/src/arch/sections.rs": 3377,
+  "crates/native/application/src/arch/sections.rs": 3370,
   "crates/native/application/src/core/desktop_commands.rs": 2089,
   "crates/native/application/src/core/edit.rs": 2280,
   "crates/native/application/src/core/profile_files.rs": 2314,

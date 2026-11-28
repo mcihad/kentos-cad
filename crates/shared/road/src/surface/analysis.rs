@@ -106,13 +106,8 @@ fn range_of(breaks: &[f64], v: f64) -> Option<usize> {
 
 /// A plan polygon's area (counter-clockwise positive).
 fn area(poly: &[[f64; 3]]) -> f64 {
-    let n = poly.len();
-    let mut s = 0.0;
-    for i in 0..n {
-        let (a, b) = (poly[i], poly[(i + 1) % n]);
-        s += a[0] * b[1] - b[0] * a[1];
-    }
-    s / 2.0
+    let plan: Vec<[f64; 2]> = poly.iter().map(|p| [p[0], p[1]]).collect();
+    kentos_geometry_core::geometry::ring_area(&plan)
 }
 
 /// The polygon's part with z on the `keep_above` side of `level` (z ≥ level, or z ≤ level).

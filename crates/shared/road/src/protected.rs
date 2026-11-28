@@ -20,14 +20,7 @@ pub struct Area {
 
 /// A ring's signed area (counter-clockwise positive).
 pub fn signed_area(ring: &[[f64; 2]]) -> f64 {
-    let n = ring.len();
-    (0..n)
-        .map(|i| {
-            let (a, b) = (ring[i], ring[(i + 1) % n]);
-            a[0] * b[1] - b[0] * a[1]
-        })
-        .sum::<f64>()
-        / 2.0
+    kentos_geometry_core::geometry::ring_area(ring)
 }
 
 /// The ring clipped to a triangle (Sutherland–Hodgman), its area.
@@ -135,5 +128,21 @@ impl Area {
                 .iter()
                 .map(|h| length_inside(h, a, b))
                 .sum::<f64>()
+    }
+}
+
+#[cfg(test)]
+mod area_tests {
+    /// A ring's area at Transverse Mercator coordinates keeps its decimals (docs/adr/9401 §9): products of raw
+    /// coordinates lose the fourth, a 10 m square came 99.99976 m².
+    #[test]
+    fn an_area_at_large_coordinates_keeps_its_decimals() {
+        let (e, n) = (486_512.34, 4_420_187.52);
+        let square = [[e, n], [e + 10.0, n], [e + 10.0, n + 10.0], [e, n + 10.0]];
+        assert!(
+            (super::signed_area(&square) - 100.0).abs() < 1e-9,
+            "{}",
+            super::signed_area(&square)
+        );
     }
 }
