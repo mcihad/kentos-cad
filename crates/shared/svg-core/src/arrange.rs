@@ -9,7 +9,7 @@
 use kentos_geometry_core::api::json::{FromJson, Json, read_field};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::jsmath::{
-    PI, cos, js_cmp, js_round, maximum, minimum, sin, stable_sort, tan,
+    PI, cos, js_cmp, maximum, minimum, round_half_up, sin, stable_sort, tan,
 };
 
 use crate::model::{rotate_about as rotation, shape_box, transform_shape};
@@ -363,8 +363,8 @@ pub fn rect_array(b: &Bounds, rows: f64, cols: f64, dx: f64, dy: f64, gap: bool)
     let sx = if gap { b.max_x - b.min_x + dx } else { dx };
     let sy = if gap { b.max_y - b.min_y + dy } else { dy };
     let mut out = Vec::new();
-    let nr = maximum(1.0, js_round(rows));
-    let nc = maximum(1.0, js_round(cols));
+    let nr = maximum(1.0, round_half_up(rows));
+    let nc = maximum(1.0, round_half_up(cols));
     let mut r = 0.0;
     while r < nr {
         let mut c = 0.0;
@@ -387,7 +387,7 @@ pub fn polar_array(
     rotate: bool,
     ccw: bool,
 ) -> Vec<Matrix> {
-    let n = maximum(1.0, js_round(count));
+    let n = maximum(1.0, round_half_up(count));
     let full = angle.abs() >= 360.0 - 1e-9;
     let step = if n > 1.0 {
         angle / (if full { n } else { n - 1.0 })

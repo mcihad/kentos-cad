@@ -117,7 +117,7 @@ fn polygon_options<'a>(ed: &SvgEditor) -> Element<'a, Message> {
                 None,
                 spec(1.0, 3.0, 24.0),
                 |ed, v| {
-                    ed.options.sides = kentos_native_style::classify::js_round(v).max(3.0);
+                    ed.options.sides = kentos_native_style::classify::round_half_up(v).max(3.0);
                     ed.touch();
                 },
             ),
@@ -206,7 +206,7 @@ fn selection_props<'a>(ed: &'a SvgEditor, sel: &[Obj]) -> Element<'a, Message> {
         .map(|s| s.opt_num("opacity").unwrap_or(1.0).to_bits())
         .collect();
     let opacity = same(&opacities).map_or(1.0, f64::from_bits);
-    let transparency = kentos_native_style::classify::js_round((1.0 - opacity) * 100.0);
+    let transparency = kentos_native_style::classify::round_half_up((1.0 - opacity) * 100.0);
     let mut parts: Vec<Element<'a, Message>> = vec![
         title(name, lock_note),
         paint_field("Dolgu", "fill", same(&fills)),

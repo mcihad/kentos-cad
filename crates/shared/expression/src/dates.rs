@@ -5,7 +5,7 @@
 //! that could round. Zone-less wall time: a zone given in the text is turned
 //! to UTC when it is read.
 
-use kentos_geometry_core::jsmath::js_round;
+use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::time::{self, civil_from_days, days_from_civil, days_in};
 
 use crate::js::text::fold_turkish;
@@ -148,7 +148,7 @@ fn date_time(args: &[V], out: &mut String) -> R<'static> {
     if d > days_in(y, m) {
         return R::V(V::Null);
     }
-    let ms = js_round(sec * 1000.0) as i64;
+    let ms = round_half_up(sec * 1000.0) as i64;
     write(
         out,
         days_from_civil(y, m, d) * DAY + h * HOUR + mi * MINUTE + ms,
@@ -309,14 +309,14 @@ pub fn call(f: Func, args: &[V], out: &mut String, s: &mut Scratch) -> R<'static
             };
             let r = match unit.ms() {
                 Some(ms) => {
-                    let delta = js_round(n * ms as f64);
+                    let delta = round_half_up(n * ms as f64);
                     if !delta.is_finite() || delta.abs() > 4e14 {
                         return R::V(V::Null);
                     }
                     t + delta as i64
                 }
                 None => {
-                    let k = js_round(n * if unit == Unit::Year { 12.0 } else { 1.0 });
+                    let k = round_half_up(n * if unit == Unit::Year { 12.0 } else { 1.0 });
                     if k.abs() > 200_000.0 {
                         return R::V(V::Null);
                     }

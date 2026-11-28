@@ -172,7 +172,7 @@ impl SvgEditor {
             .unwrap_or_default();
         let step = def.spec.step * if shift { 10.0 } else { 1.0 };
         let v = parse(&now).unwrap_or(0.0) + if up { step } else { -step };
-        let v = (kentos_native_style::classify::js_round(v * 1e6) / 1e6)
+        let v = (kentos_native_style::classify::round_half_up(v * 1e6) / 1e6)
             .clamp(def.spec.min, def.spec.max);
         self.typed.insert(key.to_owned(), text_of(v));
         (def.apply)(self, v);

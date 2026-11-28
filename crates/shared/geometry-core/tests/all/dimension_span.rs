@@ -5,7 +5,7 @@
 //! (fixtures/commands/v1/cad.dimensionsets.create.span.json) hold the rest against an independent reference.
 
 use kentos_geometry_core::geom::wall::{Component, Justify, Spec};
-use kentos_geometry_core::jsmath::{cos, js_round, sin};
+use kentos_geometry_core::jsmath::{cos, round_half_up, sin};
 use kentos_geometry_core::ops::dimension_set::{Openings, Point, Row};
 use kentos_geometry_core::ops::dimension_span::{
     Fault, GridIn, OpeningIn, Recipe, Reference, SpaceIn, WallIn, Why, plan,
@@ -85,7 +85,7 @@ fn lengths(
     spans
         .iter()
         .filter(|s| s.row == row)
-        .map(|s| js_round((h.along(s.b.at) - h.along(s.a.at)) * 1e6) / 1e6)
+        .map(|s| round_half_up((h.along(s.b.at) - h.along(s.a.at)) * 1e6) / 1e6)
         .collect()
 }
 
@@ -267,7 +267,7 @@ fn the_core_is_the_strongest_band_and_hidden_windows_stay_out() {
     let l: Vec<f64> = back
         .spans
         .iter()
-        .map(|s| js_round((s.a.at.x - s.b.at.x) * 1e6) / 1e6)
+        .map(|s| round_half_up((s.a.at.x - s.b.at.x) * 1e6) / 1e6)
         .collect();
     assert_eq!(l, [2.925, 1.2, 6.125]);
     assert_eq!(back.side, 1.0);

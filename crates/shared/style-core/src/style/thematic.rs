@@ -3,7 +3,7 @@
 //! class among breaks, and a symbol with its main colour or its size
 //! changed (Sürekli renk, İki değişkenli renk, Orantılı sembol).
 
-use kentos_geometry_core::jsmath::{js_round, maximum, minimum, pow};
+use kentos_geometry_core::jsmath::{maximum, minimum, pow, round_half_up};
 
 use super::compile::MM_PER_PX;
 use super::model::{
@@ -54,7 +54,7 @@ pub fn ramp_color(stops: &[Rgba], t: f64) -> Rgba {
             let (a, b) = (stops[k], stops[k + 1]);
             let mix = |i: usize| {
                 let v = f64::from(a[i]) + (f64::from(b[i]) - f64::from(a[i])) * f;
-                js_round(v).clamp(0.0, 255.0) as u8
+                round_half_up(v).clamp(0.0, 255.0) as u8
             };
             [mix(0), mix(1), mix(2), mix(3)]
         }
@@ -71,7 +71,7 @@ pub fn share(v: f64, min: f64, max: f64) -> f64 {
 
 /// The share's step of 256 (`round(255 t)`): the colours and sizes a layer draws with.
 pub fn step(t: f64) -> u8 {
-    js_round(255.0 * minimum(1.0, maximum(0.0, t))) as u8
+    round_half_up(255.0 * minimum(1.0, maximum(0.0, t))) as u8
 }
 
 /// Orantılı sembol's size at share `t`: `min + (max − min) · tᵉ` (QGIS's size assistant).

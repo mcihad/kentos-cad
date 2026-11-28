@@ -244,7 +244,7 @@ fn small<'a>(glyph: Icon, words: &str, tip_text: &str, press: Message) -> Elemen
 /// The bar above the canvas while there is a reference (`renderBar`).
 pub fn bar<'a>(ed: &'a SvgEditor) -> Option<Element<'a, Message>> {
     let r = ed.files.reference.as_ref()?;
-    let pct = kentos_native_style::classify::js_round(r.spec.opacity * 100.0);
+    let pct = kentos_native_style::classify::round_half_up(r.spec.opacity * 100.0);
     let (visible, locked, keep) = (r.visible, r.spec.locked, r.keep);
     let heavy = r.spec.href.len();
     let keep_box = super::super::panels::check(keep, "Dosyada sakla", move |ed, v| {

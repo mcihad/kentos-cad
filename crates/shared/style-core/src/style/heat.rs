@@ -8,7 +8,7 @@
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{js_round, maximum, minimum};
+use kentos_geometry_core::jsmath::{maximum, minimum, round_half_up};
 
 use super::model::Rgba;
 use super::place::positive;
@@ -118,7 +118,7 @@ pub fn table(ramp: &[Rgba], opacity: f64) -> Vec<Rgba> {
     (0..STEPS)
         .map(|k| {
             let c = ramp_color(ramp, k as f64 / (STEPS - 1) as f64);
-            [c[0], c[1], c[2], js_round(f64::from(c[3]) * o) as u8]
+            [c[0], c[1], c[2], round_half_up(f64::from(c[3]) * o) as u8]
         })
         .collect()
 }
@@ -135,7 +135,7 @@ pub fn colors(values: &[f64], max: f64, table: &[Rgba]) -> Vec<u8> {
         if !positive(v) {
             continue;
         }
-        let k = js_round(top * minimum(v / max, 1.0)) as usize;
+        let k = round_half_up(top * minimum(v / max, 1.0)) as usize;
         px.copy_from_slice(&table[k.min(table.len() - 1)]);
     }
     out

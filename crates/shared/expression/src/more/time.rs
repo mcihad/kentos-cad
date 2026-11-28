@@ -4,7 +4,7 @@
 
 use std::fmt::Write as _;
 
-use kentos_geometry_core::jsmath::js_round;
+use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::time;
 
 use crate::dates;
@@ -41,7 +41,7 @@ fn read_time(t: &str) -> Option<i64> {
     {
         return None;
     }
-    Some(h * 3_600_000 + m * 60_000 + js_round(s * 1000.0) as i64)
+    Some(h * 3_600_000 + m * 60_000 + round_half_up(s * 1000.0) as i64)
 }
 
 pub(super) fn call<'a>(f: Func, args: &[V<'a>], out: &mut String) -> R<'a> {
@@ -55,7 +55,7 @@ pub(super) fn call<'a>(f: Func, args: &[V<'a>], out: &mut String) -> R<'a> {
             let Some(ms) = to_number(arg(0)) else {
                 return R::V(V::Null);
             };
-            let ms = js_round(ms);
+            let ms = round_half_up(ms);
             if !(FIRST..=LAST).contains(&ms) {
                 return R::V(V::Null);
             }
@@ -84,7 +84,7 @@ pub(super) fn call<'a>(f: Func, args: &[V<'a>], out: &mut String) -> R<'a> {
                             && (0.0..60.0).contains(&m)
                             && (0.0..60.0).contains(&s) =>
                     {
-                        let ms = h * 3_600_000.0 + m * 60_000.0 + js_round(s * 1000.0);
+                        let ms = h * 3_600_000.0 + m * 60_000.0 + round_half_up(s * 1000.0);
                         (ms < DAY).then_some(ms as i64)
                     }
                     _ => None,

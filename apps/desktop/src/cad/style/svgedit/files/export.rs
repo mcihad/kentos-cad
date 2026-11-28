@@ -370,7 +370,7 @@ pub fn view<'a>(
                 spec(64.0, 1.0, 8192.0),
                 |ed, v| {
                     if let Some(FileDialog::Export(d)) = &mut ed.files.dialog {
-                        d.px = kentos_native_style::classify::js_round(v).clamp(1.0, 8192.0);
+                        d.px = kentos_native_style::classify::round_half_up(v).clamp(1.0, 8192.0);
                         ed.export_last = d.clone();
                     }
                 },

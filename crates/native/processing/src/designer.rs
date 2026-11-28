@@ -507,13 +507,13 @@ pub struct View {
 }
 
 /// JavaScript's `Math.round`: halves go up.
-fn js_round(v: f64) -> f64 {
+fn round_half_up(v: f64) -> f64 {
     (v + 0.5).floor()
 }
 
 /// A world position snapped to the grid.
 pub fn snap(v: f64) -> f64 {
-    js_round(v / canvas::GRID) * canvas::GRID
+    round_half_up(v / canvas::GRID) * canvas::GRID
 }
 
 /// Where a new box goes: right of the selected one, else at the left below every other box.

@@ -7,7 +7,7 @@
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::jsmath::{
-    PI, atan2, cos, hypot, js_round, maximum, minimum, sin, truthy,
+    PI, atan2, cos, hypot, maximum, minimum, round_half_up, sin, truthy,
 };
 use kentos_style_core::js::number;
 
@@ -18,7 +18,7 @@ use crate::shape::{Obj, PathNode, SubPath};
 
 /// A number as the SVG file writes it: three decimals at most.
 pub fn n(v: f64) -> String {
-    let s = number::to_string(js_round(v * 1000.0) / 1000.0);
+    let s = number::to_string(round_half_up(v * 1000.0) / 1000.0);
     if s == "-0" { "0".to_string() } else { s }
 }
 

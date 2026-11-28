@@ -13,7 +13,9 @@ use crate::geom::bulge::bulge_at;
 use crate::geom::dimension::sector_arms;
 use crate::geom::intersect::{Edge, line_line};
 use crate::geometry::{dist, empty_bounds, is_empty_bounds};
-use crate::jsmath::{PI, TAU, acos, atan2, cos, js_round, maximum, minimum, or, pow, sin, tan};
+use crate::jsmath::{
+    PI, TAU, acos, atan2, cos, maximum, minimum, or, pow, round_half_up, sin, tan,
+};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::ops::path::{path_of, point_at_s, tangent_at_s};
@@ -429,7 +431,7 @@ pub fn pulled_distance(c: &CornerGeom, cursor: Option<Vec2>, tol: f64) -> f64 {
     let v = Vec2::new(cur.x - c.at.x, cur.y - c.at.y);
     let t = minimum(maximum(maximum(dot(v, c.u1), dot(v, c.u2)), 0.0), c.reach);
     let step = pow(10.0, kentos_num::log10(maximum(tol, 1e-3)).floor());
-    minimum(js_round(t / step) * step, c.reach)
+    minimum(round_half_up(t / step) * step, c.reach)
 }
 
 /// Fillet radius for a pulled distance: that is where the arc meets the side (tangent length).

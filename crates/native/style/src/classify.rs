@@ -356,7 +356,7 @@ pub fn equal_count(values: &[f64], n: usize) -> Vec<NumericClass> {
     let last = sorted.len() - 1;
     let mut bounds = vec![sorted[0]];
     for i in 1..n {
-        let k = js_round((i * sorted.len()) as f64 / n as f64);
+        let k = round_half_up((i * sorted.len()) as f64 / n as f64);
         bounds.push(sorted[(k as usize).min(last)]);
     }
     bounds.push(sorted[last]);
@@ -442,7 +442,7 @@ fn hex(c: &str) -> [f64; 3] {
 fn to_hex(rgb: [f64; 3]) -> String {
     let mut out = String::from("#");
     for v in rgb {
-        out.push_str(&format!("{:02X}", js_round(v) as i64));
+        out.push_str(&format!("{:02X}", round_half_up(v) as i64));
     }
     out
 }
@@ -579,19 +579,7 @@ pub fn plain_symbols(color: &str, present: &Present) -> SymbolSet {
 
 // ── JavaScript's arithmetic where the TypeScript leaned on it ─────────
 
-/// `Math.round`: the nearest integer, halves toward +∞, the sign of zero kept.
-pub fn js_round(x: f64) -> f64 {
-    if !x.is_finite() {
-        return x;
-    }
-    let f = x.floor();
-    let r = if x - f >= 0.5 { f + 1.0 } else { f };
-    if r == 0.0 && x.is_sign_negative() {
-        -0.0
-    } else {
-        r
-    }
-}
+pub use kentos_num::round_half_up;
 
 pub use kentos_style_library::number::js_number;
 
@@ -603,7 +591,7 @@ pub fn class_label(c: NumericClass, digits: u32) -> String {
 /// A number to `digits` decimals as a label writes it (`Math.round`, then its shortest text).
 pub fn rounded(v: f64, digits: u32) -> String {
     let p = kentos_num::powi(10f64, digits as i32);
-    number::to_string(js_round(v * p) / p)
+    number::to_string(round_half_up(v * p) / p)
 }
 
 // ── What the layer style window makes of them ─────────────────────────
@@ -627,7 +615,7 @@ pub fn class_count(typed: &str) -> usize {
     let blank = typed
         .trim_matches(|c: char| c.is_whitespace() || c == '\u{FEFF}')
         .is_empty();
-    let r = js_round(js_number(typed));
+    let r = round_half_up(js_number(typed));
     if blank || r.is_nan() {
         return CLASS_COUNT_DEFAULT;
     }
@@ -741,10 +729,10 @@ mod tests {
 
     #[test]
     fn javascript_rounding_and_numbers() {
-        assert_eq!(js_round(2.5), 3.0);
-        assert_eq!(js_round(-2.5), -2.0);
-        assert_eq!(js_round(0.49999999999999994), 0.0);
-        assert!(js_round(-0.4).is_sign_negative());
+        assert_eq!(round_half_up(2.5), 3.0);
+        assert_eq!(round_half_up(-2.5), -2.0);
+        assert_eq!(round_half_up(0.49999999999999994), 0.0);
+        assert!(round_half_up(-0.4).is_sign_negative());
         assert_eq!(js_number(" 7 "), 7.0);
         assert_eq!(js_number(""), 0.0);
         assert_eq!(js_number("0x1F"), 31.0);

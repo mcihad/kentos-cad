@@ -7,7 +7,7 @@ use crate::api::json::{FromJson, Json};
 use crate::entity::{Entity, ParamValue, Params};
 use crate::geom::affine::{Affine, compose, translation};
 use crate::geometry::Bounds;
-use crate::jsmath::{atan2, cos, hypot, js_round, maximum, sin};
+use crate::jsmath::{atan2, cos, hypot, maximum, round_half_up, sin};
 use crate::ops::stretch::stretch_entity;
 use crate::ops::transform::transform_shape;
 use crate::vec2::Vec2;
@@ -139,7 +139,7 @@ impl Rule {
         }
         if let Some(step) = self.step {
             let from = self.min.unwrap_or(0.0);
-            x = from + js_round((x - from) / step) * step;
+            x = from + round_half_up((x - from) / step) * step;
             if self.max.is_some_and(|max| x > max) {
                 x -= step;
             }
@@ -558,7 +558,7 @@ impl Dynamic {
                 let a = atan2(at.y - center.y, at.x - center.x);
                 // The turn nearest the default: within half a turn of it.
                 let tau = 2.0 * std::f64::consts::PI;
-                let mut a = a - js_round((a - base) / tau) * tau;
+                let mut a = a - round_half_up((a - base) / tau) * tau;
                 a = rule.nearest(a);
                 a.is_finite().then_some(ParamValue::Number(a))
             }

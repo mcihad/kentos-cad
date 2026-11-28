@@ -315,6 +315,23 @@ hatasını taşımaz).
 kullanım). Bekçideki `js_` sayısı 4 489'dan 2 000'in altına indi. Kalanlar davranış kararı ister: `js_round`
 (159 yer), `js_cmp`, `truthy`/`or`, `stable_sort`, `js_hypot_n` ve metin yardımcıları.
 
+**Yuvarlama kuralı adını aldı (28 Kasım 2026).** `js_round` (ve `style` crate'indeki ikinci kopyası) tek tanım oldu:
+`kentos_num::round_half_up`, en yakın tam sayı, yarım +∞'a (2,5 → 3; −2,5 → −2). Bu bir kafesin kuralıdır: piksel,
+ızgara hücresi ve adım bir başlangıçtan sayılır; değer tam sayı kadar kayınca sonuç da o kadar kayar, sıfırın iki
+yanında da. Gösterilen ya da ondalık olarak saklanan değer ise yarımı sıfırdan uzağa yuvarlar (`f64::round`, gösterim
+kuralı, ADR 0149). İkisi yalnız eksi yarımlarda ayrışır. 201 kullanım yeniden adlandırıldı; davranış aynı.
+
+Kullanımların dökümü (159 çağrı yeri):
+
+| Ne yapıyor | Yer | Doğru kural |
+|---|---|---|
+| Adıma oturtma (`round(v / adım) · adım`: ızgara, 15° açı adımı) | 11 | yarım yukarı (kafes) |
+| Tam sayıya çevrilen (indeks, adet, piksel, milisaniye, renk baytı) | 24 | çoğu yarım yukarı; eksi olamayanlarda fark yok |
+| Ondalık basamağa yuvarlama (`round(v · 100) / 100`: yüzde, saydamlık, etiket değeri) | 46 | değer: yarım sıfırdan uzağa; tek tek geçecek |
+| Öbür (tohum, arayüz değeri, logaritmik adım…) | 78 | tek tek |
+
+Değer yuvarlayan yerlerin geçişi sonuçları eksi yarımlarda değiştirir; her biri kendi durumlarıyla gelir (açık).
+
 ### 7. Geçişin ortaya çıkardıkları
 
 Bir işlevin son basamağı değişince sonucu milimetre oynayan hesap, o basamağa güvenmemesi gereken bir hesaptır. Böyle

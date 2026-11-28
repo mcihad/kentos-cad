@@ -17,7 +17,7 @@
 
 use kentos_commands::ArrayLayout;
 use kentos_geometry_core::geom::affine::Affine;
-use kentos_geometry_core::jsmath::js_round;
+use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::tools::editing::grid_array_transforms;
 use kentos_geometry_core::tools::point_text::js_trim;
 
@@ -219,7 +219,7 @@ impl Stages for Array {
             return Some(self.build(m(a), m(b), cx));
         }
         let (a, b) = pair(text)?;
-        let (r, c) = (js_round(a), js_round(b));
+        let (r, c) = (round_half_up(a), round_half_up(b));
         if r < 1.0 || c < 1.0 || r * c < 2.0 || r * c > 10_000.0 {
             cx.say(Level::Warn, "Satır × sütun 2 ile 10 000 arasında olmalı.");
             return Some(Flow::Stay);

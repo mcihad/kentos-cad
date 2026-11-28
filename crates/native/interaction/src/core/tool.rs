@@ -7,7 +7,7 @@ use kentos_commands::AnnotationKind;
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape as GeomShape;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::js_round;
+use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
 use kentos_geometry_core::tools::point_input::Tracking;
 
@@ -510,7 +510,7 @@ use kentos_geometry_core::scale::METRES_PER_PX;
 /// The view's screen scale as the status bar shows it, the N of 1:N, from
 /// the metres one logical pixel spans (the web's `screenScale`).
 pub fn screen_scale(metres_per_px: f64) -> f64 {
-    js_round(metres_per_px / METRES_PER_PX)
+    round_half_up(metres_per_px / METRES_PER_PX)
 }
 
 /// A colour new objects take, as a product command writes it: a theme token

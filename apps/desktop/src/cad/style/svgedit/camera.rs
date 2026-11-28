@@ -85,7 +85,7 @@ impl Camera {
     pub fn percent(&self) -> String {
         format!(
             "%{}",
-            kentos_native_style::classify::js_round(self.zoom * 100.0)
+            kentos_native_style::classify::round_half_up(self.zoom * 100.0)
         )
     }
 }

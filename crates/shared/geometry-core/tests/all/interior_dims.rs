@@ -6,7 +6,7 @@ use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arch::ColumnSpec;
 use kentos_geometry_core::geom::wall::Spec;
-use kentos_geometry_core::jsmath::js_round;
+use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::ops::interior_dims::{Columns, Faces, references};
 use kentos_geometry_core::ops::subref::Place;
 use kentos_geometry_core::vec2::Vec2;
@@ -30,7 +30,9 @@ fn column(at: (f64, f64), json: &str) -> Shape {
 }
 
 fn xs(refs: &[kentos_geometry_core::ops::interior_dims::Reference]) -> Vec<f64> {
-    refs.iter().map(|r| js_round(r.at.x * 1e9) / 1e9).collect()
+    refs.iter()
+        .map(|r| round_half_up(r.at.x * 1e9) / 1e9)
+        .collect()
 }
 
 #[test]

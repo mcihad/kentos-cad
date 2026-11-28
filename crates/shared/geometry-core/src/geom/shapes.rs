@@ -5,7 +5,7 @@ use crate::api::Op;
 use crate::geom::arc::{ArcGeom, norm_angle};
 use crate::geom::bulge::{bulge_arc, tangent_bulge};
 use crate::geometry::{dist, signed_area};
-use crate::jsmath::{PI, asin, atan2, cos, hypot, js_round, maximum, minimum, or, sin, tan};
+use crate::jsmath::{PI, asin, atan2, cos, hypot, maximum, minimum, or, round_half_up, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -110,7 +110,7 @@ fn count(n: f64) -> usize {
 
 /// Regular n-gon about `center`: inscribed (p a vertex) or circumscribed (p an edge middle).
 pub fn regular_polygon(center: Vec2, sides: f64, p: Vec2, mode: &str) -> Option<Vec<Vec2>> {
-    let n = js_round(sides);
+    let n = round_half_up(sides);
     let r0 = len(sub(p, center));
     if n < 3.0 || r0 < 1e-9 {
         return None;
@@ -128,7 +128,7 @@ pub fn regular_polygon(center: Vec2, sides: f64, p: Vec2, mode: &str) -> Option<
 
 /// Regular n-gon built on edge p1→p2, counter-clockwise (to the left of the edge).
 pub fn regular_polygon_on_edge(p1: Vec2, p2: Vec2, sides: f64) -> Option<Vec<Vec2>> {
-    let n = js_round(sides);
+    let n = round_half_up(sides);
     let s = len(sub(p2, p1));
     if n < 3.0 || s < 1e-9 {
         return None;
@@ -300,7 +300,7 @@ pub fn cloud_of(ring: &[Vec2], arc: f64) -> Option<Cloud> {
     for i in 0..ccw.len() {
         let a = ccw[i];
         let b = ccw[(i + 1) % ccw.len()];
-        let k = maximum(1.0, js_round(dist(a, b) / arc));
+        let k = maximum(1.0, round_half_up(dist(a, b) / arc));
         let mut j = 0.0;
         while j < k {
             pts.push(Vec2::new(
@@ -403,7 +403,7 @@ pub fn closed_outline(shape: &crate::entity::Shape, segments: f64) -> Option<Vec
 pub fn cloud_arcs(ring: &[Vec2], arc: f64) -> f64 {
     let n = ring.len();
     (0..n)
-        .map(|i| maximum(1.0, js_round(dist(ring[i], ring[(i + 1) % n]) / arc)))
+        .map(|i| maximum(1.0, round_half_up(dist(ring[i], ring[(i + 1) % n]) / arc)))
         .sum()
 }
 

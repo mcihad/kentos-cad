@@ -17,7 +17,7 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::{Json, to_string as json_text};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{js_round, maximum};
+use kentos_geometry_core::jsmath::{maximum, round_half_up};
 use kentos_geometry_core::store::Store;
 use kentos_style_core::style::batch::Batches;
 use kentos_style_core::style::build::{
@@ -47,7 +47,7 @@ pub fn symbol_scale_of(screen: bool, plot_scale: f64, px_per_m: f64) -> f64 {
         return plot_scale;
     }
     let denominator = 1.0 / (px_per_m * METRES_PER_PX);
-    kentos_num::exp2(js_round(kentos_num::log2(maximum(denominator, 1.0)) * 4.0) / 4.0)
+    kentos_num::exp2(round_half_up(kentos_num::log2(maximum(denominator, 1.0)) * 4.0) / 4.0)
 }
 
 /// What a layer build needs besides the layer.

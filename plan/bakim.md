@@ -435,7 +435,10 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
     → `minimum_of`/`maximum_of`, `js_sign` → `sign` (tanımları `kentos-num`'da), `js_floor` → `f64::floor`
     (1 969 kullanım, 279 dosya).
   - [ ] Kalan taşınmış yardımcılar: `js_cmp`, `truthy`/`or`, `stable_sort`, `js_hypot_n` (tek tek karar).
-  - [ ] Yuvarlama: 159 `js_round` yerinin sınıflandırması ve geçişi.
+  - [~] Yuvarlama: `js_round` kuralının adıyla tek tanım oldu (`kentos_num::round_half_up`: yarım +∞'a, kafesin
+    kuralı; 201 kullanım, davranış aynı; `style`'daki ikinci kopya kalktı). Kalan: değer yuvarlayan yerlerin (döküm
+    ADR 9403 §6: 46'sı ondalık basamağa yuvarlıyor) yarımı sıfırdan uzağa yuvarlayan kurala tek tek geçişi; her biri
+    eksi yarımlarda sonucu değiştirir, kendi commit'i ve durumlarıyla.
   - [ ] Metin: tek `trim`, tek katı sayı okuyucu, sayı yazımı (BK-50 ile).
   - [x] Aşkın işlevler (sahibin kararı 28 Kasım 2026: `pxfm`): `kentos-num` 21 işlevi doğru yuvarlanmış verir;
     `pow` ve `atan2`'nin özel değerleri ve tam orta noktaya düşen kuvvetler temelin kendi kodudur (kitaplık

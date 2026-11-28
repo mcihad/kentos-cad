@@ -509,7 +509,7 @@ pub fn view<'a>(
             if o.smooth > 0.0 {
                 format!(
                     "%{}",
-                    kentos_native_style::classify::js_round(o.smooth * 100.0)
+                    kentos_native_style::classify::round_half_up(o.smooth * 100.0)
                 )
             } else {
                 "kapalı".to_owned()

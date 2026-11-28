@@ -3,7 +3,7 @@
 //! value it shows and the patch it writes. The forms place the fields; ↑ and
 //! ↓ step the one holding the keyboard by the same table.
 
-use kentos_native_style::classify::{js_number, js_round, rounded};
+use kentos_native_style::classify::{js_number, round_half_up, rounded};
 use kentos_native_style::designer::effects::{EFFECT_TYPES, effect_of, new_effect, put_effect};
 use kentos_native_style::designer::steps::{new_step, put_step};
 use kentos_native_style::designer::{Patch, js_value, set, type_of};
@@ -267,7 +267,7 @@ pub fn read(layer: &Value, key: &str) -> Option<f64> {
     if let Some((kind, field)) = effect_key(key) {
         let e = effect_of(layer, kind)?;
         return if field == "transparency" {
-            Some(js_round(
+            Some(round_half_up(
                 (1.0 - number(e.get("opacity")).unwrap_or(0.5)) * 100.0,
             ))
         } else {
@@ -276,17 +276,17 @@ pub fn read(layer: &Value, key: &str) -> Option<f64> {
     }
     let g = |k: &str| layer.get(k);
     match key {
-        "transparency" => Some(js_round(
+        "transparency" => Some(round_half_up(
             (1.0 - number(g("opacity")).unwrap_or(1.0)) * 100.0,
         )),
         "offsetX" => element(g("offset"), 0),
         "offsetY" => element(g("offset"), 1),
         "shiftX" => element(g("shift"), 0),
         "shiftY" => element(g("shift"), 1),
-        "jitterPct" => number(g("jitter")).map(|v| js_round(v * 100.0)),
-        "coveragePct" => number(g("coverage")).map(|v| js_round(v * 100.0)),
-        "holePct" => number(g("hole")).map(|v| js_round(v * 100.0)),
-        "teethDepthPct" => number(g("teethDepth")).map(|v| js_round(v * 100.0)),
+        "jitterPct" => number(g("jitter")).map(|v| round_half_up(v * 100.0)),
+        "coveragePct" => number(g("coverage")).map(|v| round_half_up(v * 100.0)),
+        "holePct" => number(g("hole")).map(|v| round_half_up(v * 100.0)),
+        "teethDepthPct" => number(g("teethDepth")).map(|v| round_half_up(v * 100.0)),
         "groupCount" => g("group").and_then(|gr| number(gr.get("count"))),
         "groupSpacing" => g("group").and_then(|gr| number(gr.get("spacing"))),
         "haloWidth" => g("halo").and_then(|h| number(h.get("width"))),
@@ -384,5 +384,5 @@ pub fn stepped(spec: &Spec, text: &str, up: bool, shift: bool) -> f64 {
     let step = spec.step * if shift { 10.0 } else { 1.0 };
     let from = parse(text).unwrap_or(0.0);
     let to = from + if up { step } else { -step };
-    clamp(spec, js_round(to * 1e6) / 1e6)
+    clamp(spec, round_half_up(to * 1e6) / 1e6)
 }

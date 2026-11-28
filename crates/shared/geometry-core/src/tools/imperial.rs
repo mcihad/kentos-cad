@@ -19,7 +19,7 @@
 //! Exact: 1 inch is 0.0254 m, 1 foot 0.3048 m (the international foot).
 
 use crate::display::fixed;
-use crate::jsmath::js_round;
+use crate::jsmath::round_half_up;
 
 /// Metres in an inch, exactly.
 pub const METRES_PER_INCH: f64 = 0.0254;
@@ -124,7 +124,7 @@ pub enum Style {
 /// numerator, in lowest terms with its denominator.
 fn split_fraction(inches: f64, den: u32) -> (f64, u32, u32) {
     let den = den.max(1);
-    let steps = js_round(inches * f64::from(den));
+    let steps = round_half_up(inches * f64::from(den));
     let whole = (steps / f64::from(den)).floor();
     let mut num = (steps - whole * f64::from(den)) as u32;
     let mut d = den;
@@ -171,7 +171,7 @@ pub fn format_inches(inches: f64, style: Style, decimals: u32) -> String {
         }
         Style::Engineering => {
             let scale = (0..decimals.min(8)).fold(1.0, |s, _| s * 10.0);
-            let rounded = js_round(a * scale) / scale;
+            let rounded = round_half_up(a * scale) / scale;
             let feet = (rounded / INCHES_PER_FOOT).floor();
             let rest = rounded - feet * INCHES_PER_FOOT;
             format!("{feet}'-{}\"", fixed(rest, decimals as usize))

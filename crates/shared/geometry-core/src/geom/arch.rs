@@ -15,7 +15,7 @@ use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::block::{Piece, PieceStroke};
 use crate::display::fixed;
 use crate::entity::{HatchPattern, Shape};
-use crate::jsmath::{PI, atan, atan2, cos, hypot, js_round, maximum, minimum, sin};
+use crate::jsmath::{PI, atan, atan2, cos, hypot, maximum, minimum, round_half_up, sin};
 use crate::text::TextAlign;
 use crate::vec2::Vec2;
 
@@ -906,7 +906,7 @@ fn level_of(view: crate::geom::wall::View) -> Level {
 /// decimal (17.5).
 fn centimetres(m: f64) -> String {
     let cm = m * 100.0;
-    let whole = js_round(cm);
+    let whole = round_half_up(cm);
     if (cm - whole).abs() < 0.05 {
         fixed(whole, 0)
     } else {
@@ -2083,7 +2083,7 @@ fn stair_words(walk: &Walk, spec: &StairSpec, scale: f64) -> Shape {
     };
     let words = format!(
         "{} × {}/{}",
-        fixed(js_round(spec.risers), 0),
+        fixed(round_half_up(spec.risers), 0),
         centimetres(spec.riser_height),
         centimetres(spec.tread)
     );

@@ -6,7 +6,7 @@
 //! The viewport feeds it world coordinates and a world tolerance.
 
 use crate::api::Op;
-use crate::jsmath::{PI, cos, hypot, js_round, sin, truthy};
+use crate::jsmath::{PI, cos, hypot, round_half_up, sin, truthy};
 use crate::op;
 use crate::store::snap::Extension;
 use crate::vec2::Vec2;
@@ -38,7 +38,7 @@ pub fn track_angles(polar_step: Option<f64>) -> Vec<f64> {
     {
         let mut a = 0.0;
         while a < 360.0 - 1e-9 {
-            let v = js_round(a * 1e6) / 1e6;
+            let v = round_half_up(a * 1e6) / 1e6;
             if !out.contains(&v) {
                 out.push(v);
             }

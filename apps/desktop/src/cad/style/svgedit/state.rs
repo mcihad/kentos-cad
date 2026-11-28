@@ -105,13 +105,13 @@ impl Options {
 
 /// The panels' starting distance (offset, corner, array gaps): a fiftieth of the width, at least 0.1 (`panelUnit`).
 pub fn panel_unit(width: f64) -> f64 {
-    use kentos_native_style::classify::js_round;
-    (js_round(width / 50.0 * 100.0) / 100.0).max(0.1)
+    use kentos_native_style::classify::round_half_up;
+    (round_half_up(width / 50.0 * 100.0) / 100.0).max(0.1)
 }
 
 /// `Math.max(1, Math.round(width / 20))`.
 pub fn default_grid(width: f64) -> f64 {
-    kentos_native_style::classify::js_round(width / 20.0).max(1.0)
+    kentos_native_style::classify::round_half_up(width / 20.0).max(1.0)
 }
 
 /// The right column's tabs.

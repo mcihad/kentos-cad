@@ -267,7 +267,7 @@ fn finite_numbers(text: &str) -> String {
 }
 
 /// JavaScript's `Math.round`: halves go up.
-fn js_round(x: f64) -> f64 {
+fn round_half_up(x: f64) -> f64 {
     (x + 0.5).floor()
 }
 
@@ -278,13 +278,13 @@ pub(crate) fn dock_width_on(kept: f64, window_width: f64) -> f64 {
         .max
         .unwrap_or(f64::INFINITY)
         .min(window_width * DOCK_WIDTH.max_share.unwrap_or(1.0));
-    js_round(kept.max(DOCK_WIDTH.min).min(upper))
+    round_half_up(kept.max(DOCK_WIDTH.min).min(upper))
 }
 
 /// The bottom panel's height as shown: the kept height within the limits
 /// the window allows now.
 pub(crate) fn bottom_height_on(kept: f64, window_height: f64) -> f64 {
-    js_round(
+    round_half_up(
         kept.max(BOTTOM_HEIGHT.min)
             .min(window_height * BOTTOM_HEIGHT.max_share.unwrap_or(1.0)),
     )

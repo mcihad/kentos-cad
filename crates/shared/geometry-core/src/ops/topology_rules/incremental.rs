@@ -13,7 +13,7 @@ use super::{
     is_areas, is_paths, is_points, taken,
 };
 use crate::geometry::Bounds;
-use crate::jsmath::{hypot, js_round, maximum, minimum};
+use crate::jsmath::{hypot, maximum, minimum, round_half_up};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
 
@@ -35,8 +35,8 @@ pub fn finding_key(rule: &str, uids: &[&str], at: Vec2, tolerance: f64) -> Strin
     for u in uids {
         eat(u.as_bytes());
     }
-    eat(&(js_round(at.x / step) as i64).to_le_bytes());
-    eat(&(js_round(at.y / step) as i64).to_le_bytes());
+    eat(&(round_half_up(at.x / step) as i64).to_le_bytes());
+    eat(&(round_half_up(at.y / step) as i64).to_le_bytes());
     format!("{h:016x}")
 }
 

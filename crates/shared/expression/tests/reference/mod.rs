@@ -18,7 +18,7 @@ use kentos_expression::library::{Func, Var};
 use kentos_expression::parser::{BinOp, Node, Parser};
 use kentos_expression::rows::{As, BOOL, Column, EMPTY, MEASURE_STRIDE, NUMBER, RowsInput, TEXT};
 use kentos_expression::{CompileError, Measured, Needs, Scope, Value};
-use kentos_geometry_core::jsmath::{js_round, maximum, maximum_of, minimum, minimum_of, sign};
+use kentos_geometry_core::jsmath::{maximum, maximum_of, minimum, minimum_of, round_half_up, sign};
 
 /// A parsed expression: its tree, the fields and variables it reads.
 pub struct Old {
@@ -491,7 +491,7 @@ const POW10: [f64; 13] = [
 
 /// `Math.max(0, Math.min(12, Math.round(d)))` as an index (d from `to_number`: never NaN).
 fn digits(d: f64) -> usize {
-    maximum(0.0, minimum(12.0, js_round(d))) as usize
+    maximum(0.0, minimum(12.0, round_half_up(d))) as usize
 }
 
 /// A position or length for `slice` and `padStart`: ∞ and anything past the text clamp.
@@ -540,7 +540,7 @@ pub fn call<'a>(f: Func, args: &mut [Value<'a>]) -> Result<Value<'a>, Thrown> {
                 return Ok(null);
             };
             let f = POW10[digits(d)];
-            Value::Num(js_round((v + sign(v) * f64::EPSILON * v.abs()) * f) / f)
+            Value::Num(round_half_up((v + sign(v) * f64::EPSILON * v.abs()) * f) / f)
         }
         Func::Text => {
             if args.len() < 2 {
@@ -580,11 +580,11 @@ pub fn call<'a>(f: Func, args: &mut [Value<'a>]) -> Result<Value<'a>, Thrown> {
             }
             let t = to_text(&args[0]);
             let total = text::utf16_len(&t);
-            let start = maximum(0.0, js_round(from) - 1.0);
+            let start = maximum(0.0, round_half_up(from) - 1.0);
             let end = if len == f64::INFINITY {
                 None
             } else {
-                Some(units(start + maximum(0.0, js_round(len)), total))
+                Some(units(start + maximum(0.0, round_half_up(len)), total))
             };
             owned(text::slice(&t, units(start, total), end))
         }
@@ -600,7 +600,7 @@ pub fn call<'a>(f: Func, args: &mut [Value<'a>]) -> Result<Value<'a>, Thrown> {
                 Some(c) => text::first_unit(&to_text(c)).unwrap_or(u16::from(b'0')),
             };
             let t = into_text(take(args, 0));
-            let target = maximum(0.0, js_round(len));
+            let target = maximum(0.0, round_half_up(len));
             if target <= text::utf16_len(&t) as f64 {
                 return Ok(Value::Text(t));
             }

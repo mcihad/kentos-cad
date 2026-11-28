@@ -10,26 +10,11 @@ use std::cmp::Ordering;
 
 pub use kentos_num::{
     acos, asin, atan, atan2, cos, exp, hypot, ln as log, log2, log10, maximum, maximum_of, minimum,
-    minimum_of, pow, sign, sin, tan,
+    minimum_of, pow, round_half_up, sign, sin, tan,
 };
 
 pub const PI: f64 = std::f64::consts::PI;
 pub const TAU: f64 = PI * 2.0;
-
-/// `Math.round`: the nearest integer, halves toward +∞ (−2.5 → −2, 0.49999999999999994 → 0).
-pub fn js_round(x: f64) -> f64 {
-    if !x.is_finite() {
-        return x;
-    }
-    let f = x.floor();
-    let r = if x - f >= 0.5 { f + 1.0 } else { f };
-    // Math.round keeps the sign of a zero result from a negative input (−0.4 → −0).
-    if r == 0.0 && (x < 0.0 || x.is_sign_negative()) {
-        -0.0
-    } else {
-        r
-    }
-}
 
 /// The length of a vector of any number of parts: every part divided by the largest, the squares summed with
 /// Kahan compensation, then scaled back (the port's form; two parts go to [`hypot`], which is correctly rounded).
@@ -139,24 +124,6 @@ fn merge_sort<T: Clone>(v: &mut [T], buf: &mut [T], cmp: &mut dyn FnMut(&T, &T) 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn round_matches_math_round() {
-        for (x, want) in [
-            (2.5, 3.0),
-            (-2.5, -2.0),
-            (0.49999999999999994, 0.0),
-            (-0.5, -0.0),
-            (1.4999999999999998, 1.0),
-            (4503599627370495.5, 4503599627370496.0),
-            (-7.6, -8.0),
-        ] {
-            let got = js_round(x);
-            assert_eq!(got.to_bits(), f64::to_bits(want), "round({x}) = {got}");
-        }
-        assert!(js_round(-0.4).is_sign_negative());
-        assert!(js_round(f64::NAN).is_nan());
-    }
 
     #[test]
     fn stable_sort_keeps_ties_in_order_like_javascript() {

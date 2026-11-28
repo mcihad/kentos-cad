@@ -545,7 +545,7 @@ impl LayerStyleWindow {
             Num::DotValue => d.dot_density.dot_value = x,
             Num::DotSize => d.dot_density.dot_size = Some(x),
             Num::Seed => {
-                d.dot_density.seed = Some(kentos_native_style::classify::js_round(x));
+                d.dot_density.seed = Some(kentos_native_style::classify::round_half_up(x));
             }
             Num::ChSize => d.chart.size = x,
             Num::ChBarWidth => d.chart.bar_width = Some(x),

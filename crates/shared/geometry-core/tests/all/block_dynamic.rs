@@ -5,7 +5,7 @@
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::{Blocks, shows_nothing};
 use kentos_geometry_core::entity::{Entity, Shape};
-use kentos_geometry_core::jsmath::js_round;
+use kentos_geometry_core::jsmath::round_half_up;
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::{Value, json};
 
@@ -37,7 +37,7 @@ fn insert(params: Value) -> Shape {
 
 /// The drawn shapes: lines as their ends, arcs as centre, radius and ends' angles.
 fn drawn(b: &Blocks, s: &Shape) -> Vec<String> {
-    let r = |x: f64| js_round(x * 1e6) / 1e6 + 0.0;
+    let r = |x: f64| round_half_up(x * 1e6) / 1e6 + 0.0;
     let pt = |p: Vec2| format!("({}, {})", r(p.x), r(p.y));
     b.expand(s)
         .into_iter()
@@ -57,7 +57,7 @@ fn drawn(b: &Blocks, s: &Shape) -> Vec<String> {
 fn a_door_draws_at_its_values() {
     let b = blocks(Value::Null);
     let quarter = std::f64::consts::FRAC_PI_2;
-    let q = js_round(quarter * 1e6) / 1e6;
+    let q = round_half_up(quarter * 1e6) / 1e6;
     assert_eq!(
         drawn(&b, &insert(Value::Null)),
         [

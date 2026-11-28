@@ -2044,7 +2044,7 @@ fn draw_whole(
                 Unit::M => radius * f.px_per_m,
                 _ => *radius,
             };
-            let cells = kentos_geometry_core::jsmath::js_round(radius_px / f64::from(*quality));
+            let cells = kentos_num::round_half_up(radius_px / f64::from(*quality));
             let r_cells = if cells.is_finite() {
                 maximum(cells, 1.0) as i64
             } else {
@@ -2129,7 +2129,7 @@ fn draw_whole(
                                 Patch::Size {
                                     size: px * k,
                                     unit: Unit::Px,
-                                    step: kentos_geometry_core::jsmath::js_round(k * 100.0) as u8,
+                                    step: kentos_num::round_half_up(k * 100.0) as u8,
                                 },
                             )
                         };

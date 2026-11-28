@@ -1,7 +1,7 @@
 //! Colours (every CSS syntax and keyword, with alpha) and paints (the
 //! symbol's colours, references and their fallback chains).
 
-use kentos_geometry_core::jsmath::{js_round, maximum, minimum};
+use kentos_geometry_core::jsmath::{maximum, minimum, round_half_up};
 use kentos_style_core::js::text::{is_space, slice, trim};
 
 use super::number::{parse_float, parse_hex, split_on};
@@ -169,7 +169,7 @@ kentos_geometry_core::json_struct!(Color { hex, alpha });
 
 /// Two hex digits of a channel (0–255, rounded; NaN writes "NAN" as JavaScript does).
 pub fn hex2(v: f64) -> String {
-    let r = js_round(maximum(0.0, minimum(255.0, v)));
+    let r = round_half_up(maximum(0.0, minimum(255.0, v)));
     if r.is_nan() {
         return "NAN".into();
     }

@@ -16,8 +16,8 @@ use std::hash::BuildHasherDefault;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, on_edge_arc, point_at};
 use crate::geometry::Bounds;
 use crate::jsmath::{
-    PI, TAU, atan2, cos, hypot, js_cmp, js_round, maximum, maximum_of, minimum, minimum_of, sign,
-    sin, stable_sort,
+    PI, TAU, atan2, cos, hypot, js_cmp, maximum, maximum_of, minimum, minimum_of, round_half_up,
+    sign, sin, stable_sort,
 };
 use crate::predicates::{orient2d, orientation};
 use crate::store::IdHasher;
@@ -315,7 +315,7 @@ pub fn winding(edges: &[Edge], p: Vec2) -> f64 {
             total += sign(sweep) * TAU;
         }
     }
-    js_round(total / TAU)
+    round_half_up(total / TAU)
 }
 
 // The ray of WindingIndex: a direction no drawing lines up with; u runs across it.
@@ -1245,7 +1245,7 @@ mod tests {
                 }
             }
         }
-        js_round(total / TAU)
+        round_half_up(total / TAU)
     }
 
     fn step(x: f64, up: bool) -> f64 {

@@ -115,8 +115,8 @@ impl SvgEditor {
         }
         let g = opt.grid;
         [
-            kentos_native_style::classify::js_round(p[0] / g) * g,
-            kentos_native_style::classify::js_round(p[1] / g) * g,
+            kentos_native_style::classify::round_half_up(p[0] / g) * g,
+            kentos_native_style::classify::round_half_up(p[1] / g) * g,
         ]
     }
 }

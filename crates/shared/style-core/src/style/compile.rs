@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::offset::offset_path;
-use kentos_geometry_core::jsmath::{PI, cos, hypot, js_round, maximum, minimum, sin};
+use kentos_geometry_core::jsmath::{PI, cos, hypot, maximum, minimum, round_half_up, sin};
 
 use super::generate::{self, Gen};
 use super::model::{
@@ -243,7 +243,7 @@ pub fn marker_style(
             stroke_width: stroke_width.map_or(0.0, conv),
             params: [
                 minimum(0.95, maximum(0.0, hole.unwrap_or(0.0))),
-                js_round(minimum(64.0, maximum(3.0, teeth.unwrap_or(12.0)))),
+                round_half_up(minimum(64.0, maximum(3.0, teeth.unwrap_or(12.0)))),
                 minimum(360.0, maximum(1.0, sweep.unwrap_or(180.0))) * DEG,
                 minimum(0.6, maximum(0.02, teeth_depth.unwrap_or(0.2))),
             ],

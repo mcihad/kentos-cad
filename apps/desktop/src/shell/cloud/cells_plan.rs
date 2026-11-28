@@ -128,7 +128,7 @@ pub(crate) enum SaveInput {
 }
 
 /// JavaScript's `Math.round`: halves up.
-fn js_round(x: f64) -> f64 {
+fn round_half_up(x: f64) -> f64 {
     (x + 0.5).floor()
 }
 
@@ -141,7 +141,7 @@ pub(crate) fn file_save_text(f: &FileSave) -> String {
         FileState::Pending if f.base == "0" => "Kaydedilmedi".to_owned(),
         FileState::Pending => format!("Kaydedilmedi · r{} üstüne", f.base),
         FileState::Encoding => "Dosya hazırlanıyor…".to_owned(),
-        FileState::Uploading => format!("Yükleniyor %{}", js_round(f.progress * 100.0)),
+        FileState::Uploading => format!("Yükleniyor %{}", round_half_up(f.progress * 100.0)),
         FileState::Verifying => "Sunucu doğruluyor…".to_owned(),
         FileState::Conflict => format!("Çakışma: r{} kaydedilmiş", unknown(&f.conflict_actual)),
         // Over unsaved work too: Kaydet cannot write over it (docs/specs/file-revisions.md).
@@ -225,11 +225,11 @@ pub(crate) fn ago(at: Option<i64>, now: i64) -> String {
         return "henüz yok".to_owned();
     };
     #[allow(clippy::cast_precision_loss)]
-    let s = js_round((now - at) as f64 / 1000.0);
+    let s = round_half_up((now - at) as f64 / 1000.0);
     if s < 60.0 {
         format!("{s} sn önce")
     } else {
-        format!("{} dk önce", js_round(s / 60.0))
+        format!("{} dk önce", round_half_up(s / 60.0))
     }
 }
 

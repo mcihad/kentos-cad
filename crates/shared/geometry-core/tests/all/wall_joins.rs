@@ -5,7 +5,7 @@
 use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::geom::wall::Spec;
 use kentos_geometry_core::geom::wall_join::{WallIn, solve};
-use kentos_geometry_core::jsmath::{js_round, maximum};
+use kentos_geometry_core::jsmath::{maximum, round_half_up};
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
@@ -97,8 +97,8 @@ fn walls_join_as_the_reference_says() {
                 .filter_map(|j| {
                     j.node.as_ref().map(|n| {
                         (
-                            js_round(j.at.x * 1e6) as i64,
-                            js_round(j.at.y * 1e6) as i64,
+                            round_half_up(j.at.x * 1e6) as i64,
+                            round_half_up(j.at.y * 1e6) as i64,
                             n.depth.clone(),
                             n.user,
                         )
@@ -109,8 +109,8 @@ fn walls_join_as_the_reference_says() {
                 .iter()
                 .map(|n| {
                     (
-                        js_round(n["at"][0].as_f64().unwrap() * 1e6) as i64,
-                        js_round(n["at"][1].as_f64().unwrap() * 1e6) as i64,
+                        round_half_up(n["at"][0].as_f64().unwrap() * 1e6) as i64,
+                        round_half_up(n["at"][1].as_f64().unwrap() * 1e6) as i64,
                         n["depth"]
                             .as_array()
                             .unwrap()
@@ -132,8 +132,8 @@ fn walls_join_as_the_reference_says() {
             .map(|j| {
                 (
                     j.kind.name().to_owned(),
-                    js_round(j.at.x * 1e6) as i64,
-                    js_round(j.at.y * 1e6) as i64,
+                    round_half_up(j.at.x * 1e6) as i64,
+                    round_half_up(j.at.y * 1e6) as i64,
                 )
             })
             .collect();
@@ -145,8 +145,8 @@ fn walls_join_as_the_reference_says() {
                 let at = &j["at"];
                 (
                     j["kind"].as_str().unwrap().to_owned(),
-                    js_round(at[0].as_f64().unwrap() * 1e6) as i64,
-                    js_round(at[1].as_f64().unwrap() * 1e6) as i64,
+                    round_half_up(at[0].as_f64().unwrap() * 1e6) as i64,
+                    round_half_up(at[1].as_f64().unwrap() * 1e6) as i64,
                 )
             })
             .collect();

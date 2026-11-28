@@ -680,7 +680,7 @@ fn segment(a: Vec2, b: Vec2) -> Shape {
 
 /// A slope as a plan writes it: "%33", "%32,5".
 pub fn slope_words(s: f64) -> String {
-    let r = crate::jsmath::js_round(s * 10.0) / 10.0;
+    let r = crate::jsmath::round_half_up(s * 10.0) / 10.0;
     if r.fract() == 0.0 {
         format!("%{r:.0}")
     } else {
@@ -690,7 +690,7 @@ pub fn slope_words(s: f64) -> String {
 
 /// A height as a level mark writes it (EK-4 4.27): "+8.45", "±0.00".
 pub fn level_words(z: f64) -> String {
-    let r = crate::jsmath::js_round(z * 100.0) / 100.0;
+    let r = crate::jsmath::round_half_up(z * 100.0) / 100.0;
     if r == 0.0 {
         "±0.00".into()
     } else {
@@ -1097,7 +1097,7 @@ fn part_pieces(pts: &[Vec2], spec: &RoofSpec, h: f64) -> Vec<Piece> {
             out.push(piece(Shape::Circle { c: part.at, r }));
             out.push(piece(text(
                 Vec2::new(part.at.x + r + h * 0.5, part.at.y),
-                format!("Ø{}", crate::jsmath::js_round(part.width * 1000.0)),
+                format!("Ø{}", crate::jsmath::round_half_up(part.width * 1000.0)),
                 h,
                 0.0,
                 TextAlign::MiddleLeft,

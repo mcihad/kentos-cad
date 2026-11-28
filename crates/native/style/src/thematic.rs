@@ -24,7 +24,7 @@ pub fn js_text(x: f64) -> String {
 
 /// `String(Math.round(x * 100) / 100)`: a number on the legend.
 pub fn legend_number(x: f64) -> String {
-    number::to_string(kentos_geometry_core::jsmath::js_round(x * 100.0) / 100.0)
+    number::to_string(kentos_geometry_core::jsmath::round_half_up(x * 100.0) / 100.0)
 }
 
 /// A class of breaks: `< b₀`, `b₀ – b₁`, `≥ bₙ`.
@@ -273,7 +273,7 @@ pub fn bivariate_colors(corners: &[&str; 4], n: usize) -> Vec<String> {
                     + f64::from(c[1][k]) * u * (1.0 - w)
                     + f64::from(c[2][k]) * (1.0 - u) * w
                     + f64::from(c[3][k]) * u * w;
-                kentos_geometry_core::jsmath::js_round(v) as u8
+                kentos_geometry_core::jsmath::round_half_up(v) as u8
             };
             out.push(hex([mix(0), mix(1), mix(2), mix(3)]));
         }

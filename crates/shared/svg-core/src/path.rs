@@ -5,7 +5,7 @@
 //! (i.out ?? i) and (i+1.in ?? i+1): both missing makes it a straight line.
 
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{PI, atan2, cos, js_round, maximum, pow, sin, tan};
+use kentos_geometry_core::jsmath::{PI, atan2, cos, maximum, pow, round_half_up, sin, tan};
 use kentos_style_core::js::number;
 
 use crate::shape::{PathNode, Pt, SubPath};
@@ -460,7 +460,7 @@ pub fn arc_to_cubics(
 
 /// A coordinate rounded to `digits` decimals, as `String(x)` writes it.
 pub fn fixed(v: f64, digits: f64) -> String {
-    let s = number::to_string(js_round(v * pow(10.0, digits)) / pow(10.0, digits));
+    let s = number::to_string(round_half_up(v * pow(10.0, digits)) / pow(10.0, digits));
     if s == "-0" { "0".to_string() } else { s }
 }
 

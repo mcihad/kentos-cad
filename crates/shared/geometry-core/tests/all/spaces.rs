@@ -7,7 +7,7 @@ use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::space::{self, Method};
 use kentos_geometry_core::geom::wall::Spec;
 use kentos_geometry_core::geom::wall_join::WallIn;
-use kentos_geometry_core::jsmath::{js_round, maximum};
+use kentos_geometry_core::jsmath::{maximum, round_half_up};
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
@@ -38,7 +38,12 @@ fn plain(r: &Ring) -> Vec<Vec2> {
             None => break,
         }
     }
-    let key = |p: &Vec2| (js_round(p.x * 1e6) as i64, js_round(p.y * 1e6) as i64);
+    let key = |p: &Vec2| {
+        (
+            round_half_up(p.x * 1e6) as i64,
+            round_half_up(p.y * 1e6) as i64,
+        )
+    };
     out.sort_by_key(key);
     out
 }

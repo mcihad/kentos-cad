@@ -80,7 +80,8 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
                     None,
                     spec(1.0, 1.0, f64::INFINITY),
                     |ed, v| {
-                        ed.ui.array.rect.rows = kentos_native_style::classify::js_round(v).max(1.0);
+                        ed.ui.array.rect.rows =
+                            kentos_native_style::classify::round_half_up(v).max(1.0);
                     },
                 ),
                 num(
@@ -91,7 +92,8 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
                     None,
                     spec(1.0, 1.0, f64::INFINITY),
                     |ed, v| {
-                        ed.ui.array.rect.cols = kentos_native_style::classify::js_round(v).max(1.0);
+                        ed.ui.array.rect.cols =
+                            kentos_native_style::classify::round_half_up(v).max(1.0);
                     },
                 ),
             ));
@@ -129,7 +131,7 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
                     spec(1.0, 1.0, f64::INFINITY),
                     |ed, v| {
                         ed.ui.array.polar.count =
-                            kentos_native_style::classify::js_round(v).max(1.0);
+                            kentos_native_style::classify::round_half_up(v).max(1.0);
                     },
                 ),
                 num(

@@ -19,7 +19,9 @@ use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use kentos_geometry_core::api::json::{FromJson, Json};
-use kentos_geometry_core::jsmath::{hypot, js_round, maximum, minimum, or, stable_sort, truthy};
+use kentos_geometry_core::jsmath::{
+    hypot, maximum, minimum, or, round_half_up, stable_sort, truthy,
+};
 use kentos_style_core::js::number;
 use kentos_style_core::js::text::{is_space, slice, trim, utf16_len};
 
@@ -751,9 +753,12 @@ impl<'a> Importer<'a> {
             "stroke",
             text_json(&paint(&stroke, if sym_s { 1.0 } else { sa })),
         );
-        s.set_num("strokeWidth", js_round(c.stroke_width * scale * 1e6) / 1e6);
+        s.set_num(
+            "strokeWidth",
+            round_half_up(c.stroke_width * scale * 1e6) / 1e6,
+        );
         if opacity < 0.999 {
-            s.set_num("opacity", js_round(opacity * 1000.0) / 1000.0);
+            s.set_num("opacity", round_half_up(opacity * 1000.0) / 1000.0);
         }
         if stroke != Flat::None
             && let Some(dash) = &c.dash
@@ -762,7 +767,7 @@ impl<'a> Importer<'a> {
                 "dash",
                 Json::Arr(
                     dash.iter()
-                        .map(|d| Json::Num(js_round(d * scale * 1e6) / 1e6))
+                        .map(|d| Json::Num(round_half_up(d * scale * 1e6) / 1e6))
                         .collect(),
                 ),
             );
@@ -1492,7 +1497,7 @@ pub fn doc_from_svg_tree(tree: &XmlTree, opts: &ImportOptions) -> Result<Importe
     }
     let mut doc_size: Option<f64> = size_mm
         .filter(|s| truthy(*s) && s.is_finite() && *s > 0.0)
-        .map(|s| js_round(s * 1000.0) / 1000.0);
+        .map(|s| round_half_up(s * 1000.0) / 1000.0);
     let no_size = vb.is_none() && !truthy(width) && !truthy(height);
     if root.attr("data-size-mm").is_some_and(|v| !v.is_empty()) {
         let v = num(root.attr("data-size-mm"), 0.0);
@@ -1707,7 +1712,7 @@ pub fn map_color_shapes(
             out.set("stroke", stroke);
             out.put(
                 "opacity",
-                (opacity < 0.999).then(|| Json::Num(js_round(opacity * 1000.0) / 1000.0)),
+                (opacity < 0.999).then(|| Json::Num(round_half_up(opacity * 1000.0) / 1000.0)),
             );
             out
         })

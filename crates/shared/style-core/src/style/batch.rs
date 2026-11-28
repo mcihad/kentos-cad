@@ -20,7 +20,7 @@ use std::sync::Arc;
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::signed_area;
 use kentos_geometry_core::jsmath::{
-    atan2, cos, hypot, js_cmp, js_round, maximum, sin, stable_sort,
+    atan2, cos, hypot, js_cmp, maximum, round_half_up, sin, stable_sort,
 };
 use kentos_geometry_core::triangulate::fill_into;
 
@@ -555,7 +555,7 @@ impl BatchSink {
     /// the anchor, the anchor's own tile reaching ±`TILE`/2.
     fn tile_of(&self, p: Vec2) -> [f64; 2] {
         let t = |v: f64| {
-            let i = js_round(v / TILE);
+            let i = round_half_up(v / TILE);
             // A coordinate that is no number stays with the anchor.
             if i.is_finite() { i } else { 0.0 }
         };
@@ -905,7 +905,7 @@ fn turn_code(a: (Vec2, Vec2), b: (Vec2, Vec2)) -> f64 {
     let (dx0, dy0) = (a.1.x - a.0.x, a.1.y - a.0.y);
     let (dx1, dy1) = (b.1.x - b.0.x, b.1.y - b.0.y);
     let turn = atan2(dx0 * dy1 - dy0 * dx1, dx0 * dx1 + dy0 * dy1);
-    let steps = js_round(turn / std::f64::consts::PI * TURN_STEPS);
+    let steps = round_half_up(turn / std::f64::consts::PI * TURN_STEPS);
     if steps.is_finite() && steps.abs() < TURN_STEPS {
         steps + TURN_STEPS
     } else {

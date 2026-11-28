@@ -101,8 +101,9 @@ pub(super) fn stroke_style<'a>(ed: &SvgEditor, sel: &[Obj]) -> Element<'a, Messa
                             k.iter()
                                 .map(|x| {
                                     Json::Num(
-                                        kentos_native_style::classify::js_round(x * w * 1000.0)
-                                            / 1000.0,
+                                        kentos_native_style::classify::round_half_up(
+                                            x * w * 1000.0,
+                                        ) / 1000.0,
                                     )
                                 })
                                 .collect(),

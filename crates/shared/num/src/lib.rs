@@ -16,6 +16,7 @@
 mod elementary;
 mod hypot;
 mod order;
+mod rounding;
 
 pub use elementary::{
     acos, asin, asinh, atan, atan2, atanh, cbrt, cos, cosh, erfc, exp, exp2, lgamma, ln, log2,
@@ -23,3 +24,4 @@ pub use elementary::{
 };
 pub use hypot::hypot;
 pub use order::{maximum, maximum_of, minimum, minimum_of, sign};
+pub use rounding::round_half_up;

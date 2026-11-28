@@ -21,7 +21,7 @@ use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::geom::arc::sweep;
 use kentos_geometry_core::geom::bulge::bulge_arc;
-use kentos_geometry_core::jsmath::{PI, atan2, cos, hypot, js_round, sin};
+use kentos_geometry_core::jsmath::{PI, atan2, cos, hypot, round_half_up, sin};
 use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::ops::plan_recognition::{self as read, Role};
 
@@ -337,7 +337,7 @@ fn block_pieces(
 
 /// A number to the nanometre, as the plan's reading gives its walls'.
 fn clean(x: f64) -> f64 {
-    let r = js_round(x * 1e9) / 1e9;
+    let r = round_half_up(x * 1e9) / 1e9;
     if r == 0.0 { 0.0 } else { r }
 }
 

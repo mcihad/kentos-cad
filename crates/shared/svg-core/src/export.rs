@@ -11,7 +11,7 @@
 use std::collections::HashSet;
 
 use kentos_geometry_core::api::json::{FromJson, Json, ToJson, write_str};
-use kentos_geometry_core::jsmath::{js_round, maximum, minimum};
+use kentos_geometry_core::jsmath::{maximum, minimum, round_half_up};
 use kentos_style_core::js::text::{slice, utf16_len};
 
 use crate::import::{ReferenceSpec, text_of};
@@ -373,7 +373,7 @@ kentos_geometry_core::json_struct!(out PngSize { width, height });
 /// DPI with the drawing's width in mm (without one, a unit is a CSS pixel,
 /// 96 dpi).
 pub fn png_size(w: f64, h: f64, px: Option<f64>, dpi: f64, width_mm: Option<f64>) -> PngSize {
-    let clamp = |v: f64| maximum(1.0, minimum(8192.0, js_round(v)));
+    let clamp = |v: f64| maximum(1.0, minimum(8192.0, round_half_up(v)));
     let width = match px {
         Some(px) => px,
         None => (width_mm.unwrap_or((w * 25.4) / 96.0) / 25.4) * dpi,
@@ -422,7 +422,7 @@ pub fn with_png_dpi(png: &[u8], dpi: f64) -> Option<Vec<u8>> {
     if png.len() < 33 || kind(8) != b"IHDR" {
         return None;
     }
-    let ppm = to_uint32(js_round(dpi / 0.0254)).to_be_bytes();
+    let ppm = to_uint32(round_half_up(dpi / 0.0254)).to_be_bytes();
     let mut chunk = Vec::with_capacity(21);
     chunk.extend_from_slice(&9u32.to_be_bytes());
     chunk.extend_from_slice(b"pHYs");

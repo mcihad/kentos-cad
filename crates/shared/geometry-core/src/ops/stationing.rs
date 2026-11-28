@@ -8,7 +8,7 @@
 
 use crate::api::Op;
 use crate::entity::Entity;
-use crate::jsmath::{atan2, cos, js_round, maximum, sin};
+use crate::jsmath::{atan2, cos, maximum, round_half_up, sin};
 use crate::op;
 use crate::text::TextAlign;
 use crate::tools::point_calc::{Walk, km_text};
@@ -174,7 +174,7 @@ fn interval_decimals(interval: f64) -> usize {
     let mut scale = 1.0;
     for d in 0..=6 {
         let v = interval * scale;
-        if (v - js_round(v)).abs() <= 1e-6 * maximum(v.abs(), 1.0) {
+        if (v - round_half_up(v)).abs() <= 1e-6 * maximum(v.abs(), 1.0) {
             return d;
         }
         scale *= 10.0;

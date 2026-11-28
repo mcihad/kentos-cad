@@ -521,7 +521,7 @@ fn corners(areas: &[Area]) -> Vec<(f64, f64)> {
         .flat_map(|r| r.pts.iter().map(|p| (p.x, p.y)))
         .collect();
     // By the micrometre: the overlay's cut points are within a few units of the last place off the line.
-    let k = |v: f64| crate::jsmath::js_round(v * 1e6);
+    let k = |v: f64| crate::jsmath::round_half_up(v * 1e6);
     out.sort_by(|a, b| k(a.0).total_cmp(&k(b.0)).then(k(a.1).total_cmp(&k(b.1))));
     out
 }

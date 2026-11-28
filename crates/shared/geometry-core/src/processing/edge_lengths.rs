@@ -11,7 +11,7 @@ use std::collections::HashSet;
 use crate::api::Op;
 use crate::api::json::Json;
 use crate::entity::{Entity, Shape};
-use crate::jsmath::js_round;
+use crate::jsmath::round_half_up;
 use crate::op;
 use crate::ops::edge_labels::{EdgeLabel, edge_labels};
 use crate::vec2::Vec2;
@@ -63,7 +63,7 @@ pub fn edge_path(s: &Shape) -> Option<EdgePath<'_>> {
 /// A coordinate or a length on the millimetre grid, as a key: `Math.round(x
 /// · 1000)` written as text made −0 and 0 one key, and every NaN one key.
 fn mm(x: f64) -> u64 {
-    let r = js_round(x * 1000.0);
+    let r = round_half_up(x * 1000.0);
     if r == 0.0 {
         0
     } else if r.is_nan() {

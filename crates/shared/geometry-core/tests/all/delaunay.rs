@@ -9,7 +9,7 @@
 use kentos_geometry_core::geom::delaunay::{
     Delaunay, Located, NONE, TOO_FEW, fill_star, next, triangulate,
 };
-use kentos_geometry_core::jsmath::{cos, js_round, sin};
+use kentos_geometry_core::jsmath::{cos, round_half_up, sin};
 use kentos_geometry_core::predicates::{incircle, orient2d};
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
@@ -186,8 +186,8 @@ fn random_and_degenerate_sets_keep_the_rules() {
         (0..2_000)
             .map(|_| {
                 Vec2::new(
-                    js_round((500_000.0 + g.range(0.0, 2_000.0)) * 1000.0) / 1000.0,
-                    js_round((4_420_000.0 + g.range(0.0, 2_000.0)) * 1000.0) / 1000.0,
+                    round_half_up((500_000.0 + g.range(0.0, 2_000.0)) * 1000.0) / 1000.0,
+                    round_half_up((4_420_000.0 + g.range(0.0, 2_000.0)) * 1000.0) / 1000.0,
                 )
             })
             .collect(),

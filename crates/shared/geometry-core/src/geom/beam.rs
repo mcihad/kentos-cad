@@ -27,7 +27,7 @@ impl BeamSpec {
     /// Its size as a construction plan writes it: its width over its height in centimetres ("25/50").
     pub fn size(&self) -> String {
         let cm = |m: f64| {
-            let c = crate::jsmath::js_round(m * 1000.0) / 10.0;
+            let c = crate::jsmath::round_half_up(m * 1000.0) / 10.0;
             if c.fract() == 0.0 {
                 format!("{c:.0}")
             } else {

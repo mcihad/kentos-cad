@@ -28,7 +28,7 @@
 use std::f64::consts::PI;
 
 use crate::Vec2;
-use crate::jsmath::{atan2, cos, hypot, js_round, maximum, maximum_of, minimum, sin};
+use crate::jsmath::{atan2, cos, hypot, maximum, maximum_of, minimum, round_half_up, sin};
 
 #[cfg(test)]
 mod tests;
@@ -196,7 +196,7 @@ fn length(v: Vec2) -> f64 {
 
 /// A number to the nanometre: a plan's coordinates are drawn to the millimetre and their sums carry nothing finer.
 fn clean(x: f64) -> f64 {
-    let r = js_round(x * 1e9) / 1e9;
+    let r = round_half_up(x * 1e9) / 1e9;
     if r == 0.0 { 0.0 } else { r }
 }
 
@@ -784,7 +784,7 @@ impl Plan<'_> {
             leaves,
             hand,
             side,
-            swing: ((sweep - 90.0).abs() > 1.0).then(|| js_round(sweep)),
+            swing: ((sweep - 90.0).abs() > 1.0).then(|| round_half_up(sweep)),
         })
     }
 
@@ -900,7 +900,7 @@ impl Plan<'_> {
                 } else {
                     Side::Right
                 },
-                swing: ((sweep - 90.0).abs() > 1.0).then(|| js_round(sweep)),
+                swing: ((sweep - 90.0).abs() > 1.0).then(|| round_half_up(sweep)),
             });
         }
         d.openings.sort_by(|x, y| x.t0.total_cmp(&y.t0));

@@ -941,8 +941,8 @@ fn canonical(ring: Vec<Vec2>) -> Vec<Vec2> {
 /// A point to a micrometre, to tell the same edge again.
 fn key(p: Vec2) -> (i64, i64) {
     (
-        crate::jsmath::js_round(p.x * 1e6) as i64,
-        crate::jsmath::js_round(p.y * 1e6) as i64,
+        crate::jsmath::round_half_up(p.x * 1e6) as i64,
+        crate::jsmath::round_half_up(p.y * 1e6) as i64,
     )
 }
 

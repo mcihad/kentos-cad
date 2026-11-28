@@ -5,7 +5,7 @@
 
 use std::fmt::Write as _;
 
-use kentos_geometry_core::jsmath::{js_round, maximum};
+use kentos_geometry_core::jsmath::{maximum, round_half_up};
 use sha1::Digest as _;
 
 use crate::compound::shown;
@@ -148,7 +148,7 @@ fn dms(out: &mut String, v: f64, x_axis: bool, p: u32, style: Style, seconds: bo
     let mut whole_min = minutes.trunc();
     let mut secs = (minutes - whole_min) * 60.0;
     if seconds {
-        if js_round(secs * k) >= 60.0 * k {
+        if round_half_up(secs * k) >= 60.0 * k {
             secs = maximum(secs - 60.0, 0.0);
             whole_min += 1.0;
             if whole_min >= 60.0 {
@@ -156,21 +156,21 @@ fn dms(out: &mut String, v: f64, x_axis: bool, p: u32, style: Style, seconds: bo
                 deg += 1.0;
             }
         }
-    } else if js_round(minutes * k) >= 60.0 * k {
+    } else if round_half_up(minutes * k) >= 60.0 * k {
         minutes = maximum(minutes - 60.0, 0.0);
         deg += 1.0;
     }
     let zero = if seconds {
-        deg == 0.0 && whole_min == 0.0 && js_round(secs * k) == 0.0
+        deg == 0.0 && whole_min == 0.0 && round_half_up(secs * k) == 0.0
     } else {
-        deg == 0.0 && js_round(minutes * k) == 0.0
+        deg == 0.0 && round_half_up(minutes * k) == 0.0
     };
     let mut hemi = if zero {
         ""
     } else {
         hemisphere(w, x_axis, style)
     };
-    if x_axis && seconds && deg == 180.0 && whole_min == 0.0 && js_round(secs * k) == 0.0 {
+    if x_axis && seconds && deg == 180.0 && whole_min == 0.0 && round_half_up(secs * k) == 0.0 {
         hemi = "";
     }
     if style == Style::Sign && w < 0.0 && !zero {

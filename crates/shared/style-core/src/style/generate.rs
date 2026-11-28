@@ -12,7 +12,7 @@ use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::offset::offset_path;
 use kentos_geometry_core::jsmath::{
-    PI, TAU, acos, atan, atan2, cos, hypot, js_round, maximum, minimum, sin,
+    PI, TAU, acos, atan, atan2, cos, hypot, maximum, minimum, round_half_up, sin,
 };
 use kentos_geometry_core::ops::generate::bounding::convex_hull;
 use kentos_geometry_core::ops::geoprocess::Class;
@@ -256,7 +256,7 @@ fn step(s: &Step, g: Gen, t: &dyn Values, env: &Env, unit: Unit) -> Gen {
             radius,
             rotation,
         } => {
-            let (Some(n), Some(r)) = (value(sides, t).map(js_round), len(radius)) else {
+            let (Some(n), Some(r)) = (value(sides, t).map(round_half_up), len(radius)) else {
                 return Gen::Areas(Vec::new());
             };
             if n < 3.0 || r <= 0.0 {

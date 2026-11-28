@@ -5,7 +5,7 @@
 use kentos_style_core::js::number;
 use serde_json::{Value, json};
 
-use crate::classify::js_round;
+use crate::classify::round_half_up;
 
 // ── JavaScript's values, where the TypeScript leaned on them ──────────
 
@@ -138,7 +138,8 @@ pub fn apply_patch(layer: &Value, patch: &[(String, Option<Value>)]) -> Value {
         } else {
             (Some(json!(1)), Some(json!(1)))
         };
-        let count = js_round(js_number_of(or(get(&p, "groupCount"), g_count).as_ref())).max(1.0);
+        let count =
+            round_half_up(js_number_of(or(get(&p, "groupCount"), g_count).as_ref())).max(1.0);
         let spacing = js_number_of(or(get(&p, "groupSpacing"), g_spacing).as_ref());
         let value = (count > 1.0)
             .then(|| json!({ "count": js_value(count), "spacing": js_value(spacing) }));

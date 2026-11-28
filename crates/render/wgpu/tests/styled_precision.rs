@@ -18,8 +18,8 @@ const ANCHOR: [f64; 2] = [487_100.0, 4_420_200.0];
 /// A local survey's corner in that project: 4 400 km from the anchor.
 const LOCAL: [f64; 2] = [1062.5, 2003.25];
 
-/// `Math.round`: the nearest whole, halves up (the core's `js_round`).
-fn js_round(v: f64) -> f64 {
+/// `Math.round`: the nearest whole, halves up (the core's `round_half_up`).
+fn round_half_up(v: f64) -> f64 {
     (v + 0.5).floor()
 }
 
@@ -27,8 +27,8 @@ fn js_round(v: f64) -> f64 {
 /// the style core packs a primitive whose first point is `p`.
 fn pack(p: [f64; 2]) -> ([f32; 2], [f32; 2]) {
     let tile = [
-        js_round((p[0] - ANCHOR[0]) / TILE),
-        js_round((p[1] - ANCHOR[1]) / TILE),
+        round_half_up((p[0] - ANCHOR[0]) / TILE),
+        round_half_up((p[1] - ANCHOR[1]) / TILE),
     ];
     let origin = [tile[0] * TILE, tile[1] * TILE];
     let base = [ANCHOR[0] + origin[0], ANCHOR[1] + origin[1]];

@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::api::json::{FromJson, Json, read_field};
 use kentos_geometry_core::jsmath::{
-    PI, atan2, cos, hypot, js_cmp, js_round, maximum, minimum, or, sin, stable_sort,
+    PI, atan2, cos, hypot, js_cmp, maximum, minimum, or, round_half_up, sin, stable_sort,
 };
 
 use crate::fit::fit_run;
@@ -487,7 +487,7 @@ fn smooth_ring(r: &Ring, fixed: &[bool], passes: usize) -> Ring {
 }
 
 fn round(v: f64) -> f64 {
-    js_round(v * 1000.0) / 1000.0
+    round_half_up(v * 1000.0) / 1000.0
 }
 
 fn round_node(n: &PathNode) -> PathNode {

@@ -22,7 +22,7 @@ use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, on_edge_arc, perpendicular_foot, tangent_points,
 };
 use crate::geom::leader;
-use crate::jsmath::{PI, atan2, cos, hypot, js_round, maximum, sign, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, maximum, round_half_up, sign, sin};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::vec2::Vec2;
@@ -688,11 +688,11 @@ fn point_on(c: Vec2, r: f64, a: f64) -> Vec2 {
 /// divided out when the spacing is a whole fraction of a metre (0.1, 0.5,
 /// 0.25: the decimal coordinate's nearest double, not its product).
 fn grid_coord(v: f64, g: f64) -> f64 {
-    let per = js_round(1.0 / g);
+    let per = round_half_up(1.0 / g);
     if per >= 1.0 && (1.0 / g - per).abs() < 1e-9 {
-        js_round(v * per) / per
+        round_half_up(v * per) / per
     } else {
-        js_round(v / g) * g
+        round_half_up(v / g) * g
     }
 }
 

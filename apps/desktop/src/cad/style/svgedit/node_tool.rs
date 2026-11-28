@@ -764,7 +764,7 @@ pub fn nice_round(v: f64, unit: f64) -> f64 {
     } else {
         5.0 * e
     };
-    kentos_native_style::classify::js_round(v / step) * step
+    kentos_native_style::classify::round_half_up(v / step) * step
 }
 
 /// Colours of the node tool.

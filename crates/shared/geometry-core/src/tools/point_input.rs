@@ -7,7 +7,7 @@ use crate::api::Op;
 use crate::api::json::Nullable;
 use crate::geom::survey::{along_line, polar_point};
 use crate::geometry::dist;
-use crate::jsmath::{PI, atan2, cos, hypot, js_round, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, round_half_up, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -125,7 +125,7 @@ pub fn constrain_cursor(
     }
     let Some(inc) = polar_step else { return free };
     let ang = (atan2(dy, dx) * 180.0) / PI;
-    let snapped = js_round(ang / inc) * inc;
+    let snapped = round_half_up(ang / inc) * inc;
     let rad = (snapped * PI) / 180.0;
     let ux = cos(rad);
     let uy = sin(rad);

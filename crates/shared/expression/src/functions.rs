@@ -4,8 +4,8 @@
 //! written at the end of the caller's buffer.
 
 use kentos_geometry_core::jsmath::{
-    PI, acos, asin, atan, atan2, cos, exp, js_round, log, log2, log10, maximum, maximum_of,
-    minimum, minimum_of, sign, sin, tan,
+    PI, acos, asin, atan, atan2, cos, exp, log, log2, log10, maximum, maximum_of, minimum,
+    minimum_of, round_half_up, sign, sin, tan,
 };
 
 use crate::compound::shown;
@@ -22,7 +22,7 @@ const POW10: [f64; 13] = [
 
 /// `Math.max(0, Math.min(12, Math.round(d)))` as an index (d from `to_number`: never NaN).
 fn digits(d: f64) -> usize {
-    maximum(0.0, minimum(12.0, js_round(d))) as usize
+    maximum(0.0, minimum(12.0, round_half_up(d))) as usize
 }
 
 /// The power of ten `yuvarla` scales by for `d` digits (0 to 12).
@@ -34,7 +34,7 @@ pub fn scale(d: f64) -> f64 {
 /// 1.01, as the TypeScript did).
 #[inline]
 pub fn round(v: f64, k: f64) -> f64 {
-    js_round((v + sign(v) * f64::EPSILON * v.abs()) * k) / k
+    round_half_up((v + sign(v) * f64::EPSILON * v.abs()) * k) / k
 }
 
 /// A number function of finite numbers (`xs`, as many as it takes), directly:
@@ -231,7 +231,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
                 None => u16::from(b' '),
                 Some(&c) => text::first_unit(as_text(c, &mut s.b)).unwrap_or(u16::from(b' ')),
             };
-            let target = maximum(0.0, js_round(len));
+            let target = maximum(0.0, round_half_up(len));
             let mark = out.len();
             push_text(out, first);
             let n = utf16_len(&out[mark..]);
@@ -280,11 +280,11 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
             }
             let t = as_text(first, &mut s.a);
             let total = utf16_len(t);
-            let start = maximum(0.0, js_round(from) - 1.0);
+            let start = maximum(0.0, round_half_up(from) - 1.0);
             let end = if len == f64::INFINITY {
                 None
             } else {
-                Some(units(start + maximum(0.0, js_round(len)), total))
+                Some(units(start + maximum(0.0, round_half_up(len)), total))
             };
             text::push_slice(out, t, units(start, total), end);
             return R::Made;
@@ -300,7 +300,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
                 None => u16::from(b'0'),
                 Some(&c) => text::first_unit(as_text(c, &mut s.b)).unwrap_or(u16::from(b'0')),
             };
-            let target = maximum(0.0, js_round(len));
+            let target = maximum(0.0, round_half_up(len));
             let V::Text(t) = first.shown() else {
                 // A number's (or true/false's) text is written, then filled in front of.
                 let mark = out.len();
