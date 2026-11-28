@@ -102,7 +102,26 @@ pub struct Writer {
 impl Writer {
     /// A writer and the file's first bytes (its header as far as known, the
     /// VLRs and, for a LAZ, the chunk table's offset to come).
-    pub fn new(spec: Spec) -> Result<(Writer, Vec<u8>)> {
+    pub fn new(mut spec: Spec) -> Result<(Writer, Vec<u8>)> {
+        // A record past a VLR's 65 535 bytes is not left out in silence (docs/adr/9401 §3): LAS 1.4 carries it as an
+        // EVLR; 1.2 and 1.3 have no place for it.
+        let (fits, large): (Vec<Vlr>, Vec<Vlr>) = std::mem::take(&mut spec.vlrs)
+            .into_iter()
+            .partition(|v| v.data.len() <= usize::from(u16::MAX));
+        spec.vlrs = fits;
+        if let Some(first) = large.first() {
+            if spec.minor < 4 {
+                return Err(PcError::new(format!(
+                    "“{}” {} numaralı kaydı {} bayt: bir VLR en çok 65 535 bayt taşır ve LAS 1.{} daha büyüğünü yazamaz. \
+                     LAS 1.4 olarak yazın; orada kayıt EVLR olarak taşınır.",
+                    first.user,
+                    first.record,
+                    first.data.len(),
+                    spec.minor
+                )));
+            }
+            spec.evlrs.extend(large);
+        }
         let layout = spec.layout();
         if usize::from(spec.record_len) < crate::record::standard_len(spec.format) {
             return Err(PcError::new("Kaydın boyu nokta biçiminden kısa."));
@@ -145,12 +164,10 @@ impl Writer {
         if let Some(laz) = &self.laz {
             v.push(chunks::vlr_record(laz)?);
         }
+        // Every one fits a VLR: `new` moved the larger ones to the EVLRs or refused.
         for x in &self.spec.vlrs {
             let mut x = x.clone();
             x.extended = false;
-            if x.data.len() > usize::from(u16::MAX) {
-                continue;
-            }
             v.push(x);
         }
         Ok(v)
@@ -383,6 +400,46 @@ mod tests {
             cloud.records(&run, raw, &mut all).unwrap();
         }
         (cloud, all)
+    }
+
+    /// A record past a VLR's 65 535 bytes is carried, not left out (docs/adr/9401 §3): LAS 1.4 writes it as an EVLR;
+    /// 1.2, which has none, refuses and says what to do. The reader keeps only the records it knows, so the file's
+    /// own bytes are looked at.
+    #[test]
+    fn a_record_too_large_for_a_vlr_is_carried_or_refused() {
+        let payload: Vec<u8> = (0..70_000u32).map(|i| (i % 251) as u8).collect();
+        let big = Vlr::new("kentos", 7, "büyük kayıt", payload.clone());
+        let small = Vlr::new("kentos", 8, "küçük kayıt", vec![0xA5; 16]);
+        let spec = |minor: u8, format: u8, record_len: u16| Spec {
+            minor,
+            format,
+            record_len,
+            scale: [0.01; 3],
+            offset: [0.0; 3],
+            vlrs: vec![big.clone(), small.clone()],
+            evlrs: vec![],
+            compressed: false,
+            source_id: 0,
+            global_encoding: 0,
+            software: "test".into(),
+        };
+        let las14 = spec(4, 6, 30);
+        let recs = records(&las14.layout(), 10);
+        let file = write_all(las14, &recs).unwrap();
+        let (cloud, back) = read_back(&file);
+        assert_eq!(back, recs);
+        assert_eq!(
+            (cloud.head.vlr_count, cloud.head.evlr_count),
+            (1, 1),
+            "the small one a VLR, the large one an EVLR"
+        );
+        let holds = |bytes: &[u8]| file.windows(bytes.len()).any(|w| w == bytes);
+        assert!(
+            holds(&small.data) && holds(&payload),
+            "both records' bytes are in the file"
+        );
+        let refused = write_all(spec(2, 1, 28), &[]).unwrap_err();
+        assert!(refused.to_string().contains("LAS 1.4"), "{refused}");
     }
 
     #[test]
