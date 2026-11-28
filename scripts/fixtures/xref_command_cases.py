@@ -784,6 +784,19 @@ add(edit_cases, "kaldır: grubun katmanında bu çizimin nesnesi varsa grup kal�
      "result": done(edited("Plan", removed=removed_k)), "expect": expect(kept_group)},
 ], setup=DRAWN, note="Kaldırmak bu çizimin nesnelerini silmez.")
 
+# A placement on a locked layer is not deleted (CLAUDE.md §7, docs/adr/9401 §10.2): the reference stays whole.
+LOCKED_PLACE = with_ids(copy.deepcopy(ATTACHED))
+for e_ in LOCKED_PLACE["entities"]:
+    if e_["kind"] == "insert":
+        e_["layerId"] = "kilitli"
+assert find_node(LOCKED_PLACE["layers"], "kilitli")["locked"] is True
+add(edit_cases, "kaldır: yerleştirmesi kilitli katmandaysa reddedilir, hiçbir şey yazılmaz", [
+    {"op": "execute", "input": {"operation": {"kind": "detach", "name": "Plan"}},
+     "result": failed("layer_locked", "“Kilitli” katmanı kilitli; üzerindeki “Plan” yerleştirmesi silinemez, dış başvuru kaldırılmadı. "
+                      "Kilidi Katmanlar panelinden açın.", "operation.name"),
+     "expect": expect(LOCKED_PLACE, canUndo=False, revision="same")},
+], setup=LOCKED_PLACE, note="Kilidin açılması kullanıcınındır; komut kilitli katmandaki nesneyi silmez.")
+
 # ── bind ─────────────────────────────────────────────────────────────────
 
 bound, _ = bind(ATTACHED, PLAN_ID, "bind")

@@ -87,6 +87,32 @@ fn top(def: &BlockDefinition, x: &XrefSource, doc: &Document) -> Result<(), Stop
     }
 }
 
+/// A reference's placements go with it when it is detached: one on a locked layer (locked by itself or by a group
+/// above it) refuses the detach whole, as a locked layer's object is not deleted (docs/adr/9401 §10.2).
+fn placements_unlocked(doc: &Document, def: &BlockDefinition) -> Result<(), Stop> {
+    let layers = doc.layers();
+    for slot in inserts_of(doc, def.id) {
+        let Some(placed) = doc.get(slot) else {
+            continue;
+        };
+        let layer = &placed.base().layer_id;
+        if layers.is_locked(layer) {
+            let on = layers
+                .get(layer)
+                .map_or(layer.as_str(), |n| n.name.as_str());
+            return Err(fail(
+                codes::LAYER_LOCKED,
+                format!(
+                    "“{on}” katmanı kilitli; üzerindeki “{}” yerleştirmesi silinemez, dış başvuru kaldırılmadı. Kilidi Katmanlar panelinden açın.",
+                    def.name
+                ),
+                "operation.name",
+            ));
+        }
+    }
+    Ok(())
+}
+
 /// The source file as read: its path, the SHA-256 of its bytes and its drawing; a PDF's page and what it left out.
 struct Source {
     path: PathBuf,
@@ -641,6 +667,7 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
             let (def, x) = find(doc, name)?;
             top(def, &x, doc)?;
             checks::revision(doc, input.expected_revision.as_deref())?;
+            placements_unlocked(doc, def)?;
             Plan::Detach {
                 id: def.id,
                 name: def.name.clone(),

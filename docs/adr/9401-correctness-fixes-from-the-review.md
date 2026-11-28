@@ -483,6 +483,21 @@ da vaziyet ölçüsü çizemez. Komuta çevrilmeleri (§9.2 zinciri) Aşama 2'de
 **Sınama.** Dört sınama düzeltmeden önce kırmızıydı (işaretler kilitli katmandan silinip öbür katmana çiziliyordu):
 uygulama katmanında lejant ve gölge, masaüstünde kaçış yolları aracı ve parsel aracı.
 
+#### 10.2 Dış başvuruyu kaldırmak kilitli katmandaki yerleştirmeyi silmez
+
+**Bulgu.** `cad.xrefs.edit`'in `detach` işlemi dış başvurunun tanımını ve çizimdeki bütün yerleştirmelerini siler
+(ADR 0348). Komut yerleştirmelerin katmanına bakmıyordu: kilitli katmandaki yerleştirme de siliniyordu. Dosyada hiç
+kilit denetimi yoktu.
+
+**Karar.** Yerleştirmelerden biri kilitli katmandaysa (kendisi ya da üstündeki bir grup kilitli) kaldırma bütünüyle
+reddedilir: `layer_locked`, katmanın ve başvurunun adıyla, çözümüyle. Kilitli olanı bırakıp öbürlerini silmek
+olmaz: tanımı giden yerleştirme çizimde kalamaz. Denetim sürüm denetiminden sonradır (silme komutunun sırası).
+Boşaltma, yeniden yükleme ve bağlama yerleştirmeyi değil tanımı değiştirir; onlara dokunulmadı.
+
+**Sınama.** Ortak duruma bağımsız üreteçten bir durum eklendi (`xref_command_cases.py`: yerleştirme kilitli
+katmanda; ret, hiçbir şey yazılmaz). Düzeltmeden önce kırmızıydı (“removed: 1”). Rust çalıştırıcısı ve Python
+kanalı aynı durumdan geçiyor; yetenek sınaması yeşil (kod komutun listesinde zaten vardı: ekleme katmanı için).
+
 ## Modül ve kanal tablosu
 
 | İş | Mimari | Harita | Yol | CBS | MCP | Python | Eklenti | Yapay zekâ ajanı |
@@ -505,6 +520,7 @@ uygulama katmanında lejant ve gölge, masaüstünde kaçış yolları aracı ve
 | Kütle (`tool.mass`) ve kütlenin düzenlenmesi (BK-16) | var | yok: Mimari'nin işi | yok | yok | var: `cad.masses.create`, `cad.arch.edit` | var: `kentos.cad.masses.create` | var: `run`, `document.write` izniyle | var: aynı komut |
 | Çizime yazılan sayılar ve nokta-alan kararı (BK-17) | var | var | var | var | var: aynı çekirdek işlevi | var: aynı | var: aynı | var: aynı |
 | Renk planı lejandı, Kaçış yolları, Gölge, Parsel'in ölçüleri (BK-19, §10.1) | var | yok: Mimari'nin araçları | yok | yok | yok: araçların komutu yok (BK-19'un kalanı) | yok: aynı | yok: aynı | yok: aynı |
+| Dış başvuruyu kaldır (BK-19, §10.2) | var | var | var | yok: profilinde yok (CAD dış başvurusu) | var: `cad.xrefs.edit` | var: `kentos.cad.xrefs.edit` | var: `run`, `document.write` izniyle | var: aynı komut |
 
 Düzeltmeler hiçbir hücreyi değiştirmedi. İfade dili her modülde ve her kanalda aynı crate'ten (`kentos-expression`)
 derlenir; sınır hepsinde aynıdır. BK-15'in düzeltmeleri komutların altındaki okuyucu, yazıcı ve sürücüdedir: her kanal
