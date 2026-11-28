@@ -293,7 +293,8 @@ düzenlenir.
 
 ### Aşama 2 — Tek kaynak: kopyayı türetmeye çevir
 
-- [ ] **BK-20** (B1) `history/text.rs` `TITLES` silinir; başlık katalogdan okunur.
+- [x] **BK-20** (B1) `history/text.rs` `TITLES` silindi; başlık kataloğun ürettiği `catalog/v1/command-titles.json`'dan
+  okunur (ADR 9400 “Yapılanlar”).
 - [ ] **BK-21** (B2, D3) Komut tek yerde bildirilir; `example_inputs`, çıktı eşlemesi, dağıtım, `DESKTOP_COMMANDS`,
   sınama koşucusu ve `use` listeleri ondan üretilir. Katalog tanımı komutun tipleriyle aynı dosyada, kendi işlevinde.
 - [ ] **BK-22** (B3) İşleyici iskeleti: `Result → CommandResult` dönüşümü ve `checks::fail` ortak; `create_command!`

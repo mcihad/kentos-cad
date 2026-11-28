@@ -229,10 +229,8 @@ impl App {
         };
         let command = row.command.clone().unwrap_or_default();
         // The command's catalog title (“Çizgi oluştur”), not its undo step's word.
-        let title = crate::history::text::TITLES
-            .iter()
-            .find(|(id, _)| *id == command)
-            .map(|(_, t)| (*t).to_owned())
+        let title = crate::history::text::catalog_title(&command)
+            .map(str::to_owned)
             .or_else(|| row.label.clone())
             .unwrap_or_else(|| command.clone());
         let personal = &mut self.office_palettes.personal;

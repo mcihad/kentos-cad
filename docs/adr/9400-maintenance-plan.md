@@ -138,6 +138,12 @@ Zemin (Aşama 0) hiçbir komutu, aracı ya da arayüz yüzeyini değiştirmez.
     `labels::gpu`'nun genel sayaca dayanan sınaması, MCP kabul sınamasının yığını.
   - `cargo test -p kentos-ui --lib` tek başına derlenmiyor: sınamaları `snapshot` özelliğini ister
     (`--features snapshot`; `pnpm rust:test:desktop` vitrinle birlikte koştuğu için derlenir). Olduğu gibi bırakıldı.
+- **BK-20 (28 Kasım 2026).** Masaüstünün `history/text.rs`'indeki elle tutulan başlık tablosu (505 çift) silindi.
+  Başlık komutun tanımında bir kez yazılır; katalog üretilirken başlıkların küçük dosyası da yazılır
+  (`catalog/v1/command-titles.json`, 526 komut, 25 KB; `cargo test -p kentos-commands catalog` onu tanımlara tutar) ve
+  masaüstü onu derleme zamanında gömüp ilk sorulduğunda okur. Kataloğun kendisi çalışma anında kurulmaz: şemalarıyla
+  birlikte kurulması saniyeler sürer. Eski tablonun 505 çiftinin hepsi dosyadakiyle aynıydı. `text.rs` 1 226 → 704
+  satır. BK-21'de komut tek tabloda bildirilince dosya o tablodan üretilir.
 
 ## Doğrulama
 
