@@ -252,18 +252,30 @@ fn a_typed_tool_is_said_once_by_its_own_name() {
     let before = app.log.len();
     let _ = app.update(Message::CommandRun("çizgi".into()));
     assert_eq!(app.session.tool_id(), "line");
-    // The tool's name, once (the web logs the tool, not the typed text).
+    // The tool's name, once: the tool is logged, not the typed text.
     assert_eq!(app.log.len(), before + 1);
     assert_eq!(
         app.log.last().map(|l| (l.level, l.text.as_str())),
         Some((Level::Command, "Çizgi"))
     );
-    // A command that is not a tool says nothing of what was typed (the web's
-    // CommandLine); the line's ↑ brings both back, newest first.
+    // A command that is not a tool says nothing of what was typed: neither its name nor the typed text (what the
+    // command itself has to say, a view with nothing to show, is its own line, docs/adr/9327); the line's ↑ brings
+    // both back, newest first.
     let _ = app.run("tool.cancel");
     let before = app.log.len();
     let _ = app.update(Message::CommandRun("ZE".into()));
-    assert_eq!(app.log.len(), before);
+    assert!(
+        app.log
+            .lines()
+            .skip(before)
+            .all(|l| l.level != Level::Command && !l.text.contains("ZE")),
+        "{:?}",
+        app.log
+            .lines()
+            .skip(before)
+            .map(|l| l.text.clone())
+            .collect::<Vec<_>>()
+    );
     assert_eq!(
         app.typed,
         [Entry::Input("çizgi".into()), Entry::Input("ZE".into())]

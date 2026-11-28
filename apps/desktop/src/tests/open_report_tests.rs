@@ -42,7 +42,8 @@ fn a_lossy_file_brings_its_report_and_it_comes_back() {
     let report = app.open_report().expect("kept with the drawing");
     assert_eq!(report.file, "resimli.dxf");
     assert!(
-        report.items.iter().any(|(fate, item)| *fate == Fate::Left && item.what.contains("IMAGE")),
+        // An image without its file is taken as the frame that shows its place (docs/adr/9227): changed, not left out.
+        report.items.iter().any(|(fate, item)| *fate == Fate::Changed && item.what.contains("IMAGE")),
         "{:?}",
         report.items
     );
