@@ -12,7 +12,7 @@ use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::offset::offset_path;
 use kentos_geometry_core::jsmath::{
-    PI, TAU, acos, atan, atan2, cos, js_hypot, js_max, js_min, js_round, sin,
+    PI, TAU, acos, atan, atan2, cos, hypot, js_max, js_min, js_round, sin,
 };
 use kentos_geometry_core::ops::generate::bounding::convex_hull;
 use kentos_geometry_core::ops::geoprocess::Class;
@@ -363,7 +363,7 @@ pub fn centroid(g: &Gen) -> Option<Vec2> {
                 let count = if *closed { n } else { n.saturating_sub(1) };
                 for i in 0..count {
                     let (a, b) = (p[i], p[(i + 1) % n]);
-                    let l = js_hypot(b.x - a.x, b.y - a.y);
+                    let l = hypot(b.x - a.x, b.y - a.y);
                     sx += l * ((a.x - o.x) + (b.x - o.x)) / 2.0;
                     sy += l * ((a.y - o.y) + (b.y - o.y)) / 2.0;
                     total += l;
@@ -464,14 +464,14 @@ fn extend(mut p: Vec<Vec2>, a: f64, b: f64) -> Vec<Vec2> {
         && let Some(k) = (0..n - 1).find(|&k| p[k] != p[k + 1])
     {
         let (q, r) = (p[k], p[k + 1]);
-        let l = js_hypot(r.x - q.x, r.y - q.y);
+        let l = hypot(r.x - q.x, r.y - q.y);
         p[0] = Vec2::new(p[0].x - (r.x - q.x) / l * a, p[0].y - (r.y - q.y) / l * a);
     }
     if b > 0.0
         && let Some(k) = (1..n).rev().find(|&k| p[k] != p[k - 1])
     {
         let (q, r) = (p[k - 1], p[k]);
-        let l = js_hypot(r.x - q.x, r.y - q.y);
+        let l = hypot(r.x - q.x, r.y - q.y);
         p[n - 1] = Vec2::new(
             p[n - 1].x + (r.x - q.x) / l * b,
             p[n - 1].y + (r.y - q.y) / l * b,
@@ -553,7 +553,7 @@ fn chorded(ring: &Ring, tol: f64) -> Vec<Vec2> {
         }
         let sweep = 4.0 * atan(bulge);
         let (dx, dy) = (b.x - a.x, b.y - a.y);
-        let chord = js_hypot(dx, dy);
+        let chord = hypot(dx, dy);
         if chord == 0.0 {
             continue;
         }

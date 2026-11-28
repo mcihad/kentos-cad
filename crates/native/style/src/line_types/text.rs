@@ -6,7 +6,7 @@ use kentos_geometry_core::geom::{
     intersect::Edge,
     overlay::overlay,
 };
-use kentos_geometry_core::jsmath::{js_hypot, tan};
+use kentos_geometry_core::jsmath::{hypot, tan};
 use kentos_geometry_core::{
     Vec2,
     entity::TextPlace,
@@ -26,9 +26,9 @@ fn mid(a: Vec2, b: Vec2) -> Vec2 {
 fn flat(a: Vec2, b: Vec2, p: Vec2) -> bool {
     let dx = b.x - a.x;
     let dy = b.y - a.y;
-    let len = js_hypot(dx, dy);
+    let len = hypot(dx, dy);
     if len == 0. {
-        js_hypot(p.x - a.x, p.y - a.y) <= TOL
+        hypot(p.x - a.x, p.y - a.y) <= TOL
     } else {
         let dot = (p.x - a.x) * dx + (p.y - a.y) * dy;
         dot >= -TOL * len

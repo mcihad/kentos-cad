@@ -19,9 +19,7 @@ use std::sync::Arc;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::signed_area;
-use kentos_geometry_core::jsmath::{
-    atan2, cos, js_cmp, js_hypot, js_max, js_round, sin, stable_sort,
-};
+use kentos_geometry_core::jsmath::{atan2, cos, hypot, js_cmp, js_max, js_round, sin, stable_sort};
 use kentos_geometry_core::triangulate::fill_into;
 
 use super::prim::{EffectSpec, FillPaint, Look, MarkerStyle, Sink, StrokeStyle, group_key, num};
@@ -146,7 +144,7 @@ fn proxy_box(b: &[f64; 4]) -> Vec<f64> {
     let mut out = Vec::with_capacity(4 * 6);
     for i in 0..4 {
         let (a, c) = (corners[i], corners[(i + 1) % 4]);
-        if js_hypot(c.0 - a.0, c.1 - a.1) >= 1e-12 {
+        if hypot(c.0 - a.0, c.1 - a.1) >= 1e-12 {
             out.extend([a.0, a.1, c.0, c.1, 0.0, 0.0]);
         }
     }
@@ -871,7 +869,7 @@ fn push_segments(
     let drawn: Vec<(usize, usize, usize)> = kept
         .windows(2)
         .enumerate()
-        .filter(|(_, w)| js_hypot(pts[w[1]].x - pts[w[0]].x, pts[w[1]].y - pts[w[0]].y) >= 1e-12)
+        .filter(|(_, w)| hypot(pts[w[1]].x - pts[w[0]].x, pts[w[1]].y - pts[w[0]].y) >= 1e-12)
         .map(|(j, w)| (j, w[0], w[1]))
         .collect();
     let joins = joins(
@@ -1019,7 +1017,7 @@ impl Sink for BatchSink {
                 for (i, a) in pts.iter().enumerate() {
                     along.push(d);
                     if let Some(b) = pts.get(i + 1) {
-                        let len = js_hypot(b.x - a.x, b.y - a.y);
+                        let len = hypot(b.x - a.x, b.y - a.y);
                         if len >= 1e-12 {
                             d += len;
                         }
@@ -1052,7 +1050,7 @@ impl Sink for BatchSink {
         let drawn: Vec<usize> = (0..count)
             .filter(|&i| {
                 let (a, b) = (path[i], path[(i + 1) % n]);
-                js_hypot(b.x - a.x, b.y - a.y) >= 1e-12
+                hypot(b.x - a.x, b.y - a.y) >= 1e-12
             })
             .collect();
         let joins = joins(
@@ -1065,7 +1063,7 @@ impl Sink for BatchSink {
         for (&i, [start, end]) in drawn.iter().zip(joins) {
             let a = path[i];
             let b = path[(i + 1) % n];
-            let len = js_hypot(b.x - a.x, b.y - a.y);
+            let len = hypot(b.x - a.x, b.y - a.y);
             let ends = if !closed && i == 0 { 1.0 } else { 0.0 }
                 + if !closed && i + 1 == count { 2.0 } else { 0.0 };
             out.extend([

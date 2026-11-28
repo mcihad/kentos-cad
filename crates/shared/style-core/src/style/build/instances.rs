@@ -18,7 +18,7 @@ use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::{Shape, ellipse_geom, is_closed_outline, tessellate_circle};
 use kentos_geometry_core::geom::arc::{ArcGeom, tessellate_arc};
 use kentos_geometry_core::geom::ellipse::tessellate_ellipse;
-use kentos_geometry_core::jsmath::{TAU, acos, js_hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{TAU, acos, hypot, js_max, js_min};
 use kentos_geometry_core::store::{Expanded, Item, Store};
 
 use super::super::batch::{BatchSink, CURVE_LEVELS, CURVE_TOLERANCE_PX, Def};
@@ -196,7 +196,7 @@ pub(super) fn level_radius(s: &Shape) -> Option<f64> {
     let r = match s {
         Shape::Circle { r, .. } | Shape::Arc { r, .. } => *r,
         Shape::Ellipse { major, ratio, .. } => {
-            let a = js_hypot(major.x, major.y);
+            let a = hypot(major.x, major.y);
             js_max(a, a * ratio.abs())
         }
         _ => return None,

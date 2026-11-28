@@ -11,7 +11,7 @@
 use crate::entity::Shape;
 use crate::geom::arc::sweep;
 use crate::geom::bulge::is_arc_bulge;
-use crate::jsmath::{TAU, atan2, cos, js_hypot, sin};
+use crate::jsmath::{TAU, atan2, cos, hypot, sin};
 use crate::vec2::Vec2;
 
 use super::dual::{D, P};
@@ -202,7 +202,7 @@ impl Model {
                     t0,
                     t1,
                 } => {
-                    let a = js_hypot(major.x, major.y);
+                    let a = hypot(major.x, major.y);
                     push(&mut m, c.x, VarKind::East);
                     push(&mut m, c.y, VarKind::North);
                     push(&mut m, a, VarKind::Length);
@@ -542,7 +542,7 @@ pub(super) fn write_back(shape: &mut Shape, slot: &Slot, x: &[f64]) {
             t0,
             t1,
         } => {
-            let a = js_hypot(major.x, major.y);
+            let a = hypot(major.x, major.y);
             let angle = atan2(major.y, major.x);
             let full = sweep(*t0, *t1) >= TAU - 1e-12;
             *c = Vec2::new(x[s], x[s + 1]);

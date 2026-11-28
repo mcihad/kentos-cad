@@ -20,7 +20,7 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{hypot, js_max};
 use crate::op;
 use crate::ops::fit::{self, Fit, FitKind, FitPair};
 use crate::ops::rubber::{Link, Sheet};
@@ -219,7 +219,7 @@ impl Poly {
         let (from, to) = (mean(src), mean(dst));
         let scale = src
             .iter()
-            .fold(0.0, |m, p| js_max(m, js_hypot(p.x - from.x, p.y - from.y)));
+            .fold(0.0, |m, p| js_max(m, hypot(p.x - from.x, p.y - from.y)));
         if !(scale > 0.0) {
             return Err(GeorefError::Collinear);
         }
@@ -355,7 +355,7 @@ fn refine(forward: &Map, guess: Vec2, target: Vec2) -> Option<Vec2> {
             return None;
         }
         p = Vec2::new(p.x - sx, p.y - sy);
-        let size = js_hypot(sx, sy);
+        let size = hypot(sx, sy);
         if size <= SETTLED * (1.0 + js_max(p.x.abs(), p.y.abs()))
             || (size > 0.5 * last && size <= NOISE)
         {
@@ -532,7 +532,7 @@ pub fn solve(points: &[Gcp], method: Method) -> Result<Georef, GeorefError> {
             if p.used {
                 vv += vx * vx + vy * vy;
             }
-            [vx, vy, js_hypot(vx, vy)]
+            [vx, vy, hypot(vx, vy)]
         })
         .collect();
     let dof = (2 * used.len()).saturating_sub(method.unknowns());

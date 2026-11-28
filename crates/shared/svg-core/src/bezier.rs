@@ -4,7 +4,7 @@
 //! nearest points. A straight segment is a cubic whose controls sit on its
 //! ends, so every segment has one form.
 
-use kentos_geometry_core::jsmath::{js_hypot, js_max, js_min, or};
+use kentos_geometry_core::jsmath::{hypot, js_max, js_min, or};
 
 use crate::shape::{PathNode, Pt, SubPath};
 
@@ -82,14 +82,14 @@ pub fn bez_deriv2(c: &Cubic, t: f64) -> Pt {
 /// derivative vanishes; the direction then comes from the next control.
 pub fn bez_tangent(c: &Cubic, t: f64) -> Pt {
     let mut d = bez_deriv(c, t);
-    if js_hypot(d[0], d[1]) < 1e-12 {
+    if hypot(d[0], d[1]) < 1e-12 {
         let q = if t < 0.5 {
-            if js_hypot(c[2][0] - c[0][0], c[2][1] - c[0][1]) > 1e-12 {
+            if hypot(c[2][0] - c[0][0], c[2][1] - c[0][1]) > 1e-12 {
                 c[2]
             } else {
                 c[3]
             }
-        } else if js_hypot(c[3][0] - c[1][0], c[3][1] - c[1][1]) > 1e-12 {
+        } else if hypot(c[3][0] - c[1][0], c[3][1] - c[1][1]) > 1e-12 {
             c[1]
         } else {
             c[0]
@@ -101,7 +101,7 @@ pub fn bez_tangent(c: &Cubic, t: f64) -> Pt {
             [p[0] - q[0], p[1] - q[1]]
         };
     }
-    let l = or(js_hypot(d[0], d[1]), 1.0);
+    let l = or(hypot(d[0], d[1]), 1.0);
     [d[0] / l, d[1] / l]
 }
 
@@ -144,11 +144,11 @@ pub fn reverse_cubic(c: &Cubic) -> Cubic {
 /// curve (Wang's bound for cubics), capped for degenerate input.
 pub fn flatten_steps(c: &Cubic, tol: f64, max: f64) -> f64 {
     let m = js_max(
-        js_hypot(
+        hypot(
             c[0][0] - 2.0 * c[1][0] + c[2][0],
             c[0][1] - 2.0 * c[1][1] + c[2][1],
         ),
-        js_hypot(
+        hypot(
             c[1][0] - 2.0 * c[2][0] + c[3][0],
             c[1][1] - 2.0 * c[2][1] + c[3][1],
         ),
@@ -232,7 +232,7 @@ pub fn cubic_length(c: &Cubic, t0: f64, t1: f64) -> f64 {
     if c[0][0] == c[1][0] && c[0][1] == c[1][1] && c[2][0] == c[3][0] && c[2][1] == c[3][1] {
         let a = bez(c, t0);
         let b = bez(c, t1);
-        return js_hypot(b[0] - a[0], b[1] - a[1]);
+        return hypot(b[0] - a[0], b[1] - a[1]);
     }
     let mut s = 0.0;
     let parts = 4.0;
@@ -242,7 +242,7 @@ pub fn cubic_length(c: &Cubic, t0: f64, t1: f64) -> f64 {
         let b = t0 + ((t1 - t0) * (p + 1.0)) / parts;
         for k in 0..GX.len() {
             let d = bez_deriv(c, a + (b - a) * GX[k]);
-            s += GW[k] * (b - a) * js_hypot(d[0], d[1]);
+            s += GW[k] * (b - a) * hypot(d[0], d[1]);
         }
     }
     s
@@ -296,7 +296,7 @@ pub fn nearest_on_cubic(c: &Cubic, p: Pt) -> Nearest {
         t = next;
     }
     let q = bez(c, t);
-    let d = js_hypot(q[0] - p[0], q[1] - p[1]);
+    let d = hypot(q[0] - p[0], q[1] - p[1]);
     if d * d > best_d + 1e-18 {
         let b = bez(c, best_t);
         return Nearest {
@@ -311,7 +311,7 @@ pub fn nearest_on_cubic(c: &Cubic, p: Pt) -> Nearest {
 /// The parameter where the curve is `dist` away (straight line) from its start (`from_end`: from its end).
 pub fn param_at_distance(c: &Cubic, dist: f64, from_end: bool) -> Option<f64> {
     let o = if from_end { c[3] } else { c[0] };
-    let f = |t: f64| js_hypot(bez(c, t)[0] - o[0], bez(c, t)[1] - o[1]) - dist;
+    let f = |t: f64| hypot(bez(c, t)[0] - o[0], bez(c, t)[1] - o[1]) - dist;
     let n = 64.0;
     let mut prev_t = if from_end { 1.0 } else { 0.0 };
     let mut prev_f = f(prev_t);

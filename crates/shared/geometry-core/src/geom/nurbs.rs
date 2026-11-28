@@ -919,7 +919,7 @@ mod bounded_tests {
         assert_eq!(points.first(), Some(&ctrl[0]));
         assert_eq!(points.last(), Some(&ctrl[2]));
         for p in points {
-            assert!((crate::jsmath::js_hypot(p.x, p.y) - 1.).abs() < 1e-12);
+            assert!((crate::jsmath::hypot(p.x, p.y) - 1.).abs() < 1e-12);
         }
     }
 }

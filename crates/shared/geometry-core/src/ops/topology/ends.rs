@@ -12,7 +12,7 @@ use super::{Out, TOUCH, TopoPath, TopoWorks, Work};
 use crate::geom::bulge::bulge_path_edges;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, ray_edge};
 use crate::geometry::Bounds;
-use crate::jsmath::{js_hypot, js_max, js_min, tan};
+use crate::jsmath::{hypot, js_max, js_min, tan};
 use crate::store::rtree::{PackedTree, overlaps};
 use crate::vec2::Vec2;
 
@@ -39,7 +39,7 @@ struct Plan {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(b.x - a.x, b.y - a.y)
+    hypot(b.x - a.x, b.y - a.y)
 }
 
 fn edge_length(e: &Edge) -> f64 {

@@ -2,7 +2,7 @@
 //! an arc one (docs/adr/0734); its limits straight or arc wall edges. No screen or document dependencies.
 use crate::Vec2;
 use crate::geom::bulge::bulge_arc;
-use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_min, sin, tan};
+use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_min, sin, tan};
 
 #[derive(Clone, Copy)]
 pub struct Edge {
@@ -50,7 +50,7 @@ fn dot(a: Vec2, b: Vec2) -> f64 {
 }
 fn center(edge: Edge) -> (Vec2, Vec2) {
     let d = sub(edge.b, edge.a);
-    let l = js_hypot(d.x, d.y);
+    let l = hypot(d.x, d.y);
     let n = Vec2::new(-d.y / l, d.x / l);
     (add(edge.a, mul(n, edge.left - edge.width / 2.0)), d)
 }
@@ -196,7 +196,7 @@ impl Carrier {
                 },
             ) => {
                 let d = sub(*c2, *c);
-                let dist = js_hypot(d.x, d.y);
+                let dist = hypot(d.x, d.y);
                 if dist <= 1e-9 * js_max(1.0, js_max(*r, *r2)) {
                     return Err(
                         "Sınır duvarı bölmeyle eş merkezli; kesişen başka bir kenar seçin.",
@@ -230,7 +230,7 @@ pub fn locate(
     extent: Extent,
 ) -> Result<Placement, &'static str> {
     let d = sub(source.b, source.a);
-    let length = js_hypot(d.x, d.y);
+    let length = hypot(d.x, d.y);
     if !length.is_finite() || length <= 0.0 {
         return Err("Kaynak duvar kenarı sıfır uzunlukta.");
     }

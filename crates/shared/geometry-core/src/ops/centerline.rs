@@ -10,7 +10,7 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{js_hypot, js_max, tan};
+use crate::jsmath::{hypot, js_max, tan};
 use crate::op;
 use crate::tools::point_calc::Walk;
 use crate::vec2::Vec2;
@@ -64,7 +64,7 @@ fn mid(p: Vec2, q: Vec2) -> Vec2 {
 }
 
 fn dist(p: Vec2, q: Vec2) -> f64 {
-    js_hypot(p.x - q.x, p.y - q.y)
+    hypot(p.x - q.x, p.y - q.y)
 }
 
 /// The edge's start and end.
@@ -96,7 +96,7 @@ fn matched(a: &[Edge], b: &[Edge]) -> Option<(Vec<Vec2>, Vec<f64>)> {
                     Vec2::new(a1.x - a0.x, a1.y - a0.y),
                     Vec2::new(b1.x - b0.x, b1.y - b0.y),
                 );
-                let (la, lb) = (js_hypot(da.x, da.y), js_hypot(db.x, db.y));
+                let (la, lb) = (hypot(da.x, da.y), hypot(db.x, db.y));
                 if !(la > 0.0 && lb > 0.0) {
                     return None;
                 }

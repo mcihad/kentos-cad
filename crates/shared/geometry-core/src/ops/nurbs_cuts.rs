@@ -9,7 +9,7 @@
 use crate::entity::{Entity, Shape};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::nurbs::{Nurbs, OwnedNurbs, of, with_curve};
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::ops::curve_cuts::Cut;
 use crate::vec2::Vec2;
 
@@ -29,7 +29,7 @@ pub fn cuts(c: &Nurbs, boundaries: &[Edge]) -> Vec<f64> {
                 for _ in 0..40 {
                     let on = c.point(c.closest(q));
                     let next = closest_on_edge(b, on).p;
-                    let moved = js_hypot(next.x - q.x, next.y - q.y);
+                    let moved = hypot(next.x - q.x, next.y - q.y);
                     q = next;
                     if moved <= 1e-13 {
                         break;
@@ -52,7 +52,7 @@ pub fn cuts(c: &Nurbs, boundaries: &[Edge]) -> Vec<f64> {
 fn ends_meet(c: &Nurbs) -> bool {
     let (lo, hi) = c.domain();
     let (a, b) = (c.point(lo), c.point(hi));
-    js_hypot(a.x - b.x, a.y - b.y) <= 1e-9 * (1.0 + js_hypot(a.x, a.y))
+    hypot(a.x - b.x, a.y - b.y) <= 1e-9 * (1.0 + hypot(a.x, a.y))
 }
 
 fn piece(like: &Entity, c: OwnedNurbs, closed: bool) -> Entity {
@@ -297,7 +297,7 @@ mod tests {
         for i in 0..=10 {
             let q = c.point(lo + (hi - lo) * i as f64 / 10.0);
             let on = whole.point(whole.closest(q));
-            assert!(js_hypot(on.x - q.x, on.y - q.y) < 1e-10);
+            assert!(hypot(on.x - q.x, on.y - q.y) < 1e-10);
         }
     }
 

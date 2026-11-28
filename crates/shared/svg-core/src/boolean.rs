@@ -567,19 +567,18 @@ impl Builder {
 
     pub fn line_to(&mut self, p: Pt) {
         let Some(l) = self.nodes.last() else { return };
-        if kentos_geometry_core::jsmath::js_hypot(l.x - p[0], l.y - p[1]) < 1e-12 {
+        if kentos_geometry_core::jsmath::hypot(l.x - p[0], l.y - p[1]) < 1e-12 {
             return;
         }
         self.nodes.push(PathNode::at(p[0], p[1]));
     }
 
     pub fn curve_to(&mut self, c1: Pt, c2: Pt, p: Pt) {
-        use kentos_geometry_core::jsmath::js_hypot;
+        use kentos_geometry_core::jsmath::hypot;
         let Some(l) = self.nodes.last_mut() else {
             return;
         };
-        if js_hypot(l.x - p[0], l.y - p[1]) < 1e-12 && js_hypot(c1[0] - p[0], c1[1] - p[1]) < 1e-12
-        {
+        if hypot(l.x - p[0], l.y - p[1]) < 1e-12 && hypot(c1[0] - p[0], c1[1] - p[1]) < 1e-12 {
             return;
         }
         l.out = Some([c1[0], c1[1]]);
@@ -604,7 +603,7 @@ impl Builder {
         let n = self.nodes.len();
         if n > 1 {
             let (a, b) = (&self.nodes[0], &self.nodes[n - 1]);
-            if kentos_geometry_core::jsmath::js_hypot(a.x - b.x, a.y - b.y) < 1e-9 {
+            if kentos_geometry_core::jsmath::hypot(a.x - b.x, a.y - b.y) < 1e-9 {
                 let b_in = b.in_;
                 self.nodes.pop();
                 self.nodes[0].in_ = b_in;

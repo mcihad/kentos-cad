@@ -14,7 +14,7 @@ use crate::geom::ellipse::{ellipse_area, inside_ellipse, is_full_ellipse, tessel
 use crate::geom::intersect::{Edge, closest_on_edge, seg_seg};
 use crate::geom::leader::note_place;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
-use crate::jsmath::{PI, js_cmp, js_hypot, js_max, js_min};
+use crate::jsmath::{PI, hypot, js_cmp, js_max, js_min};
 use crate::ops::edges::entity_edges;
 use crate::text::Font;
 use crate::vec2::Vec2;
@@ -223,7 +223,7 @@ impl Store {
                 Shape::Polygon { .. } if inside_polygon(e, p) => {
                     Some(entity_area(e).unwrap_or(0.0))
                 }
-                Shape::Circle { c, r } if js_hypot(p.x - c.x, p.y - c.y) < *r => Some(PI * r * r),
+                Shape::Circle { c, r } if hypot(p.x - c.x, p.y - c.y) < *r => Some(PI * r * r),
                 Shape::Ellipse {
                     c,
                     major,
@@ -429,7 +429,7 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
     match e {
         // An insert is clicked at its insertion point until its block is expanded (docs/adr/0144).
         Shape::Point { p: q, .. } | Shape::Insert { p: q, .. } => {
-            return js_hypot(p.x - q.x, p.y - q.y);
+            return hypot(p.x - q.x, p.y - q.y);
         }
         Shape::Text { p: at, .. } => {
             // Anywhere on the text body counts as a hit, where its alignment puts it (docs/adr/0145).
@@ -439,7 +439,7 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
             if point_in_polygon(p, &b) {
                 return 0.0;
             }
-            let mut d = js_hypot(p.x - at.x, p.y - at.y);
+            let mut d = hypot(p.x - at.x, p.y - at.y);
             for i in 0..4 {
                 let side = Edge::Seg {
                     a: b[i],
@@ -494,7 +494,7 @@ pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
         && let Some(l) = dimension_geom(e).and_then(|g| layout_dimension(&g))
     {
         // The value text is part of the dimension: clicking it selects the dimension.
-        d = js_max(0.0, js_hypot(p.x - l.text_at.x, p.y - l.text_at.y) - height);
+        d = js_max(0.0, hypot(p.x - l.text_at.x, p.y - l.text_at.y) - height);
     }
     for ed in entity_edges(e) {
         d = js_min(d, closest_on_edge(&ed, p).d);

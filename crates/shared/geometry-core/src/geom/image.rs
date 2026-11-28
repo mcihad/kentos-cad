@@ -8,7 +8,7 @@
 //! picture's own fraction up the frame is one less the frame's.
 
 use crate::entity::Shape;
-use crate::jsmath::{atan2, cos, js_hypot, sin};
+use crate::jsmath::{atan2, cos, hypot, sin};
 use crate::vec2::Vec2;
 
 /// A picture's frame: its lower left corner and its two sides.
@@ -100,8 +100,8 @@ impl Frame {
     /// Its width, height and turn (radians, counter-clockwise).
     pub fn size_and_turn(&self) -> (f64, f64, f64) {
         (
-            js_hypot(self.u.x, self.u.y),
-            js_hypot(self.v.x, self.v.y),
+            hypot(self.u.x, self.u.y),
+            hypot(self.v.x, self.v.y),
             atan2(self.u.y, self.u.x),
         )
     }

@@ -9,7 +9,7 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape};
 use crate::geom::bulge::{bulge_at, clean_bulge_path, segment_tangent};
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -59,7 +59,7 @@ fn path_of(e: &Shape) -> Option<(Vec<Vec2>, Vec<f64>)> {
 
 /// A unit direction, none for a segment of no length.
 fn unit(v: Vec2, a: Vec2, b: Vec2) -> Option<Vec2> {
-    (js_hypot(b.x - a.x, b.y - a.y) > SAME).then_some(v)
+    (hypot(b.x - a.x, b.y - a.y) > SAME).then_some(v)
 }
 
 /// The ends of a line or an open polyline and the directions out of them;

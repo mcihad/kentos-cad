@@ -7,7 +7,7 @@ use super::concave::concave_hull;
 use super::points::outline_points;
 use super::voronoi::{Cell, Frame, delaunay_triangles, frame_of, normalised, voronoi};
 use crate::entity::Shape;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::predicates::orient2d;
 use crate::vec2::Vec2;
 
@@ -69,13 +69,13 @@ fn brute_cell(pts: &[Vec2], i: usize, f: Frame) -> Vec<Vec2> {
     for p in ring {
         if out
             .last()
-            .is_none_or(|l| js_hypot(l.x - p.x, l.y - p.y) > 1e-9)
+            .is_none_or(|l| hypot(l.x - p.x, l.y - p.y) > 1e-9)
         {
             out.push(p);
         }
     }
     while out.len() > 1
-        && js_hypot(
+        && hypot(
             out[0].x - out[out.len() - 1].x,
             out[0].y - out[out.len() - 1].y,
         ) <= 1e-9
@@ -89,7 +89,7 @@ fn same_ring(a: &[Vec2], b: &[Vec2], tol: f64) -> bool {
     a.len() == b.len()
         && a.iter()
             .zip(b)
-            .all(|(p, q)| js_hypot(p.x - q.x, p.y - q.y) <= tol)
+            .all(|(p, q)| hypot(p.x - q.x, p.y - q.y) <= tol)
 }
 
 #[test]
@@ -242,7 +242,7 @@ fn brute_box(h: &[Vec2]) -> f64 {
     let mut best = f64::INFINITY;
     for i in 0..n {
         let (a, b) = (h[i], h[(i + 1) % n]);
-        let l = js_hypot(b.x - a.x, b.y - a.y);
+        let l = hypot(b.x - a.x, b.y - a.y);
         let u = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
         let (mut s0, mut s1, mut t1) = (f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
         for p in h {
@@ -312,14 +312,14 @@ fn the_rotated_box_is_the_least_of_every_edge() {
 fn brute_circle(pts: &[Vec2]) -> (Vec2, f64) {
     let holds = |c: Vec2, r: f64| {
         pts.iter()
-            .all(|p| js_hypot(p.x - c.x, p.y - c.y) <= r * (1.0 + 1e-9) + 1e-9)
+            .all(|p| hypot(p.x - c.x, p.y - c.y) <= r * (1.0 + 1e-9) + 1e-9)
     };
     let mut best = (Vec2::default(), f64::INFINITY);
     let n = pts.len();
     for i in 0..n {
         for j in i + 1..n {
             let c = Vec2::new((pts[i].x + pts[j].x) / 2.0, (pts[i].y + pts[j].y) / 2.0);
-            let r = js_hypot(pts[i].x - c.x, pts[i].y - c.y);
+            let r = hypot(pts[i].x - c.x, pts[i].y - c.y);
             if r < best.1 && holds(c, r) {
                 best = (c, r);
             }
@@ -333,7 +333,7 @@ fn brute_circle(pts: &[Vec2]) -> (Vec2, f64) {
                 } else {
                     super::voronoi::centre(pts[i], pts[k], pts[j])
                 };
-                let r = js_hypot(pts[i].x - c.x, pts[i].y - c.y);
+                let r = hypot(pts[i].x - c.x, pts[i].y - c.y);
                 if r < best.1 && holds(c, r) {
                     best = (c, r);
                 }
@@ -350,7 +350,7 @@ fn the_circle_is_the_least_that_holds_them() {
         let (c, r) = min_circle(&pts).unwrap();
         let (bc, br) = brute_circle(&pts);
         assert!(
-            (r - br).abs() <= 1e-8 && js_hypot(c.x - bc.x, c.y - bc.y) <= 1e-7,
+            (r - br).abs() <= 1e-8 && hypot(c.x - bc.x, c.y - bc.y) <= 1e-7,
             "{seed}: {c:?} {r} / {bc:?} {br}"
         );
     }
@@ -374,9 +374,7 @@ fn a_circle_bounds_itself() {
     let Some(Bound::Circle { c: centre, r }) = bound(&pts, Kind::Circle) else {
         panic!()
     };
-    assert!(
-        (r - 12.5).abs() < 1e-9 && js_hypot(centre.x - 487_100.0, centre.y - 4_420_050.0) < 1e-9
-    );
+    assert!((r - 12.5).abs() < 1e-9 && hypot(centre.x - 487_100.0, centre.y - 4_420_050.0) < 1e-9);
 }
 
 #[test]

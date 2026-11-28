@@ -5,7 +5,7 @@
 use std::f64::consts::PI;
 
 use super::voronoi::{centre, normalised};
-use crate::jsmath::{atan2, js_hypot, js_max, js_min};
+use crate::jsmath::{atan2, hypot, js_max, js_min};
 use crate::predicates::orient2d;
 use crate::vec2::Vec2;
 
@@ -157,7 +157,7 @@ pub fn min_area_box(hull: &[Vec2]) -> Option<Bound> {
     let unit = |i: usize| {
         let (a, b) = (p[i], p[(i + 1) % n]);
         let (dx, dy) = (b.x - a.x, b.y - a.y);
-        let l = js_hypot(dx, dy);
+        let l = hypot(dx, dy);
         Vec2::new(dx / l, dy / l)
     };
     // The extremes for the first edge by a scan, then each moved forward with the edge.
@@ -249,17 +249,14 @@ struct Disc {
 
 fn holds(d: &Disc, p: Vec2) -> bool {
     // A hair of slack for the rounding of the circle's own centre.
-    js_hypot(p.x - d.c.x, p.y - d.c.y) <= d.r * (1.0 + 1e-12)
+    hypot(p.x - d.c.x, p.y - d.c.y) <= d.r * (1.0 + 1e-12)
 }
 
 fn two(a: Vec2, b: Vec2) -> Disc {
     let c = Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
     Disc {
         c,
-        r: js_max(
-            js_hypot(a.x - c.x, a.y - c.y),
-            js_hypot(b.x - c.x, b.y - c.y),
-        ),
+        r: js_max(hypot(a.x - c.x, a.y - c.y), hypot(b.x - c.x, b.y - c.y)),
     }
 }
 
@@ -274,11 +271,8 @@ fn three(a: Vec2, b: Vec2, c: Vec2) -> Option<Disc> {
         centre(a, c, b)
     };
     let r = js_max(
-        js_hypot(a.x - o.x, a.y - o.y),
-        js_max(
-            js_hypot(b.x - o.x, b.y - o.y),
-            js_hypot(c.x - o.x, c.y - o.y),
-        ),
+        hypot(a.x - o.x, a.y - o.y),
+        js_max(hypot(b.x - o.x, b.y - o.y), hypot(c.x - o.x, c.y - o.y)),
     );
     (o.x.is_finite() && o.y.is_finite()).then_some(Disc { c: o, r })
 }

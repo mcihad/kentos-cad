@@ -32,7 +32,7 @@ use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::entity::{Shape, entity_area};
 use kentos_geometry_core::geom::bulge::{bulge_arc, bulge_ring_area};
 use kentos_geometry_core::geom::table::{PAD, table_geom};
-use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::ops::table::one_line;
 use kentos_geometry_core::text::width_em_in;
 use kentos_geometry_core::vec2::Vec2;
@@ -85,7 +85,7 @@ impl Places {
             for dy in -1..=1 {
                 for &i in self.cells.get(&(cx + dx, cy + dy)).into_iter().flatten() {
                     let q = self.at[i];
-                    if js_hypot(q.x - p.x, q.y - p.y) <= TOUCH && best.is_none_or(|b| i < b) {
+                    if hypot(q.x - p.x, q.y - p.y) <= TOUCH && best.is_none_or(|b| i < b) {
                         best = Some(i);
                     }
                 }
@@ -424,7 +424,7 @@ fn work(doc: &Document, input: &ParcelsReport, checked: Checked<'_>) -> Worked {
                             name,
                             named,
                             at: kentos_commands::Vec2 { x: p.x, y: p.y },
-                            length: js_hypot(q.x - p.x, q.y - p.y),
+                            length: hypot(q.x - p.x, q.y - p.y),
                             radius: arc.map(|a| a.r),
                             arc: arc.map(|a| a.r * a.sweep.abs()),
                         }

@@ -6,7 +6,7 @@
 
 use super::{DimensionGeom, DimensionLayout, add, lift, text_along};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, atan2, cos, js_hypot, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, sin};
 use crate::vec2::Vec2;
 
 /// The cross's arms reach h/2 from the centre; the axis lines start h/4 past them.
@@ -38,7 +38,7 @@ fn neg(v: Vec2) -> Vec2 {
 /// dimension's lines, the axis lines its extension lines (the extension line type: a centre line's dash-dot).
 pub(super) fn center_mark(d: &DimensionGeom) -> Option<DimensionLayout> {
     let (a, b, h) = (d.a, d.b, d.height);
-    let r = js_hypot(b.x - a.x, b.y - a.y);
+    let r = hypot(b.x - a.x, b.y - a.y);
     if r < 1e-9 {
         return None;
     }
@@ -79,7 +79,7 @@ pub(super) fn center_mark(d: &DimensionGeom) -> Option<DimensionLayout> {
 /// The axis from `a` to `b`, `offset` past each end: one extension line.
 pub(super) fn center_line(d: &DimensionGeom) -> Option<DimensionLayout> {
     let (a, b) = (d.a, d.b);
-    let l = js_hypot(b.x - a.x, b.y - a.y);
+    let l = hypot(b.x - a.x, b.y - a.y);
     if l < 1e-9 {
         return None;
     }
@@ -130,7 +130,7 @@ pub(super) fn elevation(d: &DimensionGeom) -> Option<DimensionLayout> {
     } else {
         u
     };
-    let at_point = js_hypot(away.x, away.y) < 1e-9;
+    let at_point = hypot(away.x, away.y) < 1e-9;
     let start = if at_point {
         add(top, toward, side / 2.0)
     } else {

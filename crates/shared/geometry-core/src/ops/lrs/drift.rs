@@ -4,12 +4,12 @@
 //! arc bent away are all found.
 
 use super::{Route, RoutePart, Walk};
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{hypot, js_max};
 use crate::vec2::Vec2;
 
 /// A point event's drift (m).
 pub fn point_drift(now: Vec2, placed: Vec2) -> f64 {
-    js_hypot(now.x - placed.x, now.y - placed.y)
+    hypot(now.x - placed.x, now.y - placed.y)
 }
 
 /// The places of a path the drift is measured at: its vertices, then each arc edge's midpoint.
@@ -27,7 +27,7 @@ fn probes(parts: &[RoutePart]) -> Vec<Vec2> {
             }
             let (a, c) = (w[0], w[1]);
             let (dx, dy) = (c.x - a.x, c.y - a.y);
-            let len = js_hypot(dx, dy);
+            let len = hypot(dx, dy);
             if len == 0.0 {
                 continue;
             }

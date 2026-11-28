@@ -15,7 +15,7 @@ use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::block::{Piece, PieceStroke};
 use crate::display::fixed;
 use crate::entity::{HatchPattern, Shape};
-use crate::jsmath::{PI, atan, atan2, cos, js_hypot, js_max, js_min, js_round, sin};
+use crate::jsmath::{PI, atan, atan2, cos, hypot, js_max, js_min, js_round, sin};
 use crate::text::TextAlign;
 use crate::vec2::Vec2;
 
@@ -625,7 +625,7 @@ fn arc_polyline(a: Vec2, b: Vec2, bulge: f64) -> Shape {
 }
 
 fn unit(v: Vec2) -> Vec2 {
-    let l = js_hypot(v.x, v.y);
+    let l = hypot(v.x, v.y);
     if l == 0.0 {
         v
     } else {
@@ -686,7 +686,7 @@ pub fn grid_end_segments(pts: &[Vec2], bulges: Option<&[f64]>, l: f64) -> Option
             ])
         }
         None => {
-            let length = js_hypot(b.x - a.x, b.y - a.y);
+            let length = hypot(b.x - a.x, b.y - a.y);
             if !(length > 2.0 * l) {
                 return None;
             }
@@ -1095,7 +1095,7 @@ impl Walk {
     pub fn of(pts: &[Vec2]) -> Walk {
         let mut at = vec![0.0];
         for w in pts.windows(2) {
-            let l = js_hypot(w[1].x - w[0].x, w[1].y - w[0].y);
+            let l = hypot(w[1].x - w[0].x, w[1].y - w[0].y);
             at.push(at[at.len() - 1] + l);
         }
         Walk {
@@ -1563,16 +1563,16 @@ fn band_side(pts: &[Vec2], half: f64, on_left: bool) -> Vec<Vec2> {
 fn arc_on(line: &[Vec2], j: usize, p: Vec2) -> f64 {
     let before: f64 = line[..=j]
         .windows(2)
-        .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+        .map(|w| hypot(w[1].x - w[0].x, w[1].y - w[0].y))
         .sum();
-    before + js_hypot(p.x - line[j].x, p.y - line[j].y)
+    before + hypot(p.x - line[j].x, p.y - line[j].y)
 }
 
 /// The point at arc length `u` along `line` (its ends past them).
 fn point_on(line: &[Vec2], u: f64) -> Vec2 {
     let mut left_over = u;
     for w in line.windows(2) {
-        let l = js_hypot(w[1].x - w[0].x, w[1].y - w[0].y);
+        let l = hypot(w[1].x - w[0].x, w[1].y - w[0].y);
         if left_over <= l || l <= EPS {
             let t = if l <= EPS { 0.0 } else { left_over / l };
             return Vec2::new(
@@ -1628,7 +1628,7 @@ pub fn riser_ends(walk: &Walk, spec: &StairSpec, s: f64) -> (Vec2, Vec2) {
         return square;
     };
     let v = Vec2::new(p.x - q.x, p.y - q.y);
-    let l = js_hypot(v.x, v.y);
+    let l = hypot(v.x, v.y);
     if l <= EPS {
         return square;
     }
@@ -1662,7 +1662,7 @@ fn arc_along(line: &[Vec2], p: Vec2) -> f64 {
     let mut at = 0.0;
     for w in line.windows(2) {
         let (a, b) = (w[0], w[1]);
-        let l = js_hypot(b.x - a.x, b.y - a.y);
+        let l = hypot(b.x - a.x, b.y - a.y);
         if l > EPS {
             let t = js_max(
                 0.0,
@@ -1672,7 +1672,7 @@ fn arc_along(line: &[Vec2], p: Vec2) -> f64 {
                 ),
             );
             let q = Vec2::new(a.x + (b.x - a.x) * t / l, a.y + (b.y - a.y) * t / l);
-            let d = js_hypot(p.x - q.x, p.y - q.y);
+            let d = hypot(p.x - q.x, p.y - q.y);
             if d < best.0 {
                 best = (d, at + t);
             }
@@ -1694,7 +1694,7 @@ pub fn tread_ring(walk: &Walk, spec: &StairSpec, a: f64, b: f64) -> Vec<Vec2> {
         let mut at = 0.0;
         let mut out = Vec::new();
         for (k, w) in line.windows(2).enumerate() {
-            at += js_hypot(w[1].x - w[0].x, w[1].y - w[0].y);
+            at += hypot(w[1].x - w[0].x, w[1].y - w[0].y);
             if k + 2 < line.len() && at > u0 + 1e-9 && at < u1 - 1e-9 {
                 out.push(w[1]);
             }
@@ -2045,7 +2045,7 @@ pub fn stair_measure(pts: &[Vec2], spec: &StairSpec) -> StairMeasure {
                 .iter()
                 .map(|(line, _)| {
                     line.windows(2)
-                        .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+                        .map(|w| hypot(w[1].x - w[0].x, w[1].y - w[0].y))
                         .sum::<f64>()
                 })
                 .sum();
@@ -2263,7 +2263,7 @@ pub fn ramp_measure(pts: &[Vec2], spec: &RampSpec) -> RampMeasure {
         .iter()
         .map(|(line, _)| {
             line.windows(2)
-                .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+                .map(|w| hypot(w[1].x - w[0].x, w[1].y - w[0].y))
                 .sum::<f64>()
         })
         .sum();
@@ -2681,7 +2681,7 @@ pub fn grid_cross(
             circle_circle(c1, r1, c2, r2)
         }
     };
-    let d = |p: &Vec2| js_hypot(p.x - near.x, p.y - near.y);
+    let d = |p: &Vec2| hypot(p.x - near.x, p.y - near.y);
     found
         .into_iter()
         .filter(|p| p.x.is_finite() && p.y.is_finite())

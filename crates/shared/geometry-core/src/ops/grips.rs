@@ -12,7 +12,7 @@ use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_at, bulge_through, is_arc_bulge, segment_mid};
 use crate::geom::dimension::{dimension_offset_at, is_new_kind, layout_dimension};
 use crate::geom::ellipse::{closest_param, ellipse_from_center, ellipse_point, is_full_ellipse};
-use crate::jsmath::{PI, js_hypot};
+use crate::jsmath::{PI, hypot};
 use crate::op;
 use crate::ops::transform::transform_entity;
 use crate::vec2::Vec2;
@@ -43,16 +43,16 @@ pub fn ellipse_axis_after_grip(shape: &Shape, index: u8, at: Vec2) -> Option<u8>
             } else {
                 Vec2::new(2. * c.x - at.x, 2. * c.y - at.y)
             },
-            js_hypot(major.x, major.y) * ratio,
+            hypot(major.x, major.y) * ratio,
         )
     } else {
         (
             Vec2::new(c.x + major.x, c.y + major.y),
-            js_hypot(at.x - c.x, at.y - c.y),
+            hypot(at.x - c.x, at.y - c.y),
         )
     };
     ellipse_from_center(*c, end, other)?;
-    Some(if other.abs() > js_hypot(end.x - c.x, end.y - c.y) {
+    Some(if other.abs() > hypot(end.x - c.x, end.y - c.y) {
         [3, 0, 1, 2][index as usize]
     } else {
         index
@@ -485,8 +485,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                 frame.p = p;
             } else {
                 let c = corners.get(index)?;
-                let was = crate::jsmath::js_hypot(c.x - f.p.x, c.y - f.p.y);
-                let now = crate::jsmath::js_hypot(p.x - f.p.x, p.y - f.p.y);
+                let was = crate::jsmath::hypot(c.x - f.p.x, c.y - f.p.y);
+                let now = crate::jsmath::hypot(p.x - f.p.x, p.y - f.p.y);
                 let k = now / was;
                 if !(k > 0.0 && k.is_finite()) {
                     return None;
@@ -645,7 +645,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             if index == 0 {
                 Shape::Circle { c: p, r: *r }
             } else {
-                let r = js_hypot(p.x - c.x, p.y - c.y);
+                let r = hypot(p.x - c.x, p.y - c.y);
                 if !(r > 1e-9) {
                     return None;
                 }
@@ -707,9 +707,9 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                     }
                 }));
             }
-            let a = js_hypot(major.x, major.y);
+            let a = hypot(major.x, major.y);
             let b = a * ratio;
-            let d = js_hypot(p.x - c.x, p.y - c.y);
+            let d = hypot(p.x - c.x, p.y - c.y);
             // Axis ends: 1/3 re-aim and resize the major axis, 2/4 resize the minor one.
             let (axis_end, other_half) = if index == 1 || index == 3 {
                 (
@@ -727,7 +727,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             // The constructor canonicalises the longer radius onto the major axis.
             // Its +90° basis change needs a -90° parameter change, otherwise an
             // existing Start/End bond jumps to a different point on this closed curve.
-            let shift = if other_half.abs() > js_hypot(axis_end.x - c.x, axis_end.y - c.y) {
+            let shift = if other_half.abs() > hypot(axis_end.x - c.x, axis_end.y - c.y) {
                 PI / 2.0
             } else {
                 0.0
@@ -745,7 +745,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             let (np, nd) = if index == 0 {
                 (p, *dir)
             } else {
-                let l = js_hypot(p.x - base.x, p.y - base.y);
+                let l = hypot(p.x - base.x, p.y - base.y);
                 if !(l > 1e-9) {
                     return None;
                 }
@@ -844,7 +844,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             let grip = dimension_grips(&e.shape).get(index)?.1;
             // An arc length's ends stay on its arc, a jogged radius's point on its circle (docs/adr/0147 §4).
             let onto = |centre: Vec2, r: f64| {
-                let l = js_hypot(p.x - centre.x, p.y - centre.y);
+                let l = hypot(p.x - centre.x, p.y - centre.y);
                 (l > 1e-9).then(|| {
                     Vec2::new(
                         centre.x + ((p.x - centre.x) / l) * r,
@@ -855,7 +855,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             let moved = match (style.as_deref(), grip) {
                 (Some("arcLength"), DimensionGrip::A | DimensionGrip::B) => {
                     let centre = (*c)?;
-                    let q = onto(centre, js_hypot(a.x - centre.x, a.y - centre.y))?;
+                    let q = onto(centre, hypot(a.x - centre.x, a.y - centre.y))?;
                     if grip == DimensionGrip::A {
                         d(q, *b, *offset, *c)
                     } else {
@@ -863,16 +863,16 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
                     }
                 }
                 (Some("jogged"), DimensionGrip::B) => {
-                    d(*a, onto(*a, js_hypot(b.x - a.x, b.y - a.y))?, *offset, *c)
+                    d(*a, onto(*a, hypot(b.x - a.x, b.y - a.y))?, *offset, *c)
                 }
                 (_, DimensionGrip::A) => {
-                    if !(js_hypot(b.x - p.x, b.y - p.y) > 1e-9) {
+                    if !(hypot(b.x - p.x, b.y - p.y) > 1e-9) {
                         return None;
                     }
                     d(p, *b, *offset, *c)
                 }
                 (_, DimensionGrip::B) => {
-                    if !(js_hypot(p.x - a.x, p.y - a.y) > 1e-9) {
+                    if !(hypot(p.x - a.x, p.y - a.y) > 1e-9) {
                         return None;
                     }
                     d(*a, p, *offset, *c)

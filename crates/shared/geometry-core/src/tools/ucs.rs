@@ -7,7 +7,7 @@
 use crate::entity::Shape;
 use crate::geom::bulge::bulge_path_edges;
 use crate::geom::intersect::closest_on_edge;
-use crate::jsmath::{PI, atan, atan2, cos, js_hypot, sin};
+use crate::jsmath::{PI, atan, atan2, cos, hypot, sin};
 use crate::tools::point_input::{Angles, Constrained, Tracking, constrain_cursor};
 use crate::vec2::Vec2;
 
@@ -85,7 +85,7 @@ impl Frame {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(b.x - a.x, b.y - a.y)
+    hypot(b.x - a.x, b.y - a.y)
 }
 
 /// A path of a shape: its points, bulges and whether it is closed.

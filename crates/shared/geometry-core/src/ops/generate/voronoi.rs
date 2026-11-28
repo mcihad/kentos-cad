@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use std::f64::consts::FRAC_PI_4;
 
 use crate::geom::delaunay::{Delaunay, MOST_POINTS, NONE, TOO_FEW, next, prev, triangulate};
-use crate::jsmath::{atan2, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, hypot, js_max, js_min, sin};
 use crate::predicates::{incircle, orient2d};
 use crate::vec2::Vec2;
 
@@ -111,7 +111,7 @@ pub fn centre(a: Vec2, b: Vec2, c: Vec2) -> Vec2 {
 
 /// The unit vector to the right of `u` (outward of a counter-clockwise hull's edge).
 fn right(u: Vec2) -> Vec2 {
-    let l = js_hypot(u.x, u.y);
+    let l = hypot(u.x, u.y);
     Vec2::new(u.y / l, -u.x / l)
 }
 
@@ -248,8 +248,8 @@ fn cells_of(pts: &[Vec2], d: &Delaunay, f: Frame) -> Vec<Option<Vec<Vec2>>> {
     let cc = centres(pts, d);
     // One far distance for every ray: well past the frame from any centre and any site.
     let mid = Vec2::new((f.min.x + f.max.x) / 2.0, (f.min.y + f.max.y) / 2.0);
-    let reach = |p: Vec2| js_hypot(p.x - mid.x, p.y - mid.y);
-    let mut span = js_hypot(f.max.x - f.min.x, f.max.y - f.min.y);
+    let reach = |p: Vec2| hypot(p.x - mid.x, p.y - mid.y);
+    let mut span = hypot(f.max.x - f.min.x, f.max.y - f.min.y);
     for &c in cc.iter().chain(pts) {
         let r = reach(c);
         if r.is_finite() {

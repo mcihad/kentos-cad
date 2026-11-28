@@ -16,7 +16,7 @@ pub mod traverse;
 pub mod trend;
 
 use crate::api::Op;
-use crate::jsmath::{PI, TAU, atan2, js_hypot};
+use crate::jsmath::{PI, TAU, atan2, hypot};
 use crate::vec2::Vec2;
 
 /// The project's angle unit: `"grad"` (400 to a turn) or `"deg"` (360).
@@ -72,7 +72,7 @@ pub fn bearing(a: Vec2, b: Vec2) -> f64 {
 
 /// Horizontal distance from `a` to `b`.
 pub fn distance(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(b.x - a.x, b.y - a.y)
+    hypot(b.x - a.x, b.y - a.y)
 }
 
 /// The point at `d` from `a` along the bearing `t` (radians): the first fundamental task.

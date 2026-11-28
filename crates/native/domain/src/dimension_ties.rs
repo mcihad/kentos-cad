@@ -33,7 +33,7 @@ use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::Entity as CoreEntity;
 use kentos_geometry_core::geom::intersect::line_line;
-use kentos_geometry_core::jsmath::{atan2, cos, js_hypot, sin};
+use kentos_geometry_core::jsmath::{atan2, cos, hypot, sin};
 use kentos_geometry_core::ops::subref::{
     Followed, Place, Reason, curve_centre, edge_line, follow, follow_path, piece, place_near, point,
 };
@@ -516,7 +516,7 @@ fn wire(p: kentos_geometry_core::Vec2) -> Vec2 {
 /// The unit direction from `a` to `b`; none when they meet.
 fn unit(a: kentos_geometry_core::Vec2, b: kentos_geometry_core::Vec2) -> Option<(f64, f64)> {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
-    let l = js_hypot(dx, dy);
+    let l = hypot(dx, dy);
     (l > 0.0).then(|| (dx / l, dy / l))
 }
 
@@ -599,7 +599,7 @@ impl Document {
                             let turn = |p: Vec2, o: Vec2| atan2(p.y - o.y, p.x - o.x);
                             let off = turn(was.b, was.a) - turn(wire(qw), was.a);
                             let at = atan2(q.y - c.y, q.x - c.x) + off;
-                            let r = js_hypot(q.x - c.x, q.y - c.y);
+                            let r = hypot(q.x - c.x, q.y - c.y);
                             Vec2 {
                                 x: c.x + r * cos(at),
                                 y: c.y + r * sin(at),
@@ -647,7 +647,7 @@ impl Document {
                     |name: &str, now: (kentos_geometry_core::Vec2, kentos_geometry_core::Vec2)| {
                         let p = point_of(was, name)?;
                         let (vx, vy) = (p.x - c_was.x, p.y - c_was.y);
-                        let length = js_hypot(vx, vy);
+                        let length = hypot(vx, vy);
                         let (ox, oy) = before(name).and_then(|(a, b)| unit(a, b))?;
                         let (ux, uy) = unit(now.0, now.1)?;
                         let side = if vx * ox + vy * oy < 0.0 { -1.0 } else { 1.0 };

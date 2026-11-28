@@ -10,7 +10,7 @@
 //! - **Along a segment** (an opening on its wall's face): where grids cross the segment, before and after a point on
 //!   it; one at the point counts before.
 
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{hypot, js_max};
 use crate::ops::wall_shift::{PARALLEL, TIE};
 use crate::vec2::Vec2;
 
@@ -49,7 +49,7 @@ fn along(p: Vec2, d: Vec2, t: f64) -> Vec2 {
 }
 
 fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {
-    let l = js_hypot(b.x - a.x, b.y - a.y);
+    let l = hypot(b.x - a.x, b.y - a.y);
     (l > 0.0).then(|| Vec2::new((b.x - a.x) / l, (b.y - a.y) / l))
 }
 
@@ -139,7 +139,7 @@ pub fn around(
 
 /// Where the line of `c`–`d` crosses segment `a`–`b`: the distance from `a` along it, none when parallel or off it.
 fn crossing(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<f64> {
-    let l = js_hypot(b.x - a.x, b.y - a.y);
+    let l = hypot(b.x - a.x, b.y - a.y);
     let u = unit(a, b)?;
     let v = unit(c, d)?;
     let den = cross(u, v);

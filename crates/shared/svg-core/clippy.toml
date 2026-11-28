@@ -11,7 +11,7 @@ disallowed-methods = [
   { path = "f64::acos", reason = "use jsmath::acos (kentos-num)" },
   { path = "f64::atan", reason = "use jsmath::atan (kentos-num)" },
   { path = "f64::atan2", reason = "use jsmath::atan2 (kentos-num)" },
-  { path = "f64::hypot", reason = "use jsmath::js_hypot (V8's Math.hypot)" },
+  { path = "f64::hypot", reason = "use kentos_num::hypot: the platform's is not correctly rounded" },
   { path = "f64::exp", reason = "use jsmath::exp (kentos-num)" },
   { path = "f64::ln", reason = "use jsmath::log (kentos-num)" },
   { path = "f64::log10", reason = "use kentos_num" },

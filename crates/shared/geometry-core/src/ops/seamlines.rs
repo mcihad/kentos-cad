@@ -34,7 +34,7 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{hypot, js_max};
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
 
@@ -91,7 +91,7 @@ fn cross(a: Pt, b: Pt) -> f64 {
     a[0] * b[1] - a[1] * b[0]
 }
 fn len(a: Pt) -> f64 {
-    js_hypot(a[0], a[1])
+    hypot(a[0], a[1])
 }
 fn lerp(a: Pt, b: Pt, t: f64) -> Pt {
     [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]

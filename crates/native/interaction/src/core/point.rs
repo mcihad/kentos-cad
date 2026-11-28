@@ -38,7 +38,7 @@ use kentos_commands::{
     EntityGeometry, PointCreate, PropertiesOperation,
 };
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::text::edit::increment;
 use kentos_native_application::{ExecutionContext, edit, point, set};
 
@@ -163,7 +163,7 @@ pub(crate) fn with_options(prompt: Prompt, m: &Memory) -> Prompt {
 /// order, with its name (trimmed; none when it has none): the web's `pointAt`.
 pub fn point_at(doc: &Document, p: Vec2) -> Option<(Slot, Option<String>)> {
     doc.entities().find_map(|e| match e {
-        Entity::Point(q) if js_hypot(q.p.x - p.x, q.p.y - p.y) <= SAME => {
+        Entity::Point(q) if hypot(q.p.x - p.x, q.p.y - p.y) <= SAME => {
             let name = q.base.label.as_deref().map(crate::js_trim);
             Some((
                 Slot(q.base.id),

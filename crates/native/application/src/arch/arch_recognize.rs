@@ -21,7 +21,7 @@ use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::geom::arc::sweep;
 use kentos_geometry_core::geom::bulge::bulge_arc;
-use kentos_geometry_core::jsmath::{PI, atan2, cos, js_hypot, js_round, sin};
+use kentos_geometry_core::jsmath::{PI, atan2, cos, hypot, js_round, sin};
 use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::ops::plan_recognition::{self as read, Role};
 
@@ -395,10 +395,10 @@ fn column_of(outline: Result<(V, f64), Vec<V>>, arch: &ArchInfo) -> Option<Colum
         Err(pts) => pts,
     };
     // A vertex drawn twice is one; a closing vertex on the first is the first.
-    pts.dedup_by(|p, q| js_hypot(p.x - q.x, p.y - q.y) <= 1e-9);
+    pts.dedup_by(|p, q| hypot(p.x - q.x, p.y - q.y) <= 1e-9);
     if pts.len() > 1
         && let (Some(first), Some(last)) = (pts.first(), pts.last())
-        && js_hypot(first.x - last.x, first.y - last.y) <= 1e-9
+        && hypot(first.x - last.x, first.y - last.y) <= 1e-9
     {
         pts.pop();
     }
@@ -409,13 +409,13 @@ fn column_of(outline: Result<(V, f64), Vec<V>>, arch: &ArchInfo) -> Option<Colum
             let (a, b, c) = (pts[(i + n - 1) % n], pts[i], pts[(i + 1) % n]);
             let (u, w) = ((b.x - a.x, b.y - a.y), (c.x - b.x, c.y - b.y));
             let turn = u.0 * w.1 - u.1 * w.0;
-            turn.abs() > 1e-9 * js_hypot(u.0, u.1) * js_hypot(w.0, w.1)
+            turn.abs() > 1e-9 * hypot(u.0, u.1) * hypot(w.0, w.1)
         })
         .map(|i| pts[i])
         .collect();
     let side = |p: V, q: V| (q.x - p.x, q.y - p.y);
     let square = |u: (f64, f64), w: (f64, f64)| {
-        (u.0 * w.0 + u.1 * w.1).abs() <= 1e-6 * js_hypot(u.0, u.1) * js_hypot(w.0, w.1)
+        (u.0 * w.0 + u.1 * w.1).abs() <= 1e-6 * hypot(u.0, u.1) * hypot(w.0, w.1)
     };
     if corners.len() == 6 {
         return l_column(&corners, &made);
@@ -438,10 +438,7 @@ fn column_of(outline: Result<(V, f64), Vec<V>>, arch: &ArchInfo) -> Option<Colum
         t
     };
     let (t0, t1) = (turn(sides[0]), turn(sides[1]));
-    let (l0, l1) = (
-        js_hypot(sides[0].0, sides[0].1),
-        js_hypot(sides[1].0, sides[1].1),
-    );
+    let (l0, l1) = (hypot(sides[0].0, sides[0].1), hypot(sides[1].0, sides[1].1));
     let (width, depth, rotation) = if t1.abs() < t0.abs() {
         (l1, l0, t1)
     } else {
@@ -469,7 +466,7 @@ fn l_column(
         let (p, q) = (pts[i % n], pts[(i + 1) % n]);
         (q.x - p.x, q.y - p.y)
     };
-    let len = |s: (f64, f64)| js_hypot(s.0, s.1);
+    let len = |s: (f64, f64)| hypot(s.0, s.1);
     // Every corner square; one turning in (the inner corner), the others out.
     let mut inner = None;
     for i in 0..n {
@@ -511,7 +508,7 @@ fn l_column(
 fn in_column(c: &ColumnFields, p: V, tol: f64) -> bool {
     let (dx, dy) = (p.x - c.at.x, p.y - c.at.y);
     if c.shape == ColumnShape::Round {
-        return js_hypot(dx, dy) <= c.width / 2.0 + tol;
+        return hypot(dx, dy) <= c.width / 2.0 + tol;
     }
     let (cos_r, sin_r) = (cos(c.rotation), sin(c.rotation));
     let (along, across) = (dx * cos_r + dy * sin_r, -dx * sin_r + dy * cos_r);

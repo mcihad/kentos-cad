@@ -17,7 +17,7 @@
 
 use crate::geom::wall::{JoinMode, left_face};
 use crate::geom::wall_join::{INLINE_DEGREES, JOIN_TOLERANCE, WallIn};
-use crate::jsmath::{PI, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, hypot, js_max, js_min, sin};
 use crate::vec2::Vec2;
 
 /// Slack, metres.
@@ -46,7 +46,7 @@ fn along(p: Vec2, d: Vec2, t: f64) -> Vec2 {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(b.x - a.x, b.y - a.y)
+    hypot(b.x - a.x, b.y - a.y)
 }
 
 fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {

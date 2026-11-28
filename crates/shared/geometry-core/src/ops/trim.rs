@@ -13,7 +13,7 @@ use crate::geom::intersect::{
     Edge, circle_circle, full_circle, line_circle_params, on_edge_arc, point_at, ray_edge,
 };
 use crate::geometry::Bounds;
-use crate::jsmath::{TAU, acos, atan2, cos, js_hypot, js_max, js_max_all, js_min, js_min_all, sin};
+use crate::jsmath::{TAU, acos, atan2, cos, hypot, js_max, js_max_all, js_min, js_min_all, sin};
 use crate::op;
 use crate::ops::curve_cuts::{
     Cut, Geometry, construction_of, ellipse_of, extend_ellipse, trim_construction, trim_ellipse,
@@ -142,7 +142,7 @@ pub fn window_points(s: &Shape, w: &Bounds) -> Vec<Vec2> {
                         t1 = js_min(t1, r);
                     }
                 }
-                if !out && (t1 - t0) * js_hypot(d.x, d.y) > LEAST {
+                if !out && (t1 - t0) * hypot(d.x, d.y) > LEAST {
                     return [0.5, 1.0 / 3.0, 2.0 / 3.0]
                         .map(|f| {
                             let t = t0 + (t1 - t0) * f;
@@ -231,8 +231,8 @@ pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geomet
             if n < 2 {
                 return Geometry::Error("Uzatmak için en az iki köşe gerekir.".into());
             }
-            let at_end = js_hypot(pick.x - pts[n - 1].x, pick.y - pts[n - 1].y)
-                <= js_hypot(pick.x - pts[0].x, pick.y - pts[0].y);
+            let at_end = hypot(pick.x - pts[n - 1].x, pick.y - pts[n - 1].y)
+                <= hypot(pick.x - pts[0].x, pick.y - pts[0].y);
             let seg = if at_end { n - 2 } else { 0 };
             if let Some(arc) = bulge_arc(pts[seg], pts[seg + 1], bulge_at(bulges.as_deref(), seg)) {
                 // An arc end segment grows along its own circle.
@@ -275,7 +275,7 @@ pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geomet
             }
             let tip = if at_end { pts[n - 1] } else { pts[0] };
             let prev = if at_end { pts[n - 2] } else { pts[1] };
-            let len = js_hypot(tip.x - prev.x, tip.y - prev.y);
+            let len = hypot(tip.x - prev.x, tip.y - prev.y);
             if len < 1e-12 {
                 return Geometry::Error("Sıfır uzunluklu kenar uzatılamaz.".into());
             }
@@ -311,8 +311,8 @@ pub fn extend_entity(target: &Entity, pick: Vec2, boundaries: &[Edge]) -> Geomet
             }))
         }
         Shape::Arc { c, r, a0, a1 } => {
-            let to_start = js_hypot(pick.x - (c.x + cos(*a0) * r), pick.y - (c.y + sin(*a0) * r));
-            let to_end = js_hypot(pick.x - (c.x + cos(*a1) * r), pick.y - (c.y + sin(*a1) * r));
+            let to_start = hypot(pick.x - (c.x + cos(*a0) * r), pick.y - (c.y + sin(*a0) * r));
+            let to_end = hypot(pick.x - (c.x + cos(*a1) * r), pick.y - (c.y + sin(*a1) * r));
             let at_end = to_end <= to_start;
             let gap = TAU - norm_angle(a1 - a0);
             let Some(best) = arc_reach(
@@ -388,7 +388,7 @@ fn circle_hits(c: Vec2, r: f64, b: &Edge) -> Vec<Vec2> {
 /// `CONSTRUCTION_REACH` past each end, as a construction line is.
 pub fn extended_edges(s: &Shape) -> Option<Vec<Edge>> {
     let on = |a: Vec2, b: Vec2, back: bool, forth: bool| -> Edge {
-        let len = js_hypot(b.x - a.x, b.y - a.y);
+        let len = hypot(b.x - a.x, b.y - a.y);
         if len < 1e-12 {
             return Edge::Seg { a, b };
         }
@@ -447,7 +447,7 @@ pub fn fence_crossings(target: &Entity, fence: &[Vec2]) -> Vec<Vec2> {
             .collect();
         here.sort_by(|a, b| a.0.total_cmp(&b.0));
         for (_, p) in here {
-            if !out.iter().any(|q| js_hypot(q.x - p.x, q.y - p.y) <= 1e-9) {
+            if !out.iter().any(|q| hypot(q.x - p.x, q.y - p.y) <= 1e-9) {
                 out.push(p);
             }
         }

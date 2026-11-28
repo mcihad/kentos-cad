@@ -15,7 +15,7 @@ use kentos_geometry_core::{
         band,
         bulge::{BulgeArc, bulge_arc, bulge_at, bulge_of_sweep},
     },
-    jsmath::{cos, js_hypot, js_min, js_sign, sin},
+    jsmath::{cos, hypot, js_min, js_sign, sin},
 };
 
 const MAX_PIECES: usize = 20_000;
@@ -117,7 +117,7 @@ fn split(
         let a = pts[i];
         let b = pts[(i + 1) % pts.len()];
         let arc = bulge_arc(a, b, bulge_at(bulges, i));
-        let length = arc.map_or_else(|| js_hypot(b.x - a.x, b.y - a.y), |a| a.r * a.sweep.abs());
+        let length = arc.map_or_else(|| hypot(b.x - a.x, b.y - a.y), |a| a.r * a.sweep.abs());
         if !length.is_finite() {
             return Err("Geniş çizgi yolu geçersiz.".into());
         }

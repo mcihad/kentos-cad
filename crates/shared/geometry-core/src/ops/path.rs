@@ -12,7 +12,7 @@ use crate::geom::ellipse::{
     is_full_ellipse,
 };
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
-use crate::jsmath::{atan2, js_cmp, js_floor, js_hypot, js_max, js_min, js_sign, or, stable_sort};
+use crate::jsmath::{atan2, hypot, js_cmp, js_floor, js_max, js_min, js_sign, or, stable_sort};
 use crate::op;
 use crate::ops::edges::{edge_length, entity_edges};
 use crate::vec2::Vec2;
@@ -102,7 +102,7 @@ pub fn tangent_at_s(path: &Path, s: f64) -> Vec2 {
     let q = norm_s(path, s);
     match path.edges[edge_index_at(path, q)] {
         Edge::Seg { a, b } => {
-            let l = or(js_hypot(b.x - a.x, b.y - a.y), 1.0);
+            let l = or(hypot(b.x - a.x, b.y - a.y), 1.0);
             Vec2::new((b.x - a.x) / l, (b.y - a.y) / l)
         }
         Edge::Arc { c, r, sweep, .. } => {
@@ -412,7 +412,7 @@ fn ellipse_param_at(g: &EllipseGeom, path: &Path, l: f64, s: f64) -> f64 {
             ellipse_length(&EllipseGeom { t1: t, ..*g })
         };
         let d = ellipse_derivative(g, t);
-        let speed = js_hypot(d.x, d.y);
+        let speed = hypot(d.x, d.y);
         if !(speed > 0.0) {
             break;
         }

@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use crate::api::Op;
 use crate::geometry::signed_area;
-use crate::jsmath::{js_cmp, js_hypot, js_max, or, stable_sort};
+use crate::jsmath::{hypot, js_cmp, js_max, or, stable_sort};
 use crate::op;
 use crate::text::{Font, width_em};
 use crate::vec2::Vec2;
@@ -91,7 +91,7 @@ fn start_key(start: StartCorner, point: Option<Vec2>, p: Vec2, i: usize) -> f64 
         // Ties go north.
         StartCorner::Northwest => p.y - p.x + p.y * 1e-12,
         StartCorner::North => p.y - p.x * 1e-12,
-        StartCorner::Point => point.map_or(0.0, |q| -js_hypot(p.x - q.x, p.y - q.y)),
+        StartCorner::Point => point.map_or(0.0, |q| -hypot(p.x - q.x, p.y - q.y)),
         StartCorner::First => -(i as f64),
     }
 }
@@ -176,7 +176,7 @@ impl PointIndex {
                     continue;
                 };
                 for &(q, refers) in list {
-                    if js_hypot(q.x - p.x, q.y - p.y) <= self.cell {
+                    if hypot(q.x - p.x, q.y - p.y) <= self.cell {
                         return Some(refers);
                     }
                 }
@@ -201,7 +201,7 @@ fn outward(pts: &[Vec2], i: usize, closed: bool, ccw: bool) -> Vec2 {
     // Right of travel is outside a counter-clockwise ring.
     let s = if !closed || ccw { 1.0 } else { -1.0 };
     let normal = |a: Vec2, b: Vec2| {
-        let l = or(js_hypot(b.x - a.x, b.y - a.y), 1.0);
+        let l = or(hypot(b.x - a.x, b.y - a.y), 1.0);
         Vec2::new(((b.y - a.y) / l) * s, (-(b.x - a.x) / l) * s)
     };
     let prev = if i > 0 {
@@ -220,7 +220,7 @@ fn outward(pts: &[Vec2], i: usize, closed: bool, ccw: bool) -> Vec2 {
     };
     let sx = prev.map_or(0.0, |v| v.x) + next.map_or(0.0, |v| v.x);
     let sy = prev.map_or(0.0, |v| v.y) + next.map_or(0.0, |v| v.y);
-    let l = js_hypot(sx, sy);
+    let l = hypot(sx, sy);
     if l > 1e-12 {
         Vec2::new(sx / l, sy / l)
     } else {

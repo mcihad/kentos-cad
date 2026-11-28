@@ -29,7 +29,7 @@
 use kentos_commands::{CommandResult, EntitiesStretch, StretchTopology, StretchWindow, codes};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::{Bounds, dist};
-use kentos_geometry_core::jsmath::{js_hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{hypot, js_max, js_min};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, stretch};
@@ -390,7 +390,7 @@ impl Tool for Stretch {
         let Some((_, from)) = self.first.filter(|_| self.stage == Stage::SecondCorner) else {
             return;
         };
-        if js_hypot(p.screen[0] - from[0], p.screen[1] - from[1]) > DRAG_THRESHOLD {
+        if hypot(p.screen[0] - from[0], p.screen[1] - from[1]) > DRAG_THRESHOLD {
             self.close_window(p.raw, cx);
             self.refresh(cx);
         }

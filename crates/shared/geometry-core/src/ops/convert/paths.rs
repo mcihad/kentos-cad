@@ -8,7 +8,7 @@ use crate::entity::{Part, Shape, entity_area, is_multi_part};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::Edge;
-use crate::jsmath::{cos, js_hypot, sin};
+use crate::jsmath::{cos, hypot, sin};
 use crate::ops::edges::edge_length;
 use crate::ops::elevation::{Carry, Elevated, carry_elevations};
 use crate::ops::path::{path_of, sub_path};
@@ -158,7 +158,7 @@ pub fn line_area(s: &Shape, zs: Option<&Zs>, close: bool) -> Result<Elevations, 
     // A closed polyline is its ring, its last bulge the closing edge's (docs/adr/0258 §1).
     let ring = matches!(s, Shape::Polyline { closed: true, .. });
     let (f, l) = (pts[0], pts[n - 1]);
-    let meets = !ring && js_hypot(f.x - l.x, f.y - l.y) <= CLOSE_TOL;
+    let meets = !ring && hypot(f.x - l.x, f.y - l.y) <= CLOSE_TOL;
     if !ring && !meets && !close {
         return Err(NoArea::Open);
     }

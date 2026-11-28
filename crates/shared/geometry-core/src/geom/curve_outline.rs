@@ -22,7 +22,7 @@ use crate::geom::ellipse::{
 use crate::geom::intersect::Edge;
 use crate::geom::spline::catmull_rom_beziers;
 use crate::geometry::Bounds;
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::vec2::Vec2;
 
 /// How far a chord may come from the curve it stands for in a computation (m).
@@ -41,7 +41,7 @@ fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     } else {
         0.0
     };
-    js_hypot(px - dx * t, py - dy * t)
+    hypot(px - dx * t, py - dy * t)
 }
 
 /// A cubic Bézier's halves (de Casteljau at ½).
@@ -223,7 +223,7 @@ fn overlaps(a: &Bounds, b: &Bounds) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::jsmath::{js_hypot, js_max};
+    use crate::jsmath::{hypot, js_max};
 
     /// The distance from p to the segment a–b.
     fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
@@ -234,7 +234,7 @@ mod tests {
         } else {
             (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0)
         };
-        js_hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
+        hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
     }
 
     /// The farthest the curve's points `samples` come from the polyline

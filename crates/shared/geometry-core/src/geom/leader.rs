@@ -7,7 +7,7 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape, TextPlace};
 use crate::geom::arrowhead::{ArrowKind, Arrowhead, arrowhead};
-use crate::jsmath::{PI, cos, js_hypot, sin};
+use crate::jsmath::{PI, cos, hypot, sin};
 use crate::op;
 use crate::text::TextAlign;
 use crate::vec2::Vec2;
@@ -50,7 +50,7 @@ pub struct LeaderLayout {
 crate::json_struct!(out LeaderLayout { head, start, first, side, landing, note_point => "notePoint", note_align => "noteAlign" });
 
 fn unit(v: Vec2) -> Option<Vec2> {
-    let l = js_hypot(v.x, v.y);
+    let l = hypot(v.x, v.y);
     (l > 0.0).then(|| Vec2::new(v.x / l, v.y / l))
 }
 
@@ -72,7 +72,7 @@ pub fn layout(
     // The first segment that has a length points the arrowhead; with none, the note's direction.
     let lead = pts[1..].iter().enumerate().find_map(|(i, q)| {
         let v = Vec2::new(q.x - tip.x, q.y - tip.y);
-        unit(v).map(|d| (i + 1, d, js_hypot(v.x, v.y)))
+        unit(v).map(|d| (i + 1, d, hypot(v.x, v.y)))
     });
     let d = lead.map_or(u, |(_, d, _)| d);
     let h = height;

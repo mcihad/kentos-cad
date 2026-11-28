@@ -2,7 +2,7 @@
 //! operation for operation (docs/adr/0008).
 
 use crate::api::Op;
-use crate::jsmath::{PI, atan2, js_hypot, js_max, js_min};
+use crate::jsmath::{PI, atan2, hypot, js_max, js_min};
 use crate::op;
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
@@ -19,7 +19,7 @@ pub struct Bounds {
 crate::json_struct!(Bounds { min_x => "minX", min_y => "minY", max_x => "maxX", max_y => "maxY" });
 
 pub fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(b.x - a.x, b.y - a.y)
+    hypot(b.x - a.x, b.y - a.y)
 }
 
 pub fn empty_bounds() -> Bounds {
@@ -199,7 +199,7 @@ pub fn dist_to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
             js_min(1.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
         )
     };
-    js_hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
+    hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
 }
 
 /// Angle in degrees, counter-clockwise from east (CAD convention).

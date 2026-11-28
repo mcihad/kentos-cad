@@ -7,7 +7,7 @@ use crate::entity::{Entity, Shape, area_parts, locate_part, outer_count, replace
 use crate::geom::arc::{ArcGeom, norm_angle, sweep};
 use crate::geom::bulge::{BulgePath, bulge_at, clean_bulge_path};
 use crate::geom::intersect::line_line;
-use crate::jsmath::{PI, acos, atan2, js_hypot, js_max, js_min, js_sign, sin, tan};
+use crate::jsmath::{PI, acos, atan2, hypot, js_max, js_min, js_sign, sin, tan};
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::vec2::Vec2;
@@ -61,7 +61,7 @@ impl ToJson for Chamfer {
 }
 
 fn unit(v: Vec2) -> Vec2 {
-    let l = js_hypot(v.x, v.y);
+    let l = hypot(v.x, v.y);
     Vec2::new(v.x / l, v.y / l)
 }
 
@@ -247,8 +247,8 @@ pub fn corner_of_path(
     let v = pts[index];
     let p = pts[i_prev];
     let nx = pts[i_next];
-    let lp = js_hypot(p.x - v.x, p.y - v.y);
-    let ln = js_hypot(nx.x - v.x, nx.y - v.y);
+    let lp = hypot(p.x - v.x, p.y - v.y);
+    let ln = hypot(nx.x - v.x, nx.y - v.y);
     if lp < 1e-12 || ln < 1e-12 {
         return err("Köşede sıfır uzunluklu kenar var.");
     }

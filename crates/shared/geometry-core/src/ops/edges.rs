@@ -15,7 +15,7 @@ use crate::geom::dimension::layout_dimension;
 use crate::geom::ellipse::is_full_ellipse;
 use crate::geom::intersect::{Edge, closest_on_edge, full_circle};
 use crate::geometry::Bounds;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -189,7 +189,7 @@ pub fn nearest_edge(e: &Shape, p: Vec2) -> Option<Edge> {
 
 pub fn edge_length(e: &Edge) -> f64 {
     match *e {
-        Edge::Seg { a, b } => js_hypot(b.x - a.x, b.y - a.y),
+        Edge::Seg { a, b } => hypot(b.x - a.x, b.y - a.y),
         Edge::Arc { r, sweep, .. } => r * sweep.abs(),
     }
 }

@@ -5,7 +5,7 @@
 
 use crate::geom::wall::{self, Line, Spec};
 use crate::geom::wall_join::JOIN_TOLERANCE;
-use crate::jsmath::{PI, atan2, js_hypot, js_max, js_min};
+use crate::jsmath::{PI, atan2, hypot, js_max, js_min};
 use crate::ops::dimension_set::{Openings, Point, Row, Span};
 use crate::ops::subref::Place;
 use crate::predicates::orient2d;
@@ -181,7 +181,7 @@ fn classify(a: Vec2, b: Vec2, bulge: f64, frame: &Frame) -> Edge {
         return Edge::Arc;
     }
     let (dx, dy) = (b.x - a.x, b.y - a.y);
-    let l = js_hypot(dx, dy);
+    let l = hypot(dx, dy);
     if !l.is_finite() || l <= 0.0 {
         return Edge::Oblique;
     }
@@ -256,7 +256,7 @@ fn in_quad(p: Vec2, q: &[Vec2; 4]) -> bool {
     let sign = if area >= 0.0 { 1.0 } else { -1.0 };
     (0..4).all(|i| {
         let (a, b) = (q[i], q[(i + 1) % 4]);
-        let l = js_hypot(b.x - a.x, b.y - a.y);
+        let l = hypot(b.x - a.x, b.y - a.y);
         l <= 0.0 || sign * orient2d(a, b, p) / l >= -SAME
     })
 }
@@ -269,7 +269,7 @@ fn touching(p: Vec2, x: &Wall<'_>) -> Vec<usize> {
     if !x.w.spec.closed {
         for (end, edge) in [(0, 0), (n - 1, n - 2)] {
             let e = x.w.pts[end];
-            if js_hypot(p.x - e.x, p.y - e.y) <= JOIN_TOLERANCE && !out.contains(&edge) {
+            if hypot(p.x - e.x, p.y - e.y) <= JOIN_TOLERANCE && !out.contains(&edge) {
                 out.push(edge);
             }
         }
@@ -788,7 +788,7 @@ fn space_rows(
                     if classify(u, v, 0.0, frame) != Edge::Parallel {
                         return false;
                     }
-                    let l = js_hypot(v.x - u.x, v.y - u.y);
+                    let l = hypot(v.x - u.x, v.y - u.y);
                     let near = |p: Vec2| {
                         (orient2d(u, v, p) / l).abs() <= 1e-6 && {
                             let (tu, tv, tp) = (frame.t(u), frame.t(v), frame.t(p));
@@ -882,7 +882,7 @@ pub fn plan(
     drop: &dyn Fn(Row, &Point, &Point) -> bool,
 ) -> Result<Planned, Fault> {
     let d = recipe.direction;
-    let l = js_hypot(d.x, d.y);
+    let l = hypot(d.x, d.y);
     if !l.is_finite()
         || l < 1e-12
         || !recipe.at.x.is_finite()

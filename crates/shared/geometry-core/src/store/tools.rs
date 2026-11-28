@@ -25,7 +25,7 @@ use crate::geom::dimension::layout_dimension;
 use crate::geom::ellipse::minor_axis;
 use crate::geom::intersect::Edge;
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::ops::curve_cuts::{Cut, Geometry};
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::ops::stretch::stretch_entity;
@@ -126,7 +126,7 @@ fn reach_of(target: &Shape, pick: Vec2) -> Reach {
             let minor = minor_axis(&ellipse_geom(*c, *major, *ratio, *t0, *t1));
             Reach::Area(circle_box(
                 *c,
-                js_hypot(major.x, major.y) + js_hypot(minor.x, minor.y),
+                hypot(major.x, major.y) + hypot(minor.x, minor.y),
             ))
         }
         Shape::Line { .. } | Shape::Polyline { .. } => {
@@ -139,8 +139,8 @@ fn reach_of(target: &Shape, pick: Vec2) -> Reach {
             if n < 2 {
                 return Reach::Nowhere;
             }
-            let at_end = js_hypot(pick.x - pts[n - 1].x, pick.y - pts[n - 1].y)
-                <= js_hypot(pick.x - pts[0].x, pick.y - pts[0].y);
+            let at_end = hypot(pick.x - pts[n - 1].x, pick.y - pts[n - 1].y)
+                <= hypot(pick.x - pts[0].x, pick.y - pts[0].y);
             let seg = if at_end { n - 2 } else { 0 };
             if let Some(arc) = bulge_arc(pts[seg], pts[seg + 1], bulge_at(bulges, seg)) {
                 return Reach::Area(circle_box(arc.c, arc.r));
@@ -150,7 +150,7 @@ fn reach_of(target: &Shape, pick: Vec2) -> Reach {
             } else {
                 (pts[0], pts[1])
             };
-            let len = js_hypot(tip.x - prev.x, tip.y - prev.y);
+            let len = hypot(tip.x - prev.x, tip.y - prev.y);
             if len < 1e-12 {
                 return Reach::Nowhere;
             }

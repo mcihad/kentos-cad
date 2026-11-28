@@ -7,7 +7,7 @@
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::centroid;
 use kentos_geometry_core::jsmath::{
-    PI, atan2, cos, js_cmp, js_floor, js_hypot, js_max, js_min, sin, stable_sort,
+    PI, atan2, cos, hypot, js_cmp, js_floor, js_max, js_min, sin, stable_sort,
 };
 
 /// A marker place: where, and the path's direction there (radians).
@@ -57,7 +57,7 @@ fn segments(pts: &[Vec2], closed: bool) -> (Vec<Seg>, f64) {
     for i in 0..count {
         let a = pts[i];
         let b = pts[(i + 1) % n];
-        let len = js_hypot(b.x - a.x, b.y - a.y);
+        let len = hypot(b.x - a.x, b.y - a.y);
         if len < 1e-12 {
             continue;
         }
@@ -580,7 +580,7 @@ pub fn line_middle(paths: &[(Vec<Vec2>, bool)]) -> Option<Vec2> {
         let count = if *closed { n } else { n.saturating_sub(1) };
         let mut len = 0.0;
         for i in 0..count {
-            len += js_hypot(pts[(i + 1) % n].x - pts[i].x, pts[(i + 1) % n].y - pts[i].y);
+            len += hypot(pts[(i + 1) % n].x - pts[i].x, pts[(i + 1) % n].y - pts[i].y);
         }
         if best.is_none_or(|b| len > b.2) {
             best = Some((pts, *closed, len));

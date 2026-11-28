@@ -1,7 +1,7 @@
 //! A kitchen run's leg frame (docs/adr/0706, 0727): where a point of a leg lies, along its line and into the run's side.
 //! How a run lays its modules is the document's rule (`kentos_domain::casework`).
 
-use crate::jsmath::{atan2, js_hypot};
+use crate::jsmath::{atan2, hypot};
 use crate::vec2::Vec2;
 
 /// A line shorter than this has no length.
@@ -21,7 +21,7 @@ impl Frame {
     /// The frame of the line `from`→`to`, its side the left of it (`left`) or the right.
     pub fn of(from: Vec2, to: Vec2, left: bool) -> Option<Frame> {
         let (dx, dy) = (to.x - from.x, to.y - from.y);
-        let length = js_hypot(dx, dy);
+        let length = hypot(dx, dy);
         if !(length > SLACK) {
             return None;
         }

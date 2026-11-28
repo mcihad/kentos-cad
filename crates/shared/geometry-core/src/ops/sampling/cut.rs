@@ -149,7 +149,7 @@ fn cut_edge(
                 a: line.point(reach.0),
                 b: line.point(reach.1),
             };
-            let near = |p: Vec2, q: Vec2| crate::jsmath::js_hypot(p.x - q.x, p.y - q.y) <= TOL;
+            let near = |p: Vec2, q: Vec2| crate::jsmath::hypot(p.x - q.x, p.y - q.y) <= TOL;
             for h in intersect_edges(e, &across) {
                 // An end on the line is its own node.
                 if h.t > 1e-12 && h.t < 1.0 - 1e-12 && !near(h.p, start) && !near(h.p, end) {

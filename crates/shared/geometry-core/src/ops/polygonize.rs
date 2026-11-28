@@ -14,7 +14,7 @@ use crate::geom::arrangement::{Area, Ring};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::region::FaceIndex;
 use crate::geometry::Bounds;
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::op;
 use crate::ops::areas::line_source;
 use crate::ops::edges::entity_edges;
@@ -145,7 +145,7 @@ fn turning(r: &Ring) -> Vec<Corner> {
         let (p, q, s) = (r.pts[(i + n - 1) % n], r.pts[i], r.pts[(i + 1) % n]);
         if bulge((i + n - 1) % n) == 0.0 && bulge(i) == 0.0 {
             let (ux, uy, vx, vy) = (q.x - p.x, q.y - p.y, s.x - q.x, s.y - q.y);
-            let l = js_hypot(ux, uy) * js_hypot(vx, vy);
+            let l = hypot(ux, uy) * hypot(vx, vy);
             if l == 0.0 || ((ux * vy - uy * vx).abs() <= 1e-12 * l && ux * vx + uy * vy > 0.0) {
                 continue;
             }
@@ -156,7 +156,7 @@ fn turning(r: &Ring) -> Vec<Corner> {
 }
 
 fn near(a: Vec2, b: Vec2) -> bool {
-    js_hypot(a.x - b.x, a.y - b.y) <= TOUCH
+    hypot(a.x - b.x, a.y - b.y) <= TOUCH
 }
 
 /// Whether two rings have the same corners in the same order, whichever

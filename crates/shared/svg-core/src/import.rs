@@ -19,7 +19,7 @@ use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use kentos_geometry_core::api::json::{FromJson, Json};
-use kentos_geometry_core::jsmath::{js_hypot, js_max, js_min, js_round, or, stable_sort, truthy};
+use kentos_geometry_core::jsmath::{hypot, js_max, js_min, js_round, or, stable_sort, truthy};
 use kentos_style_core::js::number;
 use kentos_style_core::js::text::{is_space, slice, trim, utf16_len};
 
@@ -435,7 +435,7 @@ impl<'a> Importer<'a> {
     fn length_r(&self, v: Option<&str>, fallback: f64) -> f64 {
         to_user(
             v,
-            js_hypot(self.width, self.height) / std::f64::consts::SQRT_2,
+            hypot(self.width, self.height) / std::f64::consts::SQRT_2,
             16.0,
         )
         .unwrap_or(fallback)
@@ -512,7 +512,7 @@ impl<'a> Importer<'a> {
         }
         let sw = to_user(
             val("stroke-width"),
-            js_hypot(self.width, self.height) / std::f64::consts::SQRT_2,
+            hypot(self.width, self.height) / std::f64::consts::SQRT_2,
             c.font_size,
         );
         if let Some(sw) = sw

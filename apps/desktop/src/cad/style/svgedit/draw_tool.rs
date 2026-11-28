@@ -7,7 +7,7 @@
 use iced::widget::canvas::{Frame, Path, Stroke};
 use iced::{Color, Point, Size};
 use kentos_geometry_core::api::json::Json;
-use kentos_geometry_core::jsmath::{PI, atan2, js_hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{PI, atan2, hypot, js_max, js_min};
 use kentos_svg_core::model::{regular_polygon, rotate_about, transform_shape};
 use kentos_svg_core::shape::{Obj, PathNode, Pt, SubPath};
 
@@ -118,11 +118,11 @@ pub fn shape_from_drag(spec: &DragSpec, p0: Pt, p1: Pt, id: &str) -> Option<Obj>
     }
     let mut dx = p1[0] - p0[0];
     let mut dy = p1[1] - p0[1];
-    if js_hypot(dx, dy) < 0.5 {
+    if hypot(dx, dy) < 0.5 {
         return None;
     }
     if spec.tool == ToolId::Polygon {
-        let r = js_hypot(dx, dy);
+        let r = hypot(dx, dy);
         let sp = regular_polygon(
             p0[0],
             p0[1],

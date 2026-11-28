@@ -11,7 +11,7 @@
 //! vertices up to it take the grade ahead, those after it the grade back.
 
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
-use crate::jsmath::{cos, js_hypot, sin};
+use crate::jsmath::{cos, hypot, sin};
 use crate::vec2::Vec2;
 
 /// What the range's end is given by.
@@ -39,7 +39,7 @@ fn edge_length(pts: &[Vec2], bulges: Option<&[f64]>, i: usize) -> f64 {
     let (a, b) = (pts[i], pts[(i + 1) % n]);
     match bulge_arc(a, b, bulge_at(bulges, i)) {
         Some(arc) => arc.r * arc.sweep.abs(),
-        None => js_hypot(b.x - a.x, b.y - a.y),
+        None => hypot(b.x - a.x, b.y - a.y),
     }
 }
 
@@ -309,7 +309,7 @@ mod tests {
         };
         assert!((at.along - s).abs() < 1e-9);
         assert!(
-            (js_hypot(at.p.x - 10.0, at.p.y) - 10.0).abs() < 1e-9,
+            (hypot(at.p.x - 10.0, at.p.y) - 10.0).abs() < 1e-9,
             "on the circle"
         );
         // Bulge 1 sweeps π: a quarter is π/4, its bulge tan(π/16); the rest tan(3π/16).

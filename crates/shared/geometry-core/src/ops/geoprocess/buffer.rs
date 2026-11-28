@@ -10,7 +10,7 @@ use super::{Class, subtract_all, union_all};
 use crate::geom::arrangement::{Area, Ring, TOL};
 use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{atan2, cos, js_hypot, js_max, sin};
+use crate::jsmath::{atan2, cos, hypot, js_max, sin};
 use crate::vec2::Vec2;
 
 /// Which side of a path a buffer takes (paths only; areas and points take both).
@@ -57,7 +57,7 @@ pub fn disc(c: Vec2, r: f64) -> Area {
 
 /// The points within `d` of the segment `a`–`b`: its two sides and a half circle about each end.
 pub fn capsule(a: Vec2, b: Vec2, d: f64) -> Area {
-    let len = js_hypot(b.x - a.x, b.y - a.y);
+    let len = hypot(b.x - a.x, b.y - a.y);
     if len <= TOL {
         return disc(a, d);
     }
@@ -119,7 +119,7 @@ pub fn union_pieces(cores: &[Edge], d: f64) -> Vec<Area> {
     let mut ends: HashMap<(u64, u64), Vec<End>> = HashMap::new();
     for (i, e) in cores.iter().enumerate() {
         if let Edge::Seg { a, b } = *e {
-            let len = js_hypot(b.x - a.x, b.y - a.y);
+            let len = hypot(b.x - a.x, b.y - a.y);
             if len <= TOL {
                 continue;
             }
@@ -166,7 +166,7 @@ pub fn union_pieces(cores: &[Edge], d: f64) -> Vec<Area> {
     for (i, e) in cores.iter().enumerate() {
         match *e {
             Edge::Seg { a, b } => {
-                let len = js_hypot(b.x - a.x, b.y - a.y);
+                let len = hypot(b.x - a.x, b.y - a.y);
                 if len <= TOL {
                     out.push(disc(a, d));
                     continue;
@@ -207,7 +207,7 @@ pub fn union_pieces(cores: &[Edge], d: f64) -> Vec<Area> {
 fn tangent(e: &Edge, t: f64) -> Vec2 {
     match *e {
         Edge::Seg { a, b } => {
-            let len = js_max(js_hypot(b.x - a.x, b.y - a.y), f64::MIN_POSITIVE);
+            let len = js_max(hypot(b.x - a.x, b.y - a.y), f64::MIN_POSITIVE);
             Vec2::new((b.x - a.x) / len, (b.y - a.y) / len)
         }
         Edge::Arc { a0, sweep, .. } => {
@@ -224,7 +224,7 @@ fn tangent(e: &Edge, t: f64) -> Vec2 {
 fn strip(e: &Edge, d: f64, left: bool) -> Area {
     match *e {
         Edge::Seg { a, b } => {
-            let len = js_max(js_hypot(b.x - a.x, b.y - a.y), f64::MIN_POSITIVE);
+            let len = js_max(hypot(b.x - a.x, b.y - a.y), f64::MIN_POSITIVE);
             let s = if left { d } else { -d };
             let (nx, ny) = (-(b.y - a.y) / len * s, (b.x - a.x) / len * s);
             piece(
@@ -282,7 +282,7 @@ fn side_pieces(path: &[Edge], d: f64, left: bool, out: &mut Vec<Area>) {
             // A path that closes turns at its first vertex too.
             None if path.len() > 2 => {
                 let (s, f) = (point_at(&path[0], 0.0), point_at(e, 1.0));
-                (js_hypot(s.x - f.x, s.y - f.y) <= TOL).then(|| &path[0])
+                (hypot(s.x - f.x, s.y - f.y) <= TOL).then(|| &path[0])
             }
             None => None,
         };

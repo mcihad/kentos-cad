@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::api::json::{FromJson, Json, read_field};
 use kentos_geometry_core::jsmath::{
-    PI, atan2, cos, js_cmp, js_hypot, js_max, js_min, js_round, or, sin, stable_sort,
+    PI, atan2, cos, hypot, js_cmp, js_max, js_min, js_round, or, sin, stable_sort,
 };
 
 use crate::fit::fit_run;
@@ -311,7 +311,7 @@ fn seg_dist(p: Point, a: Point, b: Point) -> f64 {
     } else {
         0.0
     };
-    js_hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy)
+    hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy)
 }
 
 /// Douglas–Peucker on an open chain `a..b` of a ring (both ends kept): the kept indices.
@@ -361,7 +361,7 @@ pub fn simplify_indices(r: &Ring, tol: f64) -> Vec<usize> {
     let mut i1 = i0;
     let mut far = -1.0;
     for i in 0..n {
-        let d = js_hypot(r[i][0] - r[i0][0], r[i][1] - r[i0][1]);
+        let d = hypot(r[i][0] - r[i0][0], r[i][1] - r[i0][1]);
         if d > far {
             far = d;
             i1 = i;
@@ -434,13 +434,13 @@ pub fn recover_corners(r: &Ring, min_run: f64, corner_rad: f64) -> Ring {
         let b = r[(i + 1) % n];
         let p = r[(i + n - 1) % n];
         let q = r[(i + 2) % n];
-        let len = js_hypot(b[0] - a[0], b[1] - a[1]);
+        let len = hypot(b[0] - a[0], b[1] - a[1]);
         let d1 = [a[0] - p[0], a[1] - p[1]];
         let d2 = [q[0] - b[0], q[1] - b[1]];
         let wraps = (i + 1) % n == 0 && out.is_empty();
         if len < 0.75
-            && js_hypot(d1[0], d1[1]) >= min_run
-            && js_hypot(d2[0], d2[1]) >= min_run
+            && hypot(d1[0], d1[1]) >= min_run
+            && hypot(d2[0], d2[1]) >= min_run
             && !wraps
             && !skip[(i + 1) % n]
         {
@@ -501,7 +501,7 @@ fn round_node(n: &PathNode) -> PathNode {
 }
 
 fn unit(x: f64, y: f64) -> Point {
-    let l = or(js_hypot(x, y), 1.0);
+    let l = or(hypot(x, y), 1.0);
     [x / l, y / l]
 }
 
@@ -555,7 +555,7 @@ pub fn fit_traced_ring(dense: &Ring, o: &TraceOptions) -> Option<SubPath> {
             } else {
                 (j + n - 1) % n
             };
-            if js_hypot(r[j][0] - r[i][0], r[j][1] - r[i][1]) >= 2.5 {
+            if hypot(r[j][0] - r[i][0], r[j][1] - r[i][1]) >= 2.5 {
                 break;
             }
         }
@@ -592,14 +592,14 @@ pub fn fit_traced_ring(dense: &Ring, o: &TraceOptions) -> Option<SubPath> {
         let mut k = 0;
         while k < n && d < 2.0 {
             a = (a + n - 1) % n;
-            d = js_hypot(pts[a][0] - pts[i][0], pts[a][1] - pts[i][1]);
+            d = hypot(pts[a][0] - pts[i][0], pts[a][1] - pts[i][1]);
             k += 1;
         }
         d = 0.0;
         k = 0;
         while k < n && d < 2.0 {
             b = (b + 1) % n;
-            d = js_hypot(pts[b][0] - pts[i][0], pts[b][1] - pts[i][1]);
+            d = hypot(pts[b][0] - pts[i][0], pts[b][1] - pts[i][1]);
             k += 1;
         }
         unit(pts[b][0] - pts[a][0], pts[b][1] - pts[a][1])
@@ -633,7 +633,7 @@ pub fn fit_traced_ring(dense: &Ring, o: &TraceOptions) -> Option<SubPath> {
             // Straight within the tolerance, but a smooth join must not kink: one cubic along the tangents.
             let a = run[0];
             let b = run[run.len() - 1];
-            let k = js_hypot(b[0] - a[0], b[1] - a[1]) / 3.0;
+            let k = hypot(b[0] - a[0], b[1] - a[1]) / 3.0;
             let u = t0.unwrap_or_else(|| unit(b[0] - a[0], b[1] - a[1]));
             let v = t1.unwrap_or_else(|| unit(b[0] - a[0], b[1] - a[1]));
             curves = vec![Some([

@@ -6,7 +6,7 @@ use crate::api::json::{Nullable, ToJson, field};
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::offset::offset_path;
 use crate::geometry::signed_area;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -15,13 +15,13 @@ pub fn clean_axis(axis: &[Vec2], closed: bool) -> Vec<Vec2> {
     let mut out: Vec<Vec2> = Vec::new();
     for &p in axis {
         match out.last() {
-            Some(last) if js_hypot(p.x - last.x, p.y - last.y) <= 1e-9 => {}
+            Some(last) if hypot(p.x - last.x, p.y - last.y) <= 1e-9 => {}
             _ => out.push(p),
         }
     }
     if closed && out.len() > 1 {
         let (f, l) = (out[0], out[out.len() - 1]);
-        if js_hypot(f.x - l.x, f.y - l.y) <= 1e-9 {
+        if hypot(f.x - l.x, f.y - l.y) <= 1e-9 {
             out.pop();
         }
     }

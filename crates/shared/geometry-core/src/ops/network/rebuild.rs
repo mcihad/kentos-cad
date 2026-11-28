@@ -32,7 +32,7 @@ use super::turns::{Level, TurnIn};
 use crate::geom::arrangement::edge_box;
 use crate::geom::intersect::Edge;
 use crate::geometry::Bounds;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::vec2::Vec2;
 
 const NONE: u32 = u32::MAX;
@@ -681,7 +681,7 @@ impl Graph {
                     continue;
                 }
                 let q = points[b as usize];
-                if js_hypot(q.x - p.x, q.y - p.y) > tol {
+                if hypot(q.x - p.x, q.y - p.y) > tol {
                     continue;
                 }
                 if !point_levels[a as usize].meets(point_levels[b as usize]) {

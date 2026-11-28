@@ -298,7 +298,7 @@ pub fn online_place(
         },
         score: None,
         distance: Some(
-            kentos_geometry_core::jsmath::js_hypot(at.x - from.x, at.y - from.y) / per_metre,
+            kentos_geometry_core::jsmath::hypot(at.x - from.x, at.y - from.y) / per_metre,
         ),
         at,
         fields: online_fields(c),

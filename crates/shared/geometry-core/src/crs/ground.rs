@@ -35,7 +35,7 @@ use crate::api::Op;
 use crate::api::json::{ToJson, field};
 use crate::geodesy::tm_scale;
 use crate::geom::bulge::{BulgeArc, bulge_arc, bulge_at, bulge_ring_area};
-use crate::jsmath::{PI, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, cos, hypot, js_max, js_min, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -377,7 +377,7 @@ fn geodesic_lens(
     let (lat, lon, _azi): (f64, f64, f64) = g.direct(p.0, p.1, azi1, s12 / 2.0);
     let m = system.project(lat, lon)?;
     let (dx, dy) = (b.x - a.x, b.y - a.y);
-    let len = js_hypot(dx, dy);
+    let len = hypot(dx, dy);
     if len == 0.0 {
         return Some(0.0);
     }
@@ -435,7 +435,7 @@ pub fn ground_measures(
                 let p = geo[geo.len() - 1];
                 let q = system.unproject(w[1]).ok_or(Unreachable)?;
                 let (s12, lat, azi) = geodesic(&g, p, q);
-                chords += js_hypot(w[1].x - w[0].x, w[1].y - w[0].y);
+                chords += hypot(w[1].x - w[0].x, w[1].y - w[0].y);
                 s += s12;
                 if let Some(k) = height.and_then(|h| factor(euler_radius(ea, ef, lat, azi), h)) {
                     ground += s12 / k;

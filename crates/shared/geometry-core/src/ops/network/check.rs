@@ -9,7 +9,7 @@ use std::collections::{HashMap, HashSet};
 use super::graph::{BuildReport, Graph};
 use crate::geom::arrangement::edge_box;
 use crate::geom::intersect::{closest_on_edge, intersect_edges};
-use crate::jsmath::{js_hypot, js_round};
+use crate::jsmath::{hypot, js_round};
 use crate::vec2::Vec2;
 
 /// How far an end may be from another edge to be called a near miss (metres).
@@ -189,7 +189,7 @@ pub fn check(g: &Graph, report: &BuildReport) -> Checked {
                 ];
                 if ends.iter().any(|&n| {
                     let q = g.nodes[n as usize];
-                    js_hypot(q.x - h.p.x, q.y - h.p.y) <= tol
+                    hypot(q.x - h.p.x, q.y - h.p.y) <= tol
                 }) {
                     continue;
                 }

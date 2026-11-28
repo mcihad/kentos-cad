@@ -13,7 +13,7 @@
 //! ids in their place (`apps/web/src/style/svg/pathOps.ts`).
 
 use kentos_geometry_core::api::json::{Json, ToJson, write_str};
-use kentos_geometry_core::jsmath::{PI, atan2, js_hypot, js_max};
+use kentos_geometry_core::jsmath::{PI, atan2, hypot, js_max};
 
 use crate::bezier::{
     flatten_cubic, flatten_sub_path_tol, reverse_sub_path, ring_signed_area, segment_count,
@@ -632,7 +632,7 @@ pub fn close_sub_path(sp: &SubPath) -> SubPath {
     let mut nodes = sp.nodes.clone();
     let k = nodes.len();
     let (a, b) = (&nodes[0], &nodes[k - 1]);
-    if k > 2 && js_hypot(a.x - b.x, a.y - b.y) < 1e-9 {
+    if k > 2 && hypot(a.x - b.x, a.y - b.y) < 1e-9 {
         let b_in = b.in_;
         nodes.pop();
         if let Some(h) = b_in {

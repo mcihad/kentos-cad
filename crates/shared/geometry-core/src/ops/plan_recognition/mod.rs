@@ -28,7 +28,7 @@
 use std::f64::consts::PI;
 
 use crate::Vec2;
-use crate::jsmath::{atan2, cos, js_hypot, js_max, js_max_all, js_min, js_round, sin};
+use crate::jsmath::{atan2, cos, hypot, js_max, js_max_all, js_min, js_round, sin};
 
 #[cfg(test)]
 mod tests;
@@ -191,7 +191,7 @@ fn cross(a: Vec2, b: Vec2) -> f64 {
 }
 
 fn length(v: Vec2) -> f64 {
-    js_hypot(v.x, v.y)
+    hypot(v.x, v.y)
 }
 
 /// A number to the nanometre: a plan's coordinates are drawn to the millimetre and their sums carry nothing finer.

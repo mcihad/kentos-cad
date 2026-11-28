@@ -16,7 +16,7 @@ use crate::geom::arc::{norm_angle, sweep};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::bulge_arc;
 use crate::geom::hatch_pattern::carried;
-use crate::jsmath::{PI, TAU, atan2, cos, js_hypot, js_max, sin};
+use crate::jsmath::{PI, TAU, atan2, cos, hypot, js_max, sin};
 use crate::op;
 use crate::ops::rubber::{Link, RubberError, Sheet};
 use crate::ops::transform::transform_shape;
@@ -242,9 +242,9 @@ fn split(
 /// Whether `m` lies more than [`CHORD`] from the chord `a`–`b` (centred images).
 fn far(a: (f64, f64), m: (f64, f64), b: (f64, f64)) -> bool {
     let (dx, dy) = (b.0 - a.0, b.1 - a.1);
-    let length = js_hypot(dx, dy);
+    let length = hypot(dx, dy);
     if length == 0.0 {
-        return js_hypot(m.0 - a.0, m.1 - a.1) > CHORD;
+        return hypot(m.0 - a.0, m.1 - a.1) > CHORD;
     }
     (dx * (m.1 - a.1) - dy * (m.0 - a.0)).abs() / length > CHORD
 }
@@ -317,7 +317,7 @@ fn image_of(j: &Jacobian, m: Vec2, n: Vec2) -> Image {
     let s = c1.y * c1.y + c2.y * c2.y;
     let q = c1.x * c1.y + c2.x * c2.y;
     let phi = 0.5 * atan2(2.0 * q, p - s);
-    let root = js_hypot((p - s) / 2.0, q);
+    let root = hypot((p - s) / 2.0, q);
     let s1 = ((p + s) / 2.0 + root).sqrt();
     let s2 = js_max((p + s) / 2.0 - root, 0.0).sqrt();
     let u1 = Vec2::new(cos(phi), sin(phi));
@@ -345,7 +345,7 @@ impl Image {
 fn text_rule(j: &Jacobian, height: f64, rotation: f64, width: Option<f64>) -> (f64, f64, f64) {
     let rad = rotation * PI / 180.0;
     let lu = lin(j, Vec2::new(cos(rad), sin(rad)));
-    let length = js_hypot(lu.x, lu.y);
+    let length = hypot(lu.x, lu.y);
     let d = det(j);
     let mut turn = atan2(lu.y, lu.x) * 180.0 / PI;
     if d < 0.0 {
@@ -611,7 +611,7 @@ fn common<M: Map + ?Sized>(
         }),
         Shape::Xline { p, dir } | Shape::Ray { p, dir } => {
             let d = lin(&m.jac(*p)?, *dir);
-            let l = js_hypot(d.x, d.y);
+            let l = hypot(d.x, d.y);
             let (p, dir) = (m.at(*p)?, Vec2::new(d.x / l, d.y / l));
             plain(if matches!(shape, Shape::Ray { .. }) {
                 Shape::Ray { p, dir }
@@ -1190,14 +1190,14 @@ fn edge_bend(a: Vec2, b: Vec2, bulge: f64, sheet: &Sheet) -> f64 {
                     arc.c.y + arc.r * sin(u),
                 ));
                 let here = Vec2::new(kept.c.x + kept.r * cos(v), kept.c.y + kept.r * sin(v));
-                worst = js_max(worst, js_hypot(real.x - here.x, real.y - here.y));
+                worst = js_max(worst, hypot(real.x - here.x, real.y - here.y));
             }
         }
         _ => {
             for t in QUARTERS {
                 let real = sheet.map(Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t));
                 let here = Vec2::new(na.x + (nb.x - na.x) * t, na.y + (nb.y - na.y) * t);
-                worst = js_max(worst, js_hypot(real.x - here.x, real.y - here.y));
+                worst = js_max(worst, hypot(real.x - here.x, real.y - here.y));
             }
         }
     }
@@ -1216,7 +1216,7 @@ fn curve_bend(c: Vec2, m: Vec2, n: Vec2, span: (f64, f64), sheet: &Sheet) -> f64
         let v = Vec2::new(m.x * cos(t) + n.x * sin(t), m.y * cos(t) + n.y * sin(t));
         let real = sheet.map(Vec2::new(c.x + v.x, c.y + v.y));
         let here = Vec2::new(to.x + sa * v.x + sc * v.y, to.y + sb * v.x + sd * v.y);
-        worst = js_max(worst, js_hypot(real.x - here.x, real.y - here.y));
+        worst = js_max(worst, hypot(real.x - here.x, real.y - here.y));
     }
     worst
 }

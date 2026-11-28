@@ -43,7 +43,7 @@ use crate::block_dynamic::Dynamic;
 use crate::entity::{Attrs, Entity, Places, Shape, entity_bounds_in};
 use crate::geom::affine::{Affine, apply, compose, translation};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_min, sin};
 use crate::ops::curve_cuts::Cut;
 use crate::ops::transform::{TextPolicy, transform_shape, transform_shape_in};
 use crate::ops::warp::{Warp, warp_shape};
@@ -1195,7 +1195,7 @@ pub fn insert_through(shape: &Shape, m: &Affine) -> Option<Shape> {
     );
     let l = compose(m, &own);
     let (u, v) = (Vec2::new(l[0], l[1]), Vec2::new(l[2], l[3]));
-    let (su, sv) = (js_hypot(u.x, u.y), js_hypot(v.x, v.y));
+    let (su, sv) = (hypot(u.x, u.y), hypot(v.x, v.y));
     if !(su > 0.0 && sv > 0.0) || (u.x * v.x + u.y * v.y).abs() > 1e-12 * su * sv {
         return None;
     }

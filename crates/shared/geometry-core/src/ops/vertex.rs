@@ -10,7 +10,7 @@ use crate::geom::bulge::{
     bulge_arc, bulge_at, bulge_of_sweep, bulge_path_edges, clean_bulge_path, is_arc_bulge,
 };
 use crate::geom::intersect::{Edge, closest_on_edge};
-use crate::jsmath::{js_hypot, js_min};
+use crate::jsmath::{hypot, js_min};
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::ops::edges::entity_edges;
@@ -227,7 +227,7 @@ pub fn arc_join(p: Vec2, v: Vec2, q: Vec2, b1: f64, b2: f64, tol: f64) -> ArcJoi
     if (b1 > 0.0) != (b2 > 0.0) {
         return ArcJoin::Opposite;
     }
-    let centres = js_hypot(one.c.x - two.c.x, one.c.y - two.c.y);
+    let centres = hypot(one.c.x - two.c.x, one.c.y - two.c.y);
     let radii = (one.r - two.r).abs();
     if !(centres <= tol && radii <= tol) {
         return ArcJoin::Apart { centres, radii };

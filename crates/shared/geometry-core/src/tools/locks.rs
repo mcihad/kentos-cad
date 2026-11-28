@@ -7,7 +7,7 @@
 
 use crate::api::Op;
 use crate::geom::intersect::{Edge, on_edge_arc, point_at};
-use crate::jsmath::{PI, atan2, cos, js_hypot, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, sin};
 use crate::op;
 use crate::tools::point_input::{AngleFrom, Angles, Constrained, constrain_cursor};
 use crate::tools::point_text::{is_js_space, js_trim};
@@ -62,7 +62,7 @@ pub fn lock_point(
             Some(Vec2::new(o.x + t * d.u.x, o.y + t * d.u.y))
         }
         (None, Some(l)) => {
-            let n = js_hypot(dx, dy);
+            let n = hypot(dx, dy);
             if n < SAME {
                 return None;
             }
@@ -179,7 +179,7 @@ pub fn direction_of(angle: f64, angles: Angles) -> Vec2 {
 pub fn deflected(prev: Vec2, from: Vec2, angle: f64, angles: Angles) -> Option<Vec2> {
     let dx = from.x - prev.x;
     let dy = from.y - prev.y;
-    let n = js_hypot(dx, dy);
+    let n = hypot(dx, dy);
     if n < SAME {
         return None;
     }
@@ -201,7 +201,7 @@ pub fn perpendicular(u: Vec2) -> Vec2 {
 pub fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {
     let dx = b.x - a.x;
     let dy = b.y - a.y;
-    let n = js_hypot(dx, dy);
+    let n = hypot(dx, dy);
     (n >= SAME).then(|| Vec2::new(dx / n, dy / n))
 }
 
@@ -215,8 +215,8 @@ pub fn square_corner(first: Vec2, second: Vec2, prev: Vec2, last: Vec2) -> Optio
     let (ax, ay) = (last.x - prev.x, last.y - prev.y);
     let (bx, by) = (second.x - first.x, second.y - first.y);
     let (pa, pb) = (Vec2::new(-ay, ax), Vec2::new(-by, bx));
-    let la = js_hypot(ax, ay);
-    let lb = js_hypot(bx, by);
+    let la = hypot(ax, ay);
+    let lb = hypot(bx, by);
     if la < SAME || lb < SAME {
         return None;
     }
@@ -251,7 +251,7 @@ pub fn edge_direction(edge: &Edge, p: Vec2) -> Option<Vec2> {
             } else {
                 let start = point_at(edge, 0.0);
                 let end = point_at(edge, 1.0);
-                if js_hypot(p.x - start.x, p.y - start.y) <= js_hypot(p.x - end.x, p.y - end.y) {
+                if hypot(p.x - start.x, p.y - start.y) <= hypot(p.x - end.x, p.y - end.y) {
                     a0
                 } else {
                     a0 + sweep

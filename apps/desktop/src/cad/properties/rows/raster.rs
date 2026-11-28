@@ -179,8 +179,8 @@ pub(super) fn rows(
     let [_, a, b, _, c, d] = x.affine;
     // A pixel's two sides: along a row and down a column.
     let (across, down) = (
-        kentos_geometry_core::jsmath::js_hypot(a, c),
-        kentos_geometry_core::jsmath::js_hypot(b, d),
+        kentos_geometry_core::jsmath::hypot(a, c),
+        kentos_geometry_core::jsmath::hypot(b, d),
     );
     let pixel = format!("{} × {}", f.length_bare(across), f.length_bare(down));
     let system = if x.srid == 0 {

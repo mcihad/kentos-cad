@@ -74,7 +74,7 @@ use kentos_geometry_core::geom::bulge::{
 };
 use kentos_geometry_core::geom::region::net_area;
 use kentos_geometry_core::geometry::{bearing_grad, dist};
-use kentos_geometry_core::jsmath::{PI, js_hypot};
+use kentos_geometry_core::jsmath::{PI, hypot};
 use kentos_geometry_core::ops::trace::Traced;
 use kentos_geometry_core::tools::drawing::{
     arc_end_about, centre_bulge, chord_end, chord_sweep, offset_along, radial_point, radius_bulge,
@@ -997,7 +997,7 @@ impl Path {
             return false;
         }
         let s = cx.view.to_screen(first);
-        js_hypot(s[0] - pressed[0], s[1] - pressed[1]) <= cx.draft.snap_aperture
+        hypot(s[0] - pressed[0], s[1] - pressed[1]) <= cx.draft.snap_aperture
     }
 
     fn close_on_first(&mut self, cx: &mut Context<'_>) {

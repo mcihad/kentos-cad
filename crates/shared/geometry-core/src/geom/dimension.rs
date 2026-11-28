@@ -7,7 +7,7 @@
 use crate::api::Op;
 use crate::geom::arc::norm_angle;
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_max_all, js_min, or, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_max_all, js_min, or, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -196,7 +196,7 @@ fn extension(
     gap: f64,
     ext: f64,
 ) {
-    let l = js_hypot(to.x - from.x, to.y - from.y);
+    let l = hypot(to.x - from.x, to.y - from.y);
     if l <= gap {
         return;
     }
@@ -253,7 +253,7 @@ fn finish(d: &DimensionGeom, l: &mut DimensionLayout) {
 /// A segment with a gap `half` each side of every cut point lying on it.
 fn cut_segment(seg: [Vec2; 2], cuts: &[Vec2], half: f64) -> Vec<[Vec2; 2]> {
     let [a, b] = seg;
-    let len = js_hypot(b.x - a.x, b.y - a.y);
+    let len = hypot(b.x - a.x, b.y - a.y);
     if len < 1e-12 {
         return vec![seg];
     }
@@ -350,7 +350,7 @@ pub fn dimension_measure(style: Option<&str>, angle: Option<f64>) -> (&'static s
 fn aligned(d: &DimensionGeom) -> Option<DimensionLayout> {
     let dx = d.b.x - d.a.x;
     let dy = d.b.y - d.a.y;
-    let length = js_hypot(dx, dy);
+    let length = hypot(dx, dy);
     if length < 1e-9 {
         return None;
     }
@@ -383,7 +383,7 @@ fn straight(d: &DimensionGeom, u: Vec2, offset: f64) -> Option<DimensionLayout> 
     extension(&mut lines, &mut ext, d.a, d1, gap, look.ext_beyond() * h);
     extension(&mut lines, &mut ext, d.b, d2, gap, look.ext_beyond() * h);
     lines.push([d1, d2]);
-    let l = js_hypot(d2.x - d1.x, d2.y - d1.y);
+    let l = hypot(d2.x - d1.x, d2.y - d1.y);
     let along = Vec2::new((d2.x - d1.x) / l, (d2.y - d1.y) / l);
     let size = look.arrow_size() * h;
     let mid = Vec2::new((d1.x + d2.x) / 2.0, (d1.y + d2.y) / 2.0);
@@ -445,7 +445,7 @@ fn angular(d: &DimensionGeom) -> Option<DimensionLayout> {
     let gap = look.ext_offset() * h;
     // Arms are extended to the arc when it lies beyond the measured points.
     for (p, t) in [(d.a, t0), (d.b, t0 + sweep)] {
-        let rp = js_hypot(p.x - c.x, p.y - c.y);
+        let rp = hypot(p.x - c.x, p.y - c.y);
         if r > rp + gap {
             ext.push(lines.len());
             lines.push([at2(c, t, rp + gap), at2(c, t, r + look.ext_beyond() * h)]);
@@ -502,7 +502,7 @@ fn angular(d: &DimensionGeom) -> Option<DimensionLayout> {
 
 fn radial(d: &DimensionGeom, diameter: bool) -> Option<DimensionLayout> {
     let c = d.a;
-    let r = js_hypot(d.b.x - c.x, d.b.y - c.y);
+    let r = hypot(d.b.x - c.x, d.b.y - c.y);
     if r < 1e-9 {
         return None;
     }
@@ -546,7 +546,7 @@ fn radial(d: &DimensionGeom, diameter: bool) -> Option<DimensionLayout> {
 pub fn signed_offset(a: Vec2, b: Vec2, p: Vec2) -> f64 {
     let dx = b.x - a.x;
     let dy = b.y - a.y;
-    let l = or(js_hypot(dx, dy), 1.0);
+    let l = or(hypot(dx, dy), 1.0);
     (dx * (p.y - a.y) - dy * (p.x - a.x)) / l
 }
 
@@ -558,28 +558,28 @@ pub fn dimension_offset_at(d: &DimensionGeom, p: Vec2) -> f64 {
             -sin(t) * (p.x - d.a.x) + cos(t) * (p.y - d.a.y)
         }
         "angular" => match d.c {
-            Some(c) => js_hypot(p.x - c.x, p.y - c.y),
+            Some(c) => hypot(p.x - c.x, p.y - c.y),
             None => d.offset,
         },
         "radius" | "diameter" => js_max(
             0.0,
-            js_hypot(p.x - d.a.x, p.y - d.a.y) - js_hypot(d.b.x - d.a.x, d.b.y - d.a.y),
+            hypot(p.x - d.a.x, p.y - d.a.y) - hypot(d.b.x - d.a.x, d.b.y - d.a.y),
         ),
         // docs/adr/0147: an ordinate has none; the dimension arc's distance
         // from the arc; the jog's along the radius from the centre shown, where it can be.
         "ordinate" => d.offset,
         "arcLength" => match d.c {
-            Some(c) => js_hypot(p.x - c.x, p.y - c.y) - js_hypot(d.a.x - c.x, d.a.y - c.y),
+            Some(c) => hypot(p.x - c.x, p.y - c.y) - hypot(d.a.x - c.x, d.a.y - c.y),
             None => d.offset,
         },
         "jogged" => kinds::jog_at(d, p).unwrap_or(d.offset),
         // docs/adr/0322: a centre mark's axis lines past the curve, an axis past its end; a level has none.
         "centerMark" => js_max(
             0.0,
-            js_hypot(p.x - d.a.x, p.y - d.a.y) - js_hypot(d.b.x - d.a.x, d.b.y - d.a.y),
+            hypot(p.x - d.a.x, p.y - d.a.y) - hypot(d.b.x - d.a.x, d.b.y - d.a.y),
         ),
         "centerLine" => {
-            let l = or(js_hypot(d.b.x - d.a.x, d.b.y - d.a.y), 1.0);
+            let l = or(hypot(d.b.x - d.a.x, d.b.y - d.a.y), 1.0);
             js_max(
                 0.0,
                 ((p.x - d.b.x) * (d.b.x - d.a.x) + (p.y - d.b.y) * (d.b.y - d.a.y)) / l,

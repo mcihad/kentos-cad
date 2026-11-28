@@ -69,7 +69,7 @@ fn frame(d: &DimensionEntity) -> Option<(Vec2, Vec2, Vec2)> {
     let u = match d.style {
         None | Some(DimensionStyle::Aligned) => {
             let (dx, dy) = (d.b.x - d.a.x, d.b.y - d.a.y);
-            let l = kentos_geometry_core::jsmath::js_hypot(dx, dy);
+            let l = kentos_geometry_core::jsmath::hypot(dx, dy);
             if l < 1e-9 {
                 return None;
             }

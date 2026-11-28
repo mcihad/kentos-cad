@@ -1,7 +1,7 @@
 //! Pure architectural chain construction from authoritative source points.
 //! Source numbers are caller-owned stable identities, never render pieces.
 
-use crate::jsmath::{PI, atan2, js_hypot};
+use crate::jsmath::{PI, atan2, hypot};
 use crate::ops::subref::Place;
 use crate::vec2::Vec2;
 
@@ -69,7 +69,7 @@ impl Frame {
         }
         let dx = line[1].x - line[0].x;
         let dy = line[1].y - line[0].y;
-        let length = js_hypot(dx, dy);
+        let length = hypot(dx, dy);
         if !length.is_finite() || length < 1e-9 {
             return Err(Fault::UnsupportedWall);
         }

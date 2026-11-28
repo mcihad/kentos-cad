@@ -14,7 +14,7 @@
 use crate::geom::arch::{ColumnSpec, column_box};
 use crate::geom::wall::left_face;
 use crate::geom::wall_join::WallIn;
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::ops::wall_shift::{PARALLEL, TIE, edge, edge_count, level};
 use crate::vec2::Vec2;
 
@@ -68,7 +68,7 @@ fn along(p: Vec2, d: Vec2, t: f64) -> Vec2 {
 }
 
 fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {
-    let l = js_hypot(b.x - a.x, b.y - a.y);
+    let l = hypot(b.x - a.x, b.y - a.y);
     (l > 0.0).then(|| Vec2::new((b.x - a.x) / l, (b.y - a.y) / l))
 }
 
@@ -103,7 +103,7 @@ pub fn gaps(walls: &[WallIn<'_>], columns: &[ColumnIn<'_>], k: usize) -> [Option
     };
     for (side, (a, b)) in sides(me).into_iter().enumerate() {
         let Some(u) = unit(a, b) else { continue };
-        let l = js_hypot(b.x - a.x, b.y - a.y);
+        let l = hypot(b.x - a.x, b.y - a.y);
         // Counter-clockwise sides: outward is to the right.
         let n = Vec2::new(u.y, -u.x);
         for (j, w) in walls.iter().enumerate() {

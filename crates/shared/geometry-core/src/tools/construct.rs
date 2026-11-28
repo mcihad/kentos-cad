@@ -10,7 +10,7 @@ use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{BulgePath, bulge_of_sweep};
 use crate::geom::dimension::{DimensionGeom, layout_dimension};
 use crate::geom::intersect::{circle_circle, line_line};
-use crate::jsmath::{PI, TAU, atan2, cos, js_hypot, js_min, sin};
+use crate::jsmath::{PI, TAU, atan2, cos, hypot, js_min, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -61,7 +61,7 @@ impl crate::api::json::FromJson for Between {
 /// Ara nokta: points on the line from `a` to `b`. None when the two points
 /// fall together, or the count is not 2 to 10 000 parts.
 pub fn points_between(a: Vec2, b: Vec2, how: &Between) -> Option<Vec<Vec2>> {
-    let l = js_hypot(b.x - a.x, b.y - a.y);
+    let l = hypot(b.x - a.x, b.y - a.y);
     if l < 1e-9 {
         return None;
     }
@@ -133,7 +133,7 @@ pub fn angle_at(vertex: Vec2, p1: Vec2, p2: Vec2) -> Option<Angle> {
         Vec2::new(p1.x - vertex.x, p1.y - vertex.y),
         Vec2::new(p2.x - vertex.x, p2.y - vertex.y),
     );
-    if js_hypot(v1.x, v1.y) < 1e-12 || js_hypot(v2.x, v2.y) < 1e-12 {
+    if hypot(v1.x, v1.y) < 1e-12 || hypot(v2.x, v2.y) < 1e-12 {
         return None;
     }
     let sweep = norm_angle(atan2(v2.y, v2.x) - atan2(v1.y, v1.x));
@@ -152,7 +152,7 @@ fn measuring(d: &DimensionGeom) -> Option<(f64, Vec2)> {
     let deg = match d.style.as_deref().unwrap_or("aligned") {
         "linear" => d.angle.unwrap_or(0.0),
         "aligned" => {
-            let l = js_hypot(d.b.x - d.a.x, d.b.y - d.a.y);
+            let l = hypot(d.b.x - d.a.x, d.b.y - d.a.y);
             if l < 1e-9 {
                 return None;
             }

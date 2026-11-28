@@ -7,7 +7,7 @@
 use crate::api::Op;
 use crate::geom::arc::Circle;
 use crate::geom::intersect::{Edge, circle_circle, line_circle_params, line_line};
-use crate::jsmath::{js_hypot, js_hypot_n, js_max, js_max_all, or};
+use crate::jsmath::{hypot, js_hypot_n, js_max, js_max_all, or};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -35,7 +35,7 @@ pub fn tangent_tangent_radius(
             return None;
         };
         let (dx, dy) = (b.x - a.x, b.y - a.y);
-        let l = js_hypot(dx, dy);
+        let l = hypot(dx, dy);
         let (ux, uy) = (dx / l, dy / l);
         let m = Vec2::new((pick1.x + pick2.x) / 2.0, (pick1.y + pick2.y) / 2.0);
         let t = (m.x - a.x) * ux + (m.y - a.y) * uy;
@@ -60,8 +60,7 @@ pub fn tangent_tangent_radius(
         let (Some(t1), Some(t2)) = (touch_point(e1, c), touch_point(e2, c)) else {
             continue;
         };
-        let score =
-            js_hypot(t1.x - pick1.x, t1.y - pick1.y) + js_hypot(t2.x - pick2.x, t2.y - pick2.y);
+        let score = hypot(t1.x - pick1.x, t1.y - pick1.y) + hypot(t2.x - pick2.x, t2.y - pick2.y);
         if best.is_none_or(|(_, s)| score < s) {
             best = Some((c, score));
         }
@@ -77,7 +76,7 @@ pub fn parallel_gap(e1: &Edge, e2: &Edge) -> Option<f64> {
     };
     let (ux, uy) = (b.x - a.x, b.y - a.y);
     let (vx, vy) = (d.x - c.x, d.y - c.y);
-    let (lu, lv) = (js_hypot(ux, uy), js_hypot(vx, vy));
+    let (lu, lv) = (hypot(ux, uy), hypot(vx, vy));
     if !(lu > 1e-12 && lv > 1e-12) || (ux * vy - uy * vx).abs() > 1e-9 * lu * lv {
         return None;
     }
@@ -89,7 +88,7 @@ fn parallels(e: &Edge, r: f64) -> Vec<Support> {
         Edge::Seg { a, b } => {
             let dx = b.x - a.x;
             let dy = b.y - a.y;
-            let l = js_hypot(dx, dy);
+            let l = hypot(dx, dy);
             if l < 1e-12 {
                 return Vec::new();
             }
@@ -148,7 +147,7 @@ fn touch_point(e: &Edge, c: Vec2) -> Option<Vec2> {
             Some(Vec2::new(a.x + dx * t, a.y + dy * t))
         }
         Edge::Arc { c: ec, r, .. } => {
-            let d = js_hypot(c.x - ec.x, c.y - ec.y);
+            let d = hypot(c.x - ec.x, c.y - ec.y);
             if d < 1e-12 {
                 return None;
             }
@@ -192,7 +191,7 @@ fn residual(k: &Constraint, c: Vec2, r: f64) -> [f64; 4] {
         Constraint::Circle { c: kc, big_r, s } => {
             let dx = c.x - kc.x;
             let dy = c.y - kc.y;
-            let d = or(js_hypot(dx, dy), 1e-12);
+            let d = or(hypot(dx, dy), 1e-12);
             let target = if s == 0.0 { r - big_r } else { big_r + s * r };
             [d - target, dx / d, dy / d, if s == 0.0 { -1.0 } else { -s }]
         }
@@ -243,12 +242,12 @@ pub fn tangent_tangent_tangent(edges: &[Edge; 3], picks: &[Vec2; 3]) -> Option<C
     );
     let local = edges.map(|e| shift(&e, o));
     let lp = picks.map(|p| Vec2::new(p.x - o.x, p.y - o.y));
-    let scale = js_max_all(std::iter::once(1.0).chain(lp.iter().map(|p| js_hypot(p.x, p.y))));
+    let scale = js_max_all(std::iter::once(1.0).chain(lp.iter().map(|p| hypot(p.x, p.y))));
     let options: Vec<Vec<Constraint>> = local
         .iter()
         .map(|e| match *e {
             Edge::Seg { a, b } => {
-                let l = js_hypot(b.x - a.x, b.y - a.y);
+                let l = hypot(b.x - a.x, b.y - a.y);
                 if l < 1e-12 {
                     return Vec::new();
                 }
@@ -264,10 +263,7 @@ pub fn tangent_tangent_tangent(edges: &[Edge; 3], picks: &[Vec2; 3]) -> Option<C
                 .collect(),
         })
         .collect();
-    let r0 = or(
-        lp.iter().fold(0.0, |m, p| m + js_hypot(p.x, p.y)) / 3.0,
-        1.0,
-    );
+    let r0 = or(lp.iter().fold(0.0, |m, p| m + hypot(p.x, p.y)) / 3.0, 1.0);
     let mut best: Option<(Circle, f64)> = None;
     for &c1 in &options[0] {
         for &c2 in &options[1] {
@@ -281,7 +277,7 @@ pub fn tangent_tangent_tangent(edges: &[Edge; 3], picks: &[Vec2; 3]) -> Option<C
                 let mut score = 0.0;
                 for i in 0..3 {
                     score += match touch_point(&local[i], sol.c) {
-                        Some(t) => js_hypot(t.x - lp[i].x, t.y - lp[i].y),
+                        Some(t) => hypot(t.x - lp[i].x, t.y - lp[i].y),
                         None => f64::INFINITY,
                     };
                 }

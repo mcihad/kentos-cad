@@ -3,7 +3,7 @@
 use crate::entity::Shape;
 use crate::geom::arc::{ON_ARC_EPS, norm_angle, on_arc, sweep};
 use crate::geom::intersect::{circle_circle, line_circle_params};
-use crate::jsmath::{atan2, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, hypot, js_max, js_min, sin};
 use crate::vec2::Vec2;
 
 const EPS: f64 = 1e-9;
@@ -22,7 +22,7 @@ fn dot(a: Vec2, b: Vec2) -> f64 {
     a.x * b.x + a.y * b.y
 }
 fn length(a: Vec2) -> f64 {
-    js_hypot(a.x, a.y)
+    hypot(a.x, a.y)
 }
 
 #[derive(Clone, Copy)]

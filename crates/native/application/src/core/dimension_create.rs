@@ -943,8 +943,8 @@ fn bind(
                 let (ux, uy) = (b.x - a.x, b.y - a.y);
                 let (vx, vy) = (p.x - c.x, p.y - c.y);
                 (ux * vy - uy * vx).abs()
-                    / (kentos_geometry_core::jsmath::js_hypot(ux, uy)
-                        * kentos_geometry_core::jsmath::js_hypot(vx, vy))
+                    / (kentos_geometry_core::jsmath::hypot(ux, uy)
+                        * kentos_geometry_core::jsmath::hypot(vx, vy))
                     .max(f64::MIN_POSITIVE)
             };
             let a_on_first = across(g.a, *s) <= across(g.b, *s);

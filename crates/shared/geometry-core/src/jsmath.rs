@@ -8,7 +8,9 @@
 
 use std::cmp::Ordering;
 
-pub use kentos_num::{acos, asin, atan, atan2, cos, exp, ln as log, log2, log10, pow, sin, tan};
+pub use kentos_num::{
+    acos, asin, atan, atan2, cos, exp, hypot, ln as log, log2, log10, pow, sin, tan,
+};
 
 pub const PI: f64 = std::f64::consts::PI;
 pub const TAU: f64 = PI * 2.0;
@@ -81,7 +83,7 @@ pub fn js_max_all(xs: impl IntoIterator<Item = f64>) -> f64 {
 }
 
 /// The length of a vector of any number of parts: every part divided by the largest, the squares summed with
-/// Kahan compensation, then scaled back (the port's form; two parts go to [`js_hypot`], which is correctly rounded).
+/// Kahan compensation, then scaled back (the port's form; two parts go to [`hypot`], which is correctly rounded).
 pub fn js_hypot_n(xs: &[f64]) -> f64 {
     let mut max = 0.0_f64;
     let mut nan = false;
@@ -112,12 +114,6 @@ pub fn js_hypot_n(xs: &[f64]) -> f64 {
         sum = preliminary;
     }
     sum.sqrt() * max
-}
-
-/// The length of the vector (a, b): the double nearest to √(a² + b²), from the numeric base (docs/adr/9403). The
-/// name is the port's; the scaled sum it stood for missed the nearest double for one length in three.
-pub fn js_hypot(a: f64, b: f64) -> f64 {
-    kentos_num::hypot(a, b)
 }
 
 /// The ordering a JavaScript comparator `(a, b) => a − b` gives: NaN compares
@@ -252,9 +248,9 @@ mod tests {
     /// base's own cases are in fixtures/numeric/v1/hypot.json).
     #[test]
     fn a_length_is_the_nearest_double() {
-        assert_eq!(js_hypot(3.0, 4.0), 5.0);
-        assert_eq!(js_hypot(f64::NAN, f64::INFINITY), f64::INFINITY);
+        assert_eq!(hypot(3.0, 4.0), 5.0);
+        assert_eq!(hypot(f64::NAN, f64::INFINITY), f64::INFINITY);
         let (x, y) = (896.809_549_769_400_7, -294.254_883_547_293_4);
-        assert_eq!(js_hypot(x, y), 943.850_255_627_992_3);
+        assert_eq!(hypot(x, y), 943.850_255_627_992_3);
     }
 }

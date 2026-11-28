@@ -24,7 +24,7 @@
 
 use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::ops::elevation::{Carry, ON};
 use crate::vec2::Vec2;
 
@@ -73,7 +73,7 @@ fn lerp([a, b]: [f64; 2], t: f64) -> f64 {
 }
 
 fn near(p: Vec2, q: Vec2) -> bool {
-    js_hypot(p.x - q.x, p.y - q.y) <= ON
+    hypot(p.x - q.x, p.y - q.y) <= ON
 }
 
 /// Rule 3: the width a source has at its vertex `p`, leaving it (`start`) or arriving.

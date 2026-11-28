@@ -14,7 +14,7 @@ use crate::geom::arrangement::{Area, Ring, TOL, tight_box};
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geom::region::{ring_area, ring_edges};
 use crate::geometry::{Bounds, empty_bounds};
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::ops::areas::polygon_of_area;
 use crate::ops::convert::{Elevations, Zs, paths};
 use crate::ops::elevation::ON;
@@ -176,7 +176,7 @@ fn cut_edge(e: &Edge, across_x: bool, cut: f64, b: &Bounds) -> Vec<Edge> {
     let mut out = Vec::with_capacity(ts.len() + 1);
     let (mut t0, mut p0) = (0.0, start);
     for (t, p) in ts {
-        if js_hypot(p.x - p0.x, p.y - p0.y) > TOL {
+        if hypot(p.x - p0.x, p.y - p0.y) > TOL {
             out.push(sub_edge(e, t0, t, p0, p));
             t0 = t;
             p0 = p;
@@ -345,7 +345,7 @@ impl Heights {
         near.sort_unstable();
         for &i in near.iter() {
             let (v, h) = self.verts[i as usize];
-            if js_hypot(p.x - v.x, p.y - v.y) <= ON {
+            if hypot(p.x - v.x, p.y - v.y) <= ON {
                 return Some(h);
             }
         }

@@ -6,7 +6,7 @@
 //! curve is not enough. Straight runs stay lines and sharp turns stay
 //! corners. Simplify, stroke to path and offsets use it.
 
-use kentos_geometry_core::jsmath::{PI, cos, js_floor, js_hypot, js_max, js_min, or};
+use kentos_geometry_core::jsmath::{PI, cos, hypot, js_floor, js_max, js_min, or};
 
 use crate::bezier::{Cubic, bez, bez_deriv, bez_deriv2};
 use crate::shape::{PathNode, Pt, SubPath};
@@ -24,7 +24,7 @@ fn dot(a: Pt, b: Pt) -> f64 {
     a[0] * b[0] + a[1] * b[1]
 }
 fn len(a: Pt) -> f64 {
-    js_hypot(a[0], a[1])
+    hypot(a[0], a[1])
 }
 fn unit(a: Pt) -> Pt {
     let l = len(a);
@@ -48,7 +48,7 @@ pub fn dist_to_segment(p: Pt, a: Pt, b: Pt) -> f64 {
     } else {
         0.0
     };
-    js_hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t)
+    hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t)
 }
 
 fn chord_params(d: &[Pt], first: usize, last: usize) -> Vec<f64> {
@@ -235,7 +235,7 @@ fn dedupe(pts: &[Pt]) -> Vec<Pt> {
     let mut out: Vec<Pt> = Vec::new();
     for &p in pts {
         match out.last() {
-            Some(q) if !(js_hypot(p[0] - q[0], p[1] - q[1]) > 1e-12) => {}
+            Some(q) if !(hypot(p[0] - q[0], p[1] - q[1]) > 1e-12) => {}
             _ => out.push(p),
         }
     }
@@ -282,7 +282,7 @@ pub fn fit_polyline(input: &[Pt], tol: f64, opts: &FitOptions) -> SubPath {
     let mut kept_at: Vec<isize> = Vec::with_capacity(input.len());
     for &p in input {
         match pts.last() {
-            Some(q) if !(js_hypot(p[0] - q[0], p[1] - q[1]) > 1e-12) => {}
+            Some(q) if !(hypot(p[0] - q[0], p[1] - q[1]) > 1e-12) => {}
             _ => pts.push(p),
         }
         kept_at.push(pts.len() as isize - 1);
@@ -290,7 +290,7 @@ pub fn fit_polyline(input: &[Pt], tol: f64, opts: &FitOptions) -> SubPath {
     if opts.closed && pts.len() > 2 {
         let a = pts[0];
         let b = pts[pts.len() - 1];
-        if js_hypot(a[0] - b[0], a[1] - b[1]) <= 1e-12 {
+        if hypot(a[0] - b[0], a[1] - b[1]) <= 1e-12 {
             pts.pop();
             let n = pts.len() as isize;
             for k in kept_at.iter_mut() {

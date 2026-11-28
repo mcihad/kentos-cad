@@ -22,7 +22,7 @@ use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, on_edge_arc, perpendicular_foot, tangent_points,
 };
 use crate::geom::leader;
-use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_round, js_sign, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_round, js_sign, sin};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::vec2::Vec2;
@@ -141,7 +141,7 @@ impl Extension {
                 (t >= -ON && off.abs() <= ON).then_some(js_max(t, 0.0))
             }
             Extension::Arc { c, r, a0, sweep } => {
-                if (js_hypot(p.x - c.x, p.y - c.y) - r).abs() > ON {
+                if (hypot(p.x - c.x, p.y - c.y) - r).abs() > ON {
                     return None;
                 }
                 // The angle travelled from the end in the sweep's sense, 0..2π.
@@ -303,7 +303,7 @@ impl Choice {
         if (q.x - self.p.x).abs() > self.tol || (q.y - self.p.y).abs() > self.tol {
             return;
         }
-        let d = js_hypot(q.x - self.p.x, q.y - self.p.y);
+        let d = hypot(q.x - self.p.x, q.y - self.p.y);
         if d > self.tol {
             return;
         }
@@ -561,12 +561,12 @@ impl Store {
         let Some(it) = self.get(id) else {
             return out;
         };
-        let near = |q: Vec2| js_hypot(q.x - at.x, q.y - at.y) <= SAME;
+        let near = |q: Vec2| hypot(q.x - at.x, q.y - at.y) <= SAME;
         for e in it.snap_shapes() {
             for ed in entity_edges(e) {
                 match ed {
                     Edge::Seg { a, b } => {
-                        let l = js_hypot(b.x - a.x, b.y - a.y);
+                        let l = hypot(b.x - a.x, b.y - a.y);
                         if l <= SAME {
                             continue;
                         }
@@ -627,7 +627,7 @@ impl Store {
                         continue;
                     };
                     let c = closest_on_edge(&ed, p);
-                    let l = js_hypot(b.x - a.x, b.y - a.y);
+                    let l = hypot(b.x - a.x, b.y - a.y);
                     if c.d > tol || l <= 0.0 || best.is_some_and(|(d, _)| d <= c.d) {
                         continue;
                     }
@@ -708,7 +708,7 @@ fn extension_snaps(ch: &mut Choice, nearby: &[Nearby], extensions: &[Extension])
         .iter()
         .map(|x| match *x {
             Extension::Line { end, dir } => {
-                let reach = js_hypot(p.x - end.x, p.y - end.y) + 2.0 * tol;
+                let reach = hypot(p.x - end.x, p.y - end.y) + 2.0 * tol;
                 Edge::Seg {
                     a: end,
                     b: Vec2::new(end.x + dir.x * reach, end.y + dir.y * reach),
@@ -840,7 +840,7 @@ fn crossings(ch: &mut Choice, nearby: &[Nearby], p: Vec2) {
 /// rounding of b − a, t·(b − a) and the sum can add (ε = 2⁻⁵³). On the axis
 /// where the box is farthest, P − (max + m) = g gives the crossing's
 /// coordinate difference ≥ g after rounding too (rounding is monotonic),
-/// and `js_hypot` is never below its larger argument. NaN or infinite ends
+/// and `hypot` is never below its larger argument. NaN or infinite ends
 /// make `m`, and so every side's gap, NaN or −∞: no pruning.
 fn crossing_gap(a: Vec2, b: Vec2, p: Vec2) -> f64 {
     let m = 1e-9 * ((b.x - a.x).abs() + (b.y - a.y).abs())
@@ -867,7 +867,7 @@ fn refine_crossing(p: Vec2, a: &Nearby, b: &Nearby) -> Vec2 {
         let mut q = p;
         for _ in 0..40 {
             let next = b.project(a.project(q));
-            let moved = js_hypot(next.x - q.x, next.y - q.y);
+            let moved = hypot(next.x - q.x, next.y - q.y);
             q = next;
             if moved <= 1e-13 {
                 break;
@@ -885,7 +885,7 @@ fn refine_crossing(p: Vec2, a: &Nearby, b: &Nearby) -> Vec2 {
             }
             // Taken on the straight partner, so a horizontal line keeps its exact Y.
             let q = Vec2::new(sa.x + (sb.x - sa.x) * h.u, sa.y + (sb.y - sa.y) * h.u);
-            let d = js_hypot(q.x - p.x, q.y - p.y);
+            let d = hypot(q.x - p.x, q.y - p.y);
             if best.is_none_or(|(_, bd)| d < bd) {
                 best = Some((q, d));
             }
@@ -1681,7 +1681,7 @@ mod tests {
             let hit = s.snap(p, 25.0, kinds, from).unwrap();
             assert_eq!(hit.kind, SnapKind::Intersection);
             assert!(
-                js_hypot(hit.point.x - o.x, hit.point.y - o.y) < 1e-9,
+                hypot(hit.point.x - o.x, hit.point.y - o.y) < 1e-9,
                 "{hit:?}"
             );
             // The first pair through that crossing: horizontal line y = 0 (id 31) and x = 0.
@@ -1752,13 +1752,13 @@ mod tests {
             );
             let g = crossing_gap(a, b, p);
             let check = |q: Vec2| {
-                let dq = js_hypot(q.x - p.x, q.y - p.y);
+                let dq = hypot(q.x - p.x, q.y - p.y);
                 assert!(dq >= g, "{a:?}→{b:?}, {p:?}: {q:?} at {dq} < {g}");
             };
             // The partner's own gap, less the band on the first segment (the pair skip in `crossings`).
             let partner = |c: Vec2, d: Vec2, q: Vec2| {
                 let gc = crossing_gap(c, d, p) - 1e-9 * ((b.x - a.x).abs() + (b.y - a.y).abs());
-                let dq = js_hypot(q.x - p.x, q.y - p.y);
+                let dq = hypot(q.x - p.x, q.y - p.y);
                 assert!(
                     dq >= gc,
                     "{c:?}→{d:?} with {a:?}→{b:?}, {p:?}: {q:?} at {dq} < {gc}"

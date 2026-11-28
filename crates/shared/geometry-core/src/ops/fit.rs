@@ -10,7 +10,7 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::jsmath::{atan2, cos, js_hypot, js_max, sin};
+use crate::jsmath::{atan2, cos, hypot, js_max, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -121,12 +121,12 @@ impl Fit {
     pub fn derived(&self) -> Derived {
         match (self.kind, self.params.as_slice()) {
             (FitKind::Helmert, &[a, b]) => Derived::Helmert {
-                scale: js_hypot(a, b),
+                scale: hypot(a, b),
                 rotation: atan2(b, a),
             },
             (FitKind::Affine, &[a, b, c, d]) => Derived::Affine {
-                scale_x: js_hypot(a, b),
-                scale_y: js_hypot(c, d),
+                scale_x: hypot(a, b),
+                scale_y: hypot(c, d),
                 rotation: atan2(b, a),
                 shear: atan2(a * c + b * d, a * d - b * c),
             },
@@ -301,7 +301,7 @@ pub fn fit(pairs: &[FitPair], kind: FitKind) -> Result<Fit, FitError> {
         if p.used {
             vv += vx * vx + vy * vy;
         }
-        residuals.push([vx, vy, js_hypot(vx, vy)]);
+        residuals.push([vx, vy, hypot(vx, vy)]);
     }
     let dof = 2 * used.len() - kind.unknowns();
     let m0 = (dof > 0).then(|| (vv / dof as f64).sqrt());

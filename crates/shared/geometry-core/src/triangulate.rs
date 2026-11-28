@@ -21,7 +21,7 @@ use crate::api::Op;
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::region::{subtract_areas, union_areas};
 use crate::geometry::signed_area;
-use crate::jsmath::{atan2, js_cmp, js_hypot, stable_sort};
+use crate::jsmath::{atan2, hypot, js_cmp, stable_sort};
 use crate::op;
 use crate::predicates::orient2d;
 use crate::vec2::Vec2;
@@ -417,7 +417,7 @@ fn bridge(pts: &[Vec2], ring: Vec<usize>, hole: &[usize], mi: usize) -> Vec<usiz
                 continue;
             }
             let ang = atan2(v.y - m.y, v.x - m.x).abs();
-            let d = js_hypot(v.x - m.x, v.y - m.y);
+            let d = hypot(v.x - m.x, v.y - m.y);
             let better = match best {
                 None => true,
                 Some((best_angle, best_dist, b)) => {

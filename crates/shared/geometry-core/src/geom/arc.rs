@@ -1,7 +1,7 @@
 //! Angles, circles and arcs (`apps/web/src/model/geom/arc.ts`).
 
 use crate::api::Op;
-use crate::jsmath::{TAU, atan2, cos, js_hypot, js_max, sin, tan};
+use crate::jsmath::{TAU, atan2, cos, hypot, js_max, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -57,7 +57,7 @@ pub fn circle_through(p1: Vec2, p2: Vec2, p3: Vec2) -> Option<Circle> {
     let cross = ax * by - ay * bx;
     // Collinear (docs/adr/0289): the sine of the angle at p1 at most 1e-9, whatever the scale; a coincident
     // pair is collinear too.
-    if !(cross.abs() > COLLINEAR * js_hypot(ax, ay) * js_hypot(bx, by)) {
+    if !(cross.abs() > COLLINEAR * hypot(ax, ay) * hypot(bx, by)) {
         return None;
     }
     let d = 2.0 * cross;
@@ -67,7 +67,7 @@ pub fn circle_through(p1: Vec2, p2: Vec2, p3: Vec2) -> Option<Circle> {
     let cy = (ax * b2 - bx * a2) / d;
     Some(Circle {
         c: Vec2::new(p1.x + cx, p1.y + cy),
-        r: js_hypot(cx, cy),
+        r: hypot(cx, cy),
     })
 }
 

@@ -11,7 +11,7 @@ use crate::entity::{Shape, TextPlace, area_parts, entity_vertices, inside_polygo
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at, seg_seg};
 use crate::geom::leader;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::predicates::orientation;
@@ -214,7 +214,7 @@ fn parts(e: &Shape, font: Font) -> (Vec<Edge>, Vec<Vec2>) {
 fn holds_polygon(e: &Shape, at: Vec2, font: Font) -> bool {
     match e {
         Shape::Polygon { .. } => inside_polygon(e, at),
-        Shape::Circle { c, r } => js_hypot(at.x - c.x, at.y - c.y) <= *r,
+        Shape::Circle { c, r } => hypot(at.x - c.x, at.y - c.y) <= *r,
         Shape::Hatch { ring, holes, .. } => {
             point_in_polygon(at, ring) && !holes.iter().flatten().any(|h| point_in_polygon(at, h))
         }

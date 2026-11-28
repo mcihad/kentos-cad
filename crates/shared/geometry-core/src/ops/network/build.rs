@@ -18,7 +18,7 @@ use super::turns::{Level, TurnIn, level_value};
 use crate::geom::arrangement::{edge_box, edge_len, sub_edge};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
 
@@ -567,7 +567,7 @@ pub(super) fn join_all(points: &[Vec2], levels: &[Level], tol: f64) -> Joined {
     }
     let mut pair = |i: u32, j: u32, parent: &mut [u32]| {
         let (p, q) = (points[i as usize], points[j as usize]);
-        if js_hypot(q.x - p.x, q.y - p.y) > tol {
+        if hypot(q.x - p.x, q.y - p.y) > tol {
             return;
         }
         if !levels[i as usize].meets(levels[j as usize]) {

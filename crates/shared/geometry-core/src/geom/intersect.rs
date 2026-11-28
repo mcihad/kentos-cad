@@ -5,7 +5,7 @@
 
 use crate::api::Op;
 use crate::geom::arc::{ON_ARC_EPS, norm_angle, on_arc};
-use crate::jsmath::{TAU, acos, atan2, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{TAU, acos, atan2, cos, hypot, js_max, js_min, sin};
 use crate::op;
 use crate::predicates::cross_accurate;
 use crate::vec2::Vec2;
@@ -60,7 +60,7 @@ pub fn line_line(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<Hit> {
     let sx = d.x - c.x;
     let sy = d.y - c.y;
     let den = cross_accurate(a, b, c, d);
-    if den.abs() < EPS * js_max(1.0, js_hypot(rx, ry) * js_hypot(sx, sy)) {
+    if den.abs() < EPS * js_max(1.0, hypot(rx, ry) * hypot(sx, sy)) {
         return None; // parallel
     }
     let t = cross_accurate(a, c, c, d) / den;
@@ -135,7 +135,7 @@ pub fn line_circle_params(a: Vec2, b: Vec2, c: Vec2, r: f64) -> Vec<f64> {
 pub fn circle_circle(c1: Vec2, r1: f64, c2: Vec2, r2: f64) -> Vec<Vec2> {
     let dx = c2.x - c1.x;
     let dy = c2.y - c1.y;
-    let d = js_hypot(dx, dy);
+    let d = hypot(dx, dy);
     if d < EPS || d > r1 + r2 + 1e-9 || d < (r1 - r2).abs() - 1e-9 {
         return Vec::new();
     }
@@ -290,7 +290,7 @@ pub fn closest_on_edge(e: &Edge, p: Vec2) -> Closest {
             Closest {
                 p: q,
                 t,
-                d: js_hypot(p.x - q.x, p.y - q.y),
+                d: hypot(p.x - q.x, p.y - q.y),
             }
         }
         Edge::Arc { c, r, a0, sweep } => {
@@ -300,13 +300,13 @@ pub fn closest_on_edge(e: &Edge, p: Vec2) -> Closest {
                 return Closest {
                     p: q,
                     t: param_on(e, q),
-                    d: (js_hypot(p.x - c.x, p.y - c.y) - r).abs(),
+                    d: (hypot(p.x - c.x, p.y - c.y) - r).abs(),
                 };
             }
             let s = point_at(e, 0.0);
             let f = point_at(e, 1.0);
-            let ds = js_hypot(p.x - s.x, p.y - s.y);
-            let df = js_hypot(p.x - f.x, p.y - f.y);
+            let ds = hypot(p.x - s.x, p.y - s.y);
+            let df = hypot(p.x - f.x, p.y - f.y);
             if ds <= df {
                 Closest {
                     p: s,
@@ -333,7 +333,7 @@ pub fn perpendicular_foot(e: &Edge, p: Vec2) -> Option<Vec2> {
         }
         Edge::Arc { c, r, a0, sweep } => {
             let ang = angle_of(c, p);
-            if js_hypot(p.x - c.x, p.y - c.y) < EPS {
+            if hypot(p.x - c.x, p.y - c.y) < EPS {
                 return None;
             }
             on_edge_arc(a0, sweep, ang).then(|| Vec2::new(c.x + cos(ang) * r, c.y + sin(ang) * r))
@@ -463,7 +463,7 @@ mod tests {
     fn plain_line_line(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<Hit> {
         let (rx, ry, sx, sy) = (b.x - a.x, b.y - a.y, d.x - c.x, d.y - c.y);
         let den = rx * sy - ry * sx;
-        if den.abs() < EPS * js_max(1.0, js_hypot(rx, ry) * js_hypot(sx, sy)) {
+        if den.abs() < EPS * js_max(1.0, hypot(rx, ry) * hypot(sx, sy)) {
             return None;
         }
         let (qx, qy) = (c.x - a.x, c.y - a.y);

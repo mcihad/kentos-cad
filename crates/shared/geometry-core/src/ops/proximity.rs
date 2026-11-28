@@ -10,7 +10,7 @@
 use crate::geom::arrangement::edge_box;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{PI, js_hypot, js_max, js_min};
+use crate::jsmath::{PI, hypot, js_max, js_min};
 use crate::ops::geoprocess;
 use crate::ops::spatial_query::{
     Geometry, TOLERANCE, arc_toward, boxes_meet, edge_gap, ends, inside, intersects, meets_point,
@@ -224,7 +224,7 @@ pub fn edge_overlap(e1: &Edge, e2: &Edge, tol: f64) -> f64 {
                 sweep: w2,
             },
         ) => {
-            if js_hypot(c1.x - c2.x, c1.y - c2.y) > tol || (r1 - r2).abs() > tol {
+            if hypot(c1.x - c2.x, c1.y - c2.y) > tol || (r1 - r2).abs() > tol {
                 return 0.0;
             }
             let overlap = angle_overlap(arc_span(s1, w1), arc_span(s2, w2));

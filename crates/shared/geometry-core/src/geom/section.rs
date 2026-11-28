@@ -30,7 +30,7 @@
 //! `scripts/fixtures/section_cases.py` computes the same from these rules without KentOS's code, in exact fractions.
 
 use crate::geometry::point_in_rings;
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::vec2::Vec2;
 
 /// Two heights or two places closer than this are one, metres.
@@ -62,7 +62,7 @@ impl Frame {
     /// A section line's frame: from `a` to `b`, looking to its left (its right when `flip`), `depth` deep (none: no
     /// limit). None for a line shorter than a millimetre or a depth not above 0.
     pub fn new(a: Vec2, b: Vec2, flip: bool, depth: Option<f64>) -> Option<Frame> {
-        let length = js_hypot(b.x - a.x, b.y - a.y);
+        let length = hypot(b.x - a.x, b.y - a.y);
         if !(length >= 1e-3) || depth.is_some_and(|d| !(d > 0.0)) {
             return None;
         }
@@ -530,7 +530,7 @@ impl Cover {
         for i in 0..n {
             let (r, s) = (self.ring[i], self.ring[(i + 1) % n]);
             let side = Vec2::new(s.x - r.x, s.y - r.y);
-            let len = js_hypot(side.x, side.y);
+            let len = hypot(side.x, side.y);
             if len <= 1e-15 {
                 continue;
             }
@@ -583,7 +583,7 @@ impl Cover {
         for i in 0..n {
             let (r, s) = (self.ring[i], self.ring[(i + 1) % n]);
             let side = Vec2::new(s.x - r.x, s.y - r.y);
-            let len = js_hypot(side.x, side.y);
+            let len = hypot(side.x, side.y);
             if len <= 1e-15 {
                 continue;
             }
@@ -675,16 +675,13 @@ fn joints(e: &Edge, covers: &[Cover], finishes: &[Option<&str>]) -> Vec<(f64, f6
 fn clean(ring: &[Vec2]) -> Vec<Vec2> {
     let mut out: Vec<Vec2> = Vec::new();
     for &p in ring {
-        if out
-            .last()
-            .is_none_or(|l| js_hypot(p.x - l.x, p.y - l.y) > EPS)
-        {
+        if out.last().is_none_or(|l| hypot(p.x - l.x, p.y - l.y) > EPS) {
             out.push(p);
         }
     }
     while out.len() > 1 && {
         let (f, l) = (out[0], out[out.len() - 1]);
-        js_hypot(f.x - l.x, f.y - l.y) <= EPS
+        hypot(f.x - l.x, f.y - l.y) <= EPS
     } {
         out.pop();
     }
@@ -701,7 +698,7 @@ fn clean(ring: &[Vec2]) -> Vec<Vec2> {
             );
             let cross = u.x * v.y - u.y * v.x;
             let dot = u.x * v.x + u.y * v.y;
-            cross.abs() <= EPS * js_hypot(u.x, u.y) * js_hypot(v.x, v.y) + 1e-15 && dot > 0.0
+            cross.abs() <= EPS * hypot(u.x, u.y) * hypot(v.x, v.y) + 1e-15 && dot > 0.0
         });
         match straight {
             Some(i) => {
@@ -835,7 +832,7 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
     };
     let mut drawn = std::collections::HashSet::new();
     for e in &edges {
-        let length = js_hypot(e.q.x - e.p.x, e.q.y - e.p.y);
+        let length = hypot(e.q.x - e.p.x, e.q.y - e.p.y);
         if length <= SHORTEST {
             continue;
         }
@@ -955,7 +952,7 @@ fn outward(rings: &[Vec<Vec2>]) -> Vec<(Vec2, Vec2, Vec2)> {
         let n = r.len();
         for k in 0..n {
             let (p, q) = (r[k], r[(k + 1) % n]);
-            let len = js_hypot(q.x - p.x, q.y - p.y);
+            let len = hypot(q.x - p.x, q.y - p.y);
             if len <= EPS {
                 continue;
             }

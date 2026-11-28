@@ -209,7 +209,7 @@ pub(super) fn beam(
     // where it hangs), rising evenly to its end; its depth across its axis a level one's, so upright it is deeper.
     let height = match (b.rise, b.pts.as_slice()) {
         (Some(rise), [a, e]) => {
-            let length = kentos_geometry_core::jsmath::js_hypot(e.x - a.x, e.y - a.y);
+            let length = kentos_geometry_core::jsmath::hypot(e.x - a.x, e.y - a.y);
             let g = rise / length;
             let (dx, dy) = (g * (e.x - a.x) / length, g * (e.y - a.y) / length);
             let upright = (top - bottom) * (1.0 + g * g).sqrt();

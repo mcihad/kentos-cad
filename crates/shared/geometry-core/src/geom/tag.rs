@@ -16,7 +16,7 @@
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::block::{Piece, PieceStroke};
 use crate::entity::Shape;
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::text::{Font, TextAlign, width_em};
 use crate::vec2::Vec2;
 
@@ -245,7 +245,7 @@ fn line_y(spec: &Spec, scale: f64, i: usize) -> f64 {
 /// A circle frame's radius at 1:`scale`.
 pub fn radius(spec: &Spec, scale: f64) -> f64 {
     let (w, b) = half_box(spec, scale);
-    js_hypot(w, b) + PAD * height(spec, scale)
+    hypot(w, b) + PAD * height(spec, scale)
 }
 
 /// How far from the middle the line towards `d` (a unit direction) leaves the frame: the circle's radius, else the
@@ -359,7 +359,7 @@ pub fn pieces(at: Vec2, spec: &Spec, scale: f64) -> Vec<Piece> {
     if spec.leader
         && let Some(to) = spec.anchor
     {
-        let l = js_hypot(to.x - at.x, to.y - at.y);
+        let l = hypot(to.x - at.x, to.y - at.y);
         if l > 0.0 {
             let d = Vec2::new((to.x - at.x) / l, (to.y - at.y) / l);
             let t = exit(at, spec, scale, d);

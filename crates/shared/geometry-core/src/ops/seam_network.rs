@@ -112,10 +112,10 @@ pub fn tidy(ring: &[Pt], ccw: bool, tol: f64) -> Vec<Pt> {
             let (u, v) = ([b[0] - a[0], b[1] - a[1]], [c[0] - b[0], c[1] - b[1]]);
             let cross = u[0] * v[1] - u[1] * v[0];
             let len = crate::jsmath::js_max(
-                crate::jsmath::js_hypot(u[0], u[1]),
-                crate::jsmath::js_hypot(v[0], v[1]),
+                crate::jsmath::hypot(u[0], u[1]),
+                crate::jsmath::hypot(v[0], v[1]),
             );
-            cross.abs() <= tol * len || crate::jsmath::js_hypot(u[0], u[1]) <= tol
+            cross.abs() <= tol * len || crate::jsmath::hypot(u[0], u[1]) <= tol
         });
         match drop {
             Some(k) => {

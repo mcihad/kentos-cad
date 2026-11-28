@@ -426,7 +426,7 @@ fn run_checked(
         hi[axis] = libm::fmax(hi[axis], *v);
     }
     let extent = if lo[0].is_finite() {
-        crate::jsmath::js_hypot(hi[0] - lo[0], hi[1] - lo[1])
+        crate::jsmath::hypot(hi[0] - lo[0], hi[1] - lo[1])
     } else {
         0.0
     };
@@ -668,7 +668,7 @@ fn run_checked(
     let weight = |x: &[f64], j: usize| match model.kinds[j] {
         VarKind::Bulge => model.edge_ends[j].map_or(1.0, |(a, b)| {
             libm::fmax(
-                crate::jsmath::js_hypot(x[b] - x[a], x[b + 1] - x[a + 1]) * 0.5,
+                crate::jsmath::hypot(x[b] - x[a], x[b + 1] - x[a + 1]) * 0.5,
                 1e-9,
             )
         }),

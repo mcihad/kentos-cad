@@ -1,14 +1,14 @@
 //! Rational Bézier interval bounds for a parallel curve. Bounds use positive
 //! Bernstein weights; subdivision refines bounds, never a sampled error guess.
 
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::vec2::Vec2;
 
 #[derive(Clone, Debug)]
 pub(super) struct Bezier(pub Vec<[f64; 3]>);
 
 fn norm(v: [f64; 2]) -> f64 {
-    js_hypot(v[0], v[1])
+    hypot(v[0], v[1])
 }
 fn derivative(c: &[[f64; 3]]) -> Vec<[f64; 3]> {
     let n = (c.len() - 1) as f64;

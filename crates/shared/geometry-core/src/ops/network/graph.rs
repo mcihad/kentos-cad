@@ -30,7 +30,7 @@ use super::turns::{Level, TurnIn, TurnTable, heading};
 use crate::geom::arrangement::{edge_len, reverse_edge, sub_edge};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{hypot, js_max};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
 
@@ -361,7 +361,7 @@ impl Graph {
         );
         let d = |n: u32| {
             let q = self.nodes[n as usize];
-            js_hypot(q.x - via.x, q.y - via.y)
+            hypot(q.x - via.x, q.y - via.y)
         };
         let mut node: Option<u32> = None;
         for n in [pa.from, pa.to] {

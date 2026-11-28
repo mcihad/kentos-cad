@@ -20,7 +20,7 @@
 use crate::api::Op;
 use crate::geom::bulge::bulge_arc;
 use crate::geom::intersect::{Edge, closest_on_edge, param_on};
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -107,7 +107,7 @@ fn extended(p: Vec2, s: &Elevated) -> Option<f64> {
         let beyond = if forward { t > 1.0 } else { t < 0.0 };
         let on_line = Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
         if beyond
-            && js_hypot(p.x - on_line.x, p.y - on_line.y) <= ON
+            && hypot(p.x - on_line.x, p.y - on_line.y) <= ON
             && let Some(v) = between(z(i), z(j), t)
         {
             return Some(v);
@@ -134,7 +134,7 @@ pub fn carry_elevations(
             // 1. On a source vertex.
             for s in sources {
                 for (k, q) in s.pts.iter().enumerate() {
-                    if js_hypot(p.x - q.x, p.y - q.y) <= ON
+                    if hypot(p.x - q.x, p.y - q.y) <= ON
                         && let Some(z) = s.zs.get(k).copied().flatten()
                     {
                         return Some(z);
@@ -207,10 +207,10 @@ pub fn length_3d(
             .and_then(|&v| bulge_arc(a, b, v))
         {
             Some(arc) => arc.r * arc.sweep.abs(),
-            None => js_hypot(b.x - a.x, b.y - a.y),
+            None => hypot(b.x - a.x, b.y - a.y),
         };
         let rise = zs[j]? - zs[i]?;
-        sum += js_hypot(plan, rise);
+        sum += hypot(plan, rise);
     }
     Some(sum)
 }
@@ -367,7 +367,7 @@ mod tests {
         // Closed: the closing edge counts, 40 m level back.
         assert_eq!(
             length_3d(&pts, None, true, &zs),
-            Some(60.0 + js_hypot(40.0, 40.0))
+            Some(60.0 + hypot(40.0, 40.0))
         );
         // A vertex without an elevation: no length in space.
         assert_eq!(

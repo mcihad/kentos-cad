@@ -15,7 +15,7 @@ use crate::entity::{Entity, Part, Shape, area_parts, is_multi_part, join_parts};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{BulgePath, clean_bulge_path};
 use crate::geom::intersect::Edge;
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::ops::path::{Division, Path, cuts_on, division_params, path_of, sub_path};
@@ -418,7 +418,7 @@ fn field_of<'a>(e: &'a Entity, name: &str) -> Option<&'a Json> {
 fn is_empty(s: &Shape) -> bool {
     let tiny = |l: f64| l <= 1e-9;
     match s {
-        Shape::Line { a, b } => tiny(js_hypot(b.x - a.x, b.y - a.y)),
+        Shape::Line { a, b } => tiny(hypot(b.x - a.x, b.y - a.y)),
         Shape::Circle { r, .. } | Shape::Arc { r, .. } => tiny(*r),
         Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } | Shape::Spline { pts, .. } => {
             pts.windows(2).all(|w| same_pt(w[0], w[1]))

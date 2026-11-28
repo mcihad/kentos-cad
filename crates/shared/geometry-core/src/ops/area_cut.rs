@@ -10,7 +10,7 @@
 //! Stage one: one outer ring of straight edges, the cut one straight chord. A line that crosses the boundary more than
 //! twice would leave more than two pieces and is refused.
 
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::vec2::Vec2;
 
 /// Why no cut is given, in the tool's words.
@@ -115,7 +115,7 @@ pub fn cut_for_area(ring: &[Vec2], edge: usize, target: f64) -> Result<Cut, &'st
         return Err(NO_EDGE);
     }
     let (p0, p1) = (pts[edge], pts[(edge + 1) % n]);
-    let length = js_hypot(p1.x - p0.x, p1.y - p0.y);
+    let length = hypot(p1.x - p0.x, p1.y - p0.y);
     if length == 0.0 || !length.is_finite() {
         return Err(ZERO_EDGE);
     }

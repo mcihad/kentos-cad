@@ -16,7 +16,7 @@ use crate::geom::curve_outline::{ellipse_outline, spline_outline};
 use crate::geom::ellipse::{EllipseGeom, ellipse_point, is_full_ellipse, param_of_point};
 use crate::geom::nurbs::{self, Nurbs, OwnedNurbs};
 use crate::geom::spline::catmull_rom_beziers;
-use crate::jsmath::{TAU, atan2, cos, js_hypot, js_max, sin};
+use crate::jsmath::{TAU, atan2, cos, hypot, js_max, sin};
 use crate::vec2::Vec2;
 use std::collections::HashMap;
 
@@ -130,7 +130,7 @@ pub fn curve_points(c: &HatchCurve) -> Vec<Vec2> {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(a.x - b.x, a.y - b.y)
+    hypot(a.x - b.x, a.y - b.y)
 }
 
 fn curve_at(l: &HatchLoop, i: usize) -> Option<&HatchCurve> {
@@ -649,7 +649,7 @@ fn image_arc(
     let s = c1.y * c1.y + c2.y * c2.y;
     let q = c1.x * c1.y + c2.x * c2.y;
     let phi = 0.5 * atan2(2.0 * q, p - s);
-    let root = js_hypot((p - s) / 2.0, q);
+    let root = hypot((p - s) / 2.0, q);
     let s1 = ((p + s) / 2.0 + root).sqrt();
     let s2 = js_max((p + s) / 2.0 - root, 0.0).sqrt();
     if !(s1 > 0.0 && s2 > s1 * 1e-12) {
@@ -694,7 +694,7 @@ fn image_arc(
 /// Whether J turns, scales evenly and perhaps mirrors.
 fn similar(j: [f64; 4]) -> bool {
     let [a, b, c, d] = j;
-    let tol = 1e-12 * js_max(js_hypot(a, b), 1e-300);
+    let tol = 1e-12 * js_max(hypot(a, b), 1e-300);
     ((a - d).abs() <= tol && (b + c).abs() <= tol) || ((a + d).abs() <= tol && (b - c).abs() <= tol)
 }
 

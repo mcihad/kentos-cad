@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::Json as CoreJson;
-use kentos_geometry_core::jsmath::{js_hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{hypot, js_max, js_min};
 use kentos_style_core::style::compile::{Env, Values};
 use kentos_style_core::style::generate::{Gen, run};
 use kentos_style_core::style::model::{Exprs, Unit};
@@ -126,7 +126,7 @@ fn seg_distance(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     } else {
         (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0)
     };
-    js_hypot(p.x - a.x - t * dx, p.y - a.y - t * dy)
+    hypot(p.x - a.x - t * dx, p.y - a.y - t * dy)
 }
 
 fn ring_area(r: &[Vec2]) -> f64 {
@@ -149,7 +149,7 @@ fn check_buffer(name: &str, got: &Gen, input: &Gen, check: &Json, tol: f64) {
         match input {
             Gen::Points(ps) => ps
                 .iter()
-                .map(|q| js_hypot(p.x - q.x, p.y - q.y))
+                .map(|q| hypot(p.x - q.x, p.y - q.y))
                 .fold(f64::INFINITY, js_min),
             Gen::Lines(paths) => paths
                 .iter()

@@ -14,7 +14,7 @@
 use crate::api::Op;
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::geom::bulge::{bulge_at, has_bulges, is_arc_bulge};
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::ops::elevation::Elevated;
 use crate::vec2::Vec2;
@@ -140,7 +140,7 @@ impl ToJson for Answer {
 }
 
 fn same(a: Vec2, b: Vec2) -> bool {
-    js_hypot(a.x - b.x, a.y - b.y) <= SAME
+    hypot(a.x - b.x, a.y - b.y) <= SAME
 }
 
 /// The vertex after `i` along the path: its next, a closed path's first
@@ -198,7 +198,7 @@ pub fn rows(paths: &[Elevated]) -> Vec<Row> {
             let (chord, radius) = match next_of(p, i) {
                 Some(j) => {
                     let b = p.pts[j];
-                    let chord = js_hypot(b.x - at.x, b.y - at.y);
+                    let chord = hypot(b.x - at.x, b.y - at.y);
                     (
                         Some(chord),
                         radius_of(chord, bulge_at(p.bulges.as_deref(), i)),
@@ -305,7 +305,7 @@ pub fn with_radius(
         Some(r) if !r.is_finite() => return Err(Refusal::Missing),
         Some(r) if r != 0.0 => {
             let (a, b) = (p.pts[index], p.pts[j]);
-            let chord = js_hypot(b.x - a.x, b.y - a.y);
+            let chord = hypot(b.x - a.x, b.y - a.y);
             if chord <= SAME {
                 return Err(Refusal::NoChord);
             }

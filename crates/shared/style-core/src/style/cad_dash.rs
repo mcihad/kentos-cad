@@ -12,7 +12,7 @@ use super::{
 use kentos_geometry_core::{
     Vec2,
     geom::ellipse::param_of_point,
-    jsmath::{atan2, cos, js_hypot, js_max, js_min, js_sign, sin},
+    jsmath::{atan2, cos, hypot, js_max, js_min, js_sign, sin},
 };
 use std::f64::consts::TAU;
 
@@ -52,18 +52,18 @@ pub(super) fn distances(route: &Route, path: &[Vec2]) -> Option<Vec<f64>> {
         let mut at = 0.;
         for (i, p) in path.iter().enumerate() {
             let mut u = c.closest(*p);
-            if i == 0 && js_hypot(p.x - c.point(lo).x, p.y - c.point(lo).y) <= far {
+            if i == 0 && hypot(p.x - c.point(lo).x, p.y - c.point(lo).y) <= far {
                 u = lo;
             }
             // A closed curve's last vertex is its first point: the end, not the start again.
             if u < u_prev
                 && i + 1 == path.len()
-                && js_hypot(p.x - c.point(hi).x, p.y - c.point(hi).y) <= far
+                && hypot(p.x - c.point(hi).x, p.y - c.point(hi).y) <= far
             {
                 u = hi;
             }
             let q = c.point(u);
-            if u < u_prev || js_hypot(q.x - p.x, q.y - p.y) > far {
+            if u < u_prev || hypot(q.x - p.x, q.y - p.y) > far {
                 return None;
             }
             at += c.length_between(u_prev, u);
@@ -91,7 +91,7 @@ pub(super) fn distances(route: &Route, path: &[Vec2]) -> Option<Vec<f64>> {
                 }
                 None => Vec2::new(e.a.x + (e.b.x - e.a.x) * f, e.a.y + (e.b.y - e.a.y) * f),
             };
-            (e.start + e.length * f, js_hypot(q.x - p.x, q.y - p.y))
+            (e.start + e.length * f, hypot(q.x - p.x, q.y - p.y))
         };
         let mut k = 0;
         for (i, p) in path.iter().enumerate() {
@@ -289,7 +289,7 @@ pub(super) fn ink(
                     .position(|g| t <= g.3 && g.3 > g.2)
                     .or_else(|| segments.iter().rposition(|g| g.3 > g.2))?;
                 let (a, b, s0, s1) = segments[seg];
-                let len = js_hypot(b.x - a.x, b.y - a.y);
+                let len = hypot(b.x - a.x, b.y - a.y);
                 if len > 0. {
                     dots.push((
                         cut(a, b, s0, s1, t),

@@ -10,7 +10,7 @@
 //! bit (`for_area`), the same steps on every platform.
 
 use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep};
-use crate::jsmath::{atan2, js_hypot, js_max};
+use crate::jsmath::{atan2, hypot, js_max};
 use crate::vec2::Vec2;
 
 use super::edge_shift::{NO_AREA, NO_EDGE, PARALLEL, PASSED};
@@ -37,7 +37,7 @@ fn cross(p: Vec2, q: Vec2) -> f64 {
 }
 
 fn dist(p: Vec2, q: Vec2) -> f64 {
-    js_hypot(p.x - q.x, p.y - q.y)
+    hypot(p.x - q.x, p.y - q.y)
 }
 
 /// The curve of the segment `a → b` with `bulge`: its circle, else its line.
@@ -46,7 +46,7 @@ pub(crate) fn curve_of(a: Vec2, b: Vec2, bulge: f64) -> Option<Curve> {
         return Some(Curve::Circle { c: arc.c, r: arc.r });
     }
     let t = sub(b, a);
-    let l = js_hypot(t.x, t.y);
+    let l = hypot(t.x, t.y);
     (l > 0.0).then(|| Curve::Line {
         p: a,
         dir: Vec2::new(t.x / l, t.y / l),
@@ -158,7 +158,7 @@ pub(crate) fn shifted(
             Curve::Line { .. } => Ok(Vec2::new(v.x + normal.x * d, v.y + normal.y * d)),
             Curve::Circle { c, r } => {
                 let w = sub(v, c);
-                let l = js_hypot(w.x, w.y);
+                let l = hypot(w.x, w.y);
                 Ok(Vec2::new(c.x + w.x / l * r, c.y + w.y / l * r))
             }
         }

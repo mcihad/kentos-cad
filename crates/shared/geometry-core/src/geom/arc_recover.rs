@@ -8,7 +8,7 @@
 use crate::Vec2;
 use crate::geom::arc::DEFAULT_STEP;
 use crate::geom::bulge::bulge_via;
-use crate::jsmath::{atan2, js_hypot, tan};
+use crate::jsmath::{atan2, hypot, tan};
 
 /// A circle an outline's arcs may lie on: its centre and radius.
 pub type Circle = (Vec2, f64);
@@ -18,7 +18,7 @@ pub type Circle = (Vec2, f64);
 pub const ON_CIRCLE: f64 = 1e-9;
 
 fn on(p: Vec2, c: &Circle) -> bool {
-    (js_hypot(p.x - c.0.x, p.y - c.0.y) - c.1).abs() <= ON_CIRCLE * crate::jsmath::js_max(c.1, 1.0)
+    (hypot(p.x - c.0.x, p.y - c.0.y) - c.1).abs() <= ON_CIRCLE * crate::jsmath::js_max(c.1, 1.0)
 }
 
 /// The edge from `a` to `b` as a chord of one of `circles`: the circle and the way it turns (+1 counter-clockwise);

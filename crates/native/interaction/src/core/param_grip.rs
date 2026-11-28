@@ -11,7 +11,7 @@ use kentos_commands::{BlocksParameters, ParametersOperation};
 use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::block_dynamic::{GripKind, ParamGrip};
 use kentos_geometry_core::entity::{ParamValue as CoreValue, Params, Shape};
-use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::jsmath::hypot;
 use kentos_native_application::{ExecutionContext, block_params};
 
 use crate::Vec2;
@@ -94,7 +94,7 @@ pub(crate) fn grip_at(screen: [f64; 2], cx: &Context<'_>) -> Option<(Slot, Param
     let mut best = REACH;
     for (slot, g) in cx.spatial.param_grips(&editable) {
         let s = cx.view.to_screen(g.at);
-        let d = js_hypot(s[0] - screen[0], s[1] - screen[1]);
+        let d = hypot(s[0] - screen[0], s[1] - screen[1]);
         if d <= best {
             best = d;
             found = Some((slot, g));
@@ -208,7 +208,7 @@ impl ParamDrag {
         // A linear's along its line, a polar's toward where the grip is.
         let unit = self.along.or_else(|| {
             let (dx, dy) = (self.at.x - from.x, self.at.y - from.y);
-            let n = js_hypot(dx, dy);
+            let n = hypot(dx, dy);
             (n > 0.0).then(|| Vec2::new(dx / n, dy / n))
         });
         if matches!(self.kind, GripKind::Linear | GripKind::Polar)
@@ -248,12 +248,11 @@ impl ParamDrag {
             (Some(CoreValue::Number(x)), GripKind::Angle) => format.angle(*x),
             (Some(CoreValue::Number(x)), _) => format.length(*x),
             (Some(CoreValue::Point(p)), GripKind::Polar) => {
-                format.length(js_hypot(p.x - from.x, p.y - from.y))
+                format.length(hypot(p.x - from.x, p.y - from.y))
             }
-            (Some(CoreValue::Point(_)), _) => format.length(js_hypot(
-                self.at.x - self.origin.x,
-                self.at.y - self.origin.y,
-            )),
+            (Some(CoreValue::Point(_)), _) => {
+                format.length(hypot(self.at.x - self.origin.x, self.at.y - self.origin.y))
+            }
             _ => "değer yok".to_owned(),
         };
         Preview {

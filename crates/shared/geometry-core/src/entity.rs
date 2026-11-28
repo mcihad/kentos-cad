@@ -1634,7 +1634,7 @@ impl<'a> TextPlace<'a> {
             return Some((self.p, self.rotation));
         };
         let d = Vec2::new(last.mid.x - first.mid.x, last.mid.y - first.mid.y);
-        let turn = if plan.clusters.len() == 1 || crate::jsmath::js_hypot(d.x, d.y) <= 1e-9 {
+        let turn = if plan.clusters.len() == 1 || crate::jsmath::hypot(d.x, d.y) <= 1e-9 {
             first.turn
         } else {
             crate::text::along::degrees(crate::jsmath::atan2(d.y, d.x))

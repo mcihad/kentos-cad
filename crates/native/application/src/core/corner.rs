@@ -31,7 +31,7 @@ use kentos_commands::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::geom::intersect::closest_on_edge;
-use kentos_geometry_core::jsmath::{PI, acos, cos, js_hypot, js_max, js_min, sin, tan};
+use kentos_geometry_core::jsmath::{PI, acos, cos, hypot, js_max, js_min, sin, tan};
 use kentos_geometry_core::ops::curve_cuts::Geometry;
 use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::ops::fillet::{
@@ -533,7 +533,7 @@ fn closed_path(
             let start = Vec2::new(c.x + r * cos(a0), c.y + r * sin(a0));
             let last = pts[n - 1];
             let first = pts[0];
-            let near = |p: Vec2, q: Vec2| js_hypot(p.x - q.x, p.y - q.y);
+            let near = |p: Vec2, q: Vec2| hypot(p.x - q.x, p.y - q.y);
             let ccw = near(start, last) <= near(start, first);
             let sweep = norm_angle(a1 - a0);
             let b = tan(sweep / 4.0);
@@ -611,7 +611,7 @@ pub fn line_corners(doc: &Document, lines: &[Slot], size: Size) -> LineCorners {
     // Each corner's geometry and sizes along its lines, or none when the lines are in line.
     let away = |k: usize, e: usize| {
         let (p, q) = (ends(k)[e], ends(k)[1 - e]);
-        let l = js_hypot(q.x - p.x, q.y - p.y);
+        let l = hypot(q.x - p.x, q.y - p.y);
         (Vec2::new((q.x - p.x) / l, (q.y - p.y) / l), l)
     };
     let planned: Vec<Option<(CornerGeom, f64, f64)>> = corners
@@ -661,7 +661,7 @@ pub fn line_corners(doc: &Document, lines: &[Slot], size: Size) -> LineCorners {
         }
     }
     for k in 0..segs.len() {
-        let l = js_hypot(segs[k].b.x - segs[k].a.x, segs[k].b.y - segs[k].a.y);
+        let l = hypot(segs[k].b.x - segs[k].a.x, segs[k].b.y - segs[k].a.y);
         if let [Some(c0), Some(c1)] = by[k]
             && need[k][0] + need[k][1] > l + 1e-9
         {

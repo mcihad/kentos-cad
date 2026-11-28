@@ -320,7 +320,7 @@ pub fn view_in(
     let c = to_grid(cx, cy)?;
     let e = to_grid(cx + step, cy)?;
     let n = to_grid(cx, cy + step)?;
-    let d = |p: (f64, f64)| crate::jsmath::js_hypot(p.0 - c.0, p.1 - c.1);
+    let d = |p: (f64, f64)| crate::jsmath::hypot(p.0 - c.0, p.1 - c.1);
     let units_per_px = (d(e) + d(n)) / 2.0;
     (units_per_px.is_finite() && units_per_px > 0.0).then_some(ViewInGrid {
         bbox: b,

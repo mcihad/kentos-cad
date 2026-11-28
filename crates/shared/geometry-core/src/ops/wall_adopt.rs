@@ -43,7 +43,7 @@ fn cross(a: Vec2, b: Vec2) -> f64 {
 }
 
 fn len(a: Vec2) -> f64 {
-    crate::jsmath::js_hypot(a.x, a.y)
+    crate::jsmath::hypot(a.x, a.y)
 }
 
 /// The covered stretches of side `a → b` (lengths along it from `a`), and the walls that cover it.

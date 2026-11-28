@@ -407,7 +407,7 @@ pub fn void_cross(parts: &[Area]) -> Vec<Shape> {
         let mut longest = 0.0;
         for i in 0..n {
             let (a, b) = (outer[i], outer[(i + 1) % n]);
-            let l = crate::jsmath::js_hypot(b.x - a.x, b.y - a.y);
+            let l = crate::jsmath::hypot(b.x - a.x, b.y - a.y);
             if l > longest {
                 longest = l;
                 along = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);

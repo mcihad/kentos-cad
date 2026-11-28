@@ -13,7 +13,7 @@ use crate::geom::arc::{ArcGeom, arc_end, arc_start, norm_angle};
 use crate::geom::arrangement::Ring;
 use crate::geom::ellipse::is_full_ellipse;
 use crate::geom::hatch_pattern::carried;
-use crate::jsmath::{PI, atan2, cos, js_hypot, or, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, or, sin};
 use crate::op;
 use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
@@ -283,7 +283,7 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
         }
         Shape::Xline { p, dir } | Shape::Ray { p, dir } => {
             let d = apply_linear(m, *dir);
-            let l = or(js_hypot(d.x, d.y), 1.0);
+            let l = or(hypot(d.x, d.y), 1.0);
             let (p, dir) = (apply(m, *p), Vec2::new(d.x / l, d.y / l));
             if matches!(shape, Shape::Ray { .. }) {
                 Shape::Ray { p, dir }
@@ -808,7 +808,7 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
             mark.at = mark.at.map(|a| apply(m, a));
             // The linear part: [a, b, c, d] maps (x, y) to (a x + c y, b x + d y).
             let (ma, mb, mc, md) = (m[0], m[1], m[2], m[3]);
-            let scale = crate::jsmath::js_hypot(ma, mb);
+            let scale = crate::jsmath::hypot(ma, mb);
             if let Some(r) = &mut mark.radius {
                 *r *= scale;
             }

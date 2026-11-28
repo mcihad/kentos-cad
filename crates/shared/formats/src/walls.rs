@@ -716,7 +716,7 @@ mod tests {
                         l.pts
                             .windows(2)
                             .map(|w| {
-                                kentos_geometry_core::jsmath::js_hypot(
+                                kentos_geometry_core::jsmath::hypot(
                                     w[1].x - w[0].x,
                                     w[1].y - w[0].y,
                                 )

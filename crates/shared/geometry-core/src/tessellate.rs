@@ -8,7 +8,7 @@ use std::f64::consts::{PI, TAU};
 
 use crate::Vec2;
 use crate::geom::bulge::{bulge_arc, bulge_at};
-use crate::jsmath::{acos, cos, js_hypot, js_min, sin};
+use crate::jsmath::{acos, cos, hypot, js_min, sin};
 
 /// Most chords one curve piece may get. Beyond it the tolerance is not met: at
 /// 1 mm a full circle reaches the cap at about 1.3 km radius. The projection is
@@ -96,7 +96,7 @@ pub fn ellipse_points(
     // With even parameter steps dt the sagitta is about ds²/(8ρ): a·dt²/8 at the
     // major vertices (ds = b·dt, ρ = b²/a) and b·dt²/8 at the minor ones, so the
     // worst case is that of a circle with the major radius.
-    let n = arc_segments(js_hypot(major.x, major.y), sweep, tol);
+    let n = arc_segments(hypot(major.x, major.y), sweep, tol);
     let minor = Vec2::new(-major.y * ratio, major.x * ratio);
     let at = |t: f64| {
         Vec2::new(
@@ -118,7 +118,7 @@ fn reflect(a: Vec2, b: Vec2) -> Vec2 {
 }
 
 fn knot(a: Vec2, b: Vec2) -> f64 {
-    let k = js_hypot(b.x - a.x, b.y - a.y).sqrt();
+    let k = hypot(b.x - a.x, b.y - a.y).sqrt();
     if k == 0.0 { 1e-6 } else { k }
 }
 
@@ -160,7 +160,7 @@ fn point_segment_distance(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     } else {
         (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0)
     };
-    js_hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
+    hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
 }
 
 /// The spline through `pts` as points. Each span is split evenly, doubling
@@ -225,7 +225,7 @@ mod tests {
         for i in 0..pts.len() {
             let (a, b) = (pts[i], pts[(i + 1) % pts.len()]);
             let m = Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
-            worst = js_max(worst, r - js_hypot(m.x - c.x, m.y - c.y));
+            worst = js_max(worst, r - hypot(m.x - c.x, m.y - c.y));
         }
         worst
     }

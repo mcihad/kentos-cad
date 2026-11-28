@@ -13,7 +13,7 @@ use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::entity::{Shape, entity_vertices, is_multi_part};
 use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geometry::dist;
-use crate::jsmath::{PI, atan, atan2, cos, js_hypot, sin};
+use crate::jsmath::{PI, atan, atan2, cos, hypot, sin};
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
@@ -216,7 +216,7 @@ fn path(shape: &Shape) -> Option<(Vec<Vec2>, Vec<f64>)> {
 }
 
 fn unit(x: f64, y: f64) -> Vec2 {
-    let n = js_hypot(x, y);
+    let n = hypot(x, y);
     Vec2::new(x / n, y / n)
 }
 

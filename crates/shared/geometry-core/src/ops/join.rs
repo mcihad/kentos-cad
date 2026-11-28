@@ -8,7 +8,7 @@ use crate::api::json::{Json, ToJson, field};
 use crate::entity::{Entity, Shape};
 use crate::geom::arc::{ArcGeom, arc_end, arc_start, bulge_from_arc, norm_angle};
 use crate::geom::bulge::{bulge_at, clean_bulge_path, reverse_bulge_path};
-use crate::jsmath::{atan2, js_hypot, js_max};
+use crate::jsmath::{atan2, hypot, js_max};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -54,7 +54,7 @@ fn chain_of(e: &Shape) -> Option<Chain> {
 }
 
 fn near(a: Vec2, b: Vec2, tol: f64) -> bool {
-    js_hypot(a.x - b.x, a.y - b.y) <= tol
+    hypot(a.x - b.x, a.y - b.y) <= tol
 }
 
 // An empty polyline has no ends; the TypeScript throws reading them.
@@ -249,7 +249,7 @@ pub fn simplest(joined: &Shape, members: &[Shape], tol: f64) -> Shape {
         && let (Some(&a), Some(&b)) = (pts.first(), pts.last())
     {
         let (dx, dy) = (b.x - a.x, b.y - a.y);
-        let len = js_hypot(dx, dy);
+        let len = hypot(dx, dy);
         if len > tol {
             let (ux, uy) = (dx / len, dy / len);
             let mut along = 0.0_f64;
@@ -278,7 +278,7 @@ pub fn simplest(joined: &Shape, members: &[Shape], tol: f64) -> Shape {
         && let Some(&(c, r)) = arcs.first()
         && arcs
             .iter()
-            .all(|(c2, r2)| js_hypot(c2.x - c.x, c2.y - c.y) <= tol && (r2 - r).abs() <= tol)
+            .all(|(c2, r2)| hypot(c2.x - c.x, c2.y - c.y) <= tol && (r2 - r).abs() <= tol)
     {
         match joined {
             Shape::Polygon { bulges, .. } => {

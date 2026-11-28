@@ -10,7 +10,7 @@
 
 use crate::geom::arch::{Railings, StairSpec, Walk, railing_line, riser_stations, stair_landings};
 use crate::geom::stair_body::winding_zones;
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::vec2::Vec2;
 
 const EPS: f64 = 1e-9;
@@ -110,7 +110,7 @@ pub fn rail_runs(
         let mut walked = 0.0;
         for k in 0..n - 1 {
             let (p, q) = (line[k], line[k + 1]);
-            let l = js_hypot(q.x - p.x, q.y - p.y);
+            let l = hypot(q.x - p.x, q.y - p.y);
             let (o, len) = (walk.pts[k], walk.at[k + 1] - walk.at[k]);
             if len <= EPS || l <= EPS {
                 walked += l;
@@ -379,7 +379,7 @@ mod tests {
         // The inner side's pieces over the landing: (2.24, 0.55)–(2.29, 0.55), up to (2.29, 0.65), back to (2.24, 0.65).
         let lengths: Vec<f64> = left[1..4]
             .iter()
-            .map(|r| js_hypot(r.b.x - r.a.x, r.b.y - r.a.y))
+            .map(|r| hypot(r.b.x - r.a.x, r.b.y - r.a.y))
             .collect();
         assert!(
             near(lengths[0], 0.05) && near(lengths[1], 0.10) && near(lengths[2], 0.05),

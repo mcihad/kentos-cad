@@ -28,7 +28,7 @@ use crate::geom::intersect::{
     Edge, circle_circle, intersect_edges, line_circle_params, line_line, ray_edge,
 };
 use crate::geom::wall::{self, Body, DEFAULT_PRIORITY, Drawn, JoinMode, Line, Spec, Stroke};
-use crate::jsmath::{PI, TAU, acos, cos, js_hypot, js_max, js_min};
+use crate::jsmath::{PI, TAU, acos, cos, hypot, js_max, js_min};
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, nearest_s, path_of, point_at_s, sub_path, tangent_at_s};
 use crate::vec2::Vec2;
@@ -213,11 +213,11 @@ fn dot(a: Vec2, b: Vec2) -> f64 {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(a.x - b.x, a.y - b.y)
+    hypot(a.x - b.x, a.y - b.y)
 }
 
 fn unit(v: Vec2) -> Option<Vec2> {
-    let l = js_hypot(v.x, v.y);
+    let l = hypot(v.x, v.y);
     (l > 1e-12).then(|| Vec2::new(v.x / l, v.y / l))
 }
 

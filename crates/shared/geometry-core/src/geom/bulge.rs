@@ -6,7 +6,7 @@ use crate::api::Op;
 use crate::geom::arc::{DEFAULT_STEP, circle_through, norm_angle};
 use crate::geom::intersect::Edge;
 use crate::geometry::{path_length, signed_area};
-use crate::jsmath::{PI, atan, atan2, cos, js_hypot, js_max, or, sin, tan};
+use crate::jsmath::{PI, atan, atan2, cos, hypot, js_max, or, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -43,7 +43,7 @@ pub fn bulge_arc(a: Vec2, b: Vec2, bulge: f64) -> Option<BulgeArc> {
     }
     let dx = b.x - a.x;
     let dy = b.y - a.y;
-    let chord = js_hypot(dx, dy);
+    let chord = hypot(dx, dy);
     if chord < EPS {
         return None;
     }
@@ -133,7 +133,7 @@ pub fn bulge_through(a: Vec2, m: Vec2, b: Vec2) -> f64 {
 pub fn tangent_bulge(a: Vec2, dir: Vec2, b: Vec2) -> Option<f64> {
     let cx = b.x - a.x;
     let cy = b.y - a.y;
-    if js_hypot(cx, cy) < EPS {
+    if hypot(cx, cy) < EPS {
         return None;
     }
     let alpha = atan2(dir.x * cy - dir.y * cx, dir.x * cx + dir.y * cy);
@@ -148,7 +148,7 @@ pub fn tangent_bulge(a: Vec2, dir: Vec2, b: Vec2) -> Option<f64> {
 pub fn segment_tangent(a: Vec2, b: Vec2, bulge: f64, at_end: bool) -> Vec2 {
     let dx = b.x - a.x;
     let dy = b.y - a.y;
-    let l = or(js_hypot(dx, dy), 1.0);
+    let l = or(hypot(dx, dy), 1.0);
     let half = 2.0 * atan(bulge); // θ/2
     let rot = if at_end { half } else { -half };
     let c = cos(rot);
@@ -228,7 +228,7 @@ pub fn bulge_path_length(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> 
         let b = pts[(i + 1) % n];
         l += match bulge_arc(a, b, bulge_at(bulges, i)) {
             Some(arc) => arc.r * arc.sweep.abs(),
-            None => js_hypot(b.x - a.x, b.y - a.y),
+            None => hypot(b.x - a.x, b.y - a.y),
         };
     }
     l
@@ -286,7 +286,7 @@ pub fn clean_bulge_path(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool, tol:
     let mut out_b: Vec<f64> = Vec::new();
     for (i, &p) in pts.iter().enumerate() {
         if let Some(&last) = out_p.last()
-            && js_hypot(p.x - last.x, p.y - last.y) <= tol
+            && hypot(p.x - last.x, p.y - last.y) <= tol
         {
             if let Some(b) = out_b.last_mut() {
                 *b = bulge_at(bulges, i);
@@ -299,7 +299,7 @@ pub fn clean_bulge_path(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool, tol:
     if closed && out_p.len() > 1 {
         let f = out_p[0];
         let l = out_p[out_p.len() - 1];
-        if js_hypot(f.x - l.x, f.y - l.y) <= tol {
+        if hypot(f.x - l.x, f.y - l.y) <= tol {
             out_p.pop();
             out_b.pop();
         }

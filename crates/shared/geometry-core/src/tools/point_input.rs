@@ -7,7 +7,7 @@ use crate::api::Op;
 use crate::api::json::Nullable;
 use crate::geom::survey::{along_line, polar_point};
 use crate::geometry::dist;
-use crate::jsmath::{PI, atan2, cos, js_hypot, js_round, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, js_round, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -54,7 +54,7 @@ pub fn polar_point_in(last: Vec2, distance: f64, angle: f64, angles: Angles) -> 
 pub fn toward_point(last: Vec2, cursor: Vec2, distance: f64) -> Option<Vec2> {
     let dx = cursor.x - last.x;
     let dy = cursor.y - last.y;
-    let l = js_hypot(dx, dy);
+    let l = hypot(dx, dy);
     if l < 1e-9 {
         return None;
     }

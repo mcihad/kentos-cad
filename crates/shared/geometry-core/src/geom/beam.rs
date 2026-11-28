@@ -153,7 +153,7 @@ pub(crate) fn pieces_at(pts: &[Vec2], spec: &BeamSpec, scale: f64, level: Level)
     if !words.is_empty() {
         let middle = side(pts, spec.middle);
         if let Some(w) = middle.windows(2).max_by(|a, b| {
-            let l = |w: &[Vec2]| crate::jsmath::js_hypot(w[1].x - w[0].x, w[1].y - w[0].y);
+            let l = |w: &[Vec2]| crate::jsmath::hypot(w[1].x - w[0].x, w[1].y - w[0].y);
             l(a).total_cmp(&l(b))
         }) {
             let (a, b) = (w[0], w[1]);

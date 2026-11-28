@@ -14,7 +14,7 @@
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::entity::Shape;
 use crate::geom::wall::{self, Spec as WallSpec, path_shape};
-use crate::jsmath::{atan2, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, hypot, js_max, js_min, sin};
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, path_of, point_at_s, tangent_at_s};
 use crate::vec2::Vec2;
@@ -433,7 +433,7 @@ impl Recess {
     /// (an opening's `place`); none where the jambs have no thickness or the band none.
     pub fn band(&self, place: [Vec2; 4]) -> Option<Vec<Vec2>> {
         let [l0, r0, l1, r1] = place;
-        let t = js_hypot(r0.x - l0.x, r0.y - l0.y);
+        let t = hypot(r0.x - l0.x, r0.y - l0.y);
         if !(t > 1e-9) {
             return None;
         }
@@ -751,7 +751,7 @@ pub fn frame_of(place: &[Vec2]) -> Option<Frame> {
     }
     let (m0, m1) = (mid(place[0], place[1]), mid(place[2], place[3]));
     let d = sub(m1, m0);
-    let length = js_hypot(d.x, d.y);
+    let length = hypot(d.x, d.y);
     if !(length > 0.0) {
         return None;
     }
@@ -763,7 +763,7 @@ pub fn frame_of(place: &[Vec2]) -> Option<Frame> {
         along,
         left,
         length,
-        thickness: js_hypot(t.x, t.y),
+        thickness: hypot(t.x, t.y),
     })
 }
 
@@ -845,7 +845,7 @@ fn jambs_centre(place: &[Vec2]) -> Option<Vec2> {
     let (p, u) = (place[0], sub(place[1], place[0]));
     let (q, v) = (place[2], sub(place[3], place[2]));
     let den = u.x * v.y - u.y * v.x;
-    let scale = js_hypot(u.x, u.y) * js_hypot(v.x, v.y);
+    let scale = hypot(u.x, u.y) * hypot(v.x, v.y);
     if !(den.abs() > 1e-12 * scale) {
         return None;
     }
@@ -859,7 +859,7 @@ fn along(a: Vec2, b: Vec2, centre: Option<Vec2>) -> Shape {
     let Some(c) = centre else {
         return line(a, b);
     };
-    let r = js_hypot(a.x - c.x, a.y - c.y);
+    let r = hypot(a.x - c.x, a.y - c.y);
     let (aa, ab) = (atan2(a.y - c.y, a.x - c.x), atan2(b.y - c.y, b.x - c.x));
     let tau = 2.0 * crate::jsmath::PI;
     let ccw = (ab - aa).rem_euclid(tau);
@@ -1652,7 +1652,7 @@ fn pocket_leaves(p: &Parts, spec: &Spec) -> Vec<Shape> {
 /// stands); two split by angle as given. Each a closed ring: inner arc, end radial, outer arc back, start radial.
 fn arc_pocket_leaves(p: &Parts, spec: &Spec, c: Vec2, t: f64) -> Vec<Shape> {
     let m = p.across(p.place[0], p.place[1], p.middle());
-    let r = js_hypot(m.x - c.x, m.y - c.y);
+    let r = hypot(m.x - c.x, m.y - c.y);
     let start = p.fit + p.fr;
     let (e0, e1) = (
         p.along_start(start, p.middle()),

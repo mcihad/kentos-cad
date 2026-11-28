@@ -18,7 +18,7 @@ use kentos_commands::{
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::hatch_pattern::pattern_pieces;
 use kentos_geometry_core::geometry::point_in_rings;
-use kentos_geometry_core::jsmath::{atan2, js_hypot};
+use kentos_geometry_core::jsmath::{atan2, hypot};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::{core_pattern, shape};
 use kentos_native_application::viewmarks::references_of;
@@ -165,7 +165,7 @@ impl ViewMarkTool {
                 // The pointer still on the point just given is no next point (UR-030): no cut of no length.
                 pts.extend(last.filter(|p| {
                     pts.last()
-                        .is_none_or(|q| js_hypot(p.x - q.x, p.y - q.y) > 1e-9)
+                        .is_none_or(|q| hypot(p.x - q.x, p.y - q.y) > 1e-9)
                 }));
                 if pts.len() < 2 {
                     return None;
@@ -174,7 +174,7 @@ impl ViewMarkTool {
             ViewMarkForm::Elevation => {
                 let c = *pts.first()?;
                 if let Some(p) = last
-                    && js_hypot(p.x - c.x, p.y - c.y) > 0.0
+                    && hypot(p.x - c.x, p.y - c.y) > 0.0
                 {
                     angle = Some(atan2(p.y - c.y, p.x - c.x).to_degrees());
                 }
@@ -183,7 +183,7 @@ impl ViewMarkTool {
                 let c = *pts.first()?;
                 radius = match (self.radius, last) {
                     (Some(r), _) => Some(r),
-                    (None, Some(p)) => Some(js_hypot(p.x - c.x, p.y - c.y)),
+                    (None, Some(p)) => Some(hypot(p.x - c.x, p.y - c.y)),
                     (None, None) => None,
                 };
                 if self.radius.is_some() {
@@ -404,7 +404,7 @@ impl ViewMarkTool {
             (ViewMarkForm::Elevation, _, _) => return self.write(Some(at), cx),
             (ViewMarkForm::Detail, _, None) => {
                 let c = self.pts[0];
-                let r = js_hypot(at.x - c.x, at.y - c.y);
+                let r = hypot(at.x - c.x, at.y - c.y);
                 if r > 0.0 {
                     self.radius = Some(r);
                 }

@@ -14,7 +14,7 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape};
 use crate::geom::arc::{ON_ARC_EPS, on_arc, sweep};
-use crate::jsmath::{PI, atan2, cos, js_hypot, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -76,7 +76,7 @@ impl Round {
 pub fn common_tangents(first: &Round, second: &Round) -> Vec<Tangent> {
     let (c1, r1, c2, r2) = (first.c, first.r, second.c, second.r);
     let (dx, dy) = (c2.x - c1.x, c2.y - c1.y);
-    let d = js_hypot(dx, dy);
+    let d = hypot(dx, dy);
     let mut out = Vec::new();
     if !(d > 0.0) {
         return out;
@@ -116,7 +116,7 @@ pub fn common_tangents(first: &Round, second: &Round) -> Vec<Tangent> {
 pub fn chosen_tangent(tangents: &[Tangent], p1: Vec2, p2: Vec2) -> Option<Tangent> {
     let mut best: Option<(f64, Tangent)> = None;
     for t in tangents {
-        let cost = js_hypot(p1.x - t.a.x, p1.y - t.a.y) + js_hypot(p2.x - t.b.x, p2.y - t.b.y);
+        let cost = hypot(p1.x - t.a.x, p1.y - t.a.y) + hypot(p2.x - t.b.x, p2.y - t.b.y);
         if best.is_none_or(|(least, _)| cost < least) {
             best = Some((cost, *t));
         }

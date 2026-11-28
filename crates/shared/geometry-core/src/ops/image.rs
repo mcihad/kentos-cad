@@ -5,7 +5,7 @@
 use crate::api::Op;
 use crate::entity::{Entity, Shape};
 use crate::geom::image::{Frame, clipped};
-use crate::jsmath::{atan2, js_hypot};
+use crate::jsmath::{atan2, hypot};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -33,7 +33,7 @@ crate::json_struct!(out Placed {
 });
 
 pub fn placed(p: Vec2, q: Vec2, aspect: f64) -> Result<Placed, String> {
-    let width = js_hypot(q.x - p.x, q.y - p.y);
+    let width = hypot(q.x - p.x, q.y - p.y);
     if !(width > 0.0 && width.is_finite() && aspect > 0.0 && aspect.is_finite()) {
         return Err(NO_SIZE.to_owned());
     }

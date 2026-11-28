@@ -16,9 +16,7 @@ use crate::geom::bulge::{bulge_of_sweep, bulge_ring_area};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::region::{orient_ring, ring_area, ring_edges};
 use crate::geometry::Bounds;
-use crate::jsmath::{
-    PI, TAU, atan2, js_cmp, js_hypot, js_max, js_min, js_sign, or, sin, stable_sort,
-};
+use crate::jsmath::{PI, TAU, atan2, hypot, js_cmp, js_max, js_min, js_sign, or, sin, stable_sort};
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
 
@@ -58,8 +56,8 @@ fn leave(edge: &Edge, at: Vec2, far: Vec2) -> Leave {
         },
         Edge::Arc { sweep, .. } => {
             // The tangent turns from the chord by half the sweep; the radius follows from the chord.
-            let kappa = js_sign(sweep) * 2.0 * sin(sweep.abs() / 2.0)
-                / js_hypot(far.x - at.x, far.y - at.y);
+            let kappa =
+                js_sign(sweep) * 2.0 * sin(sweep.abs() / 2.0) / hypot(far.x - at.x, far.y - at.y);
             Leave {
                 angle: chord - sweep / 2.0 + kappa * RHO / 2.0,
                 kappa,
@@ -306,7 +304,7 @@ pub(crate) fn joinable(a: &Edge, b: &Edge) -> Option<Edge> {
             let uy = ab.y - aa.y;
             let vx = bb.x - ba.x;
             let vy = bb.y - ba.y;
-            let l = js_hypot(ux, uy) * js_hypot(vx, vy);
+            let l = hypot(ux, uy) * hypot(vx, vy);
             ((ux * vy - uy * vx).abs() <= 1e-12 * l && ux * vx + uy * vy > 0.0)
                 .then_some(Edge::Seg { a: aa, b: bb })
         }
@@ -324,7 +322,7 @@ pub(crate) fn joinable(a: &Edge, b: &Edge) -> Option<Edge> {
                 ..
             },
         ) => {
-            let same = js_hypot(ca.x - cb.x, ca.y - cb.y) <= TOL
+            let same = hypot(ca.x - cb.x, ca.y - cb.y) <= TOL
                 && (ra - rb).abs() <= TOL
                 && js_sign(sa) == js_sign(sb);
             (same && (sa + sb).abs() < TAU - 1e-6).then_some(Edge::Arc {
@@ -383,7 +381,7 @@ fn to_ring(edges: Vec<Edge>, cycle_from: &[usize], verts: &Vertices, origin: Vec
     let e = edges[best];
     let m = point_at(&e, 0.5);
     let q = point_at(&e, 0.5 + 1e-6);
-    let l = or(js_hypot(q.x - m.x, q.y - m.y), 1.0);
+    let l = or(hypot(q.x - m.x, q.y - m.y), 1.0);
     let eps = js_min(edge_len(&e) * 1e-4, 1e-4);
     let probe = Vec2::new(m.x - ((q.y - m.y) / l) * eps, m.y + ((q.x - m.x) / l) * eps);
     LocalRing {
@@ -605,7 +603,7 @@ impl Cores {
     /// the arrangement.
     fn covers_outside(&self, a: Vec2, b: Vec2) -> bool {
         let (dx, dy) = (b.x - a.x, b.y - a.y);
-        let len = js_hypot(dx, dy);
+        let len = hypot(dx, dy);
         if len <= TOL {
             return false;
         }
@@ -786,7 +784,7 @@ fn box_holds(b: &Bounds, p: Vec2) -> bool {
 fn hair_left(e: &Edge) -> Vec2 {
     let m = point_at(e, 0.5);
     let q = point_at(e, 0.5 + 1e-6);
-    let l = or(js_hypot(q.x - m.x, q.y - m.y), 1.0);
+    let l = or(hypot(q.x - m.x, q.y - m.y), 1.0);
     let eps = js_min(edge_len(e) * 1e-4, 1e-4);
     Vec2::new(m.x - ((q.y - m.y) / l) * eps, m.y + ((q.x - m.x) / l) * eps)
 }

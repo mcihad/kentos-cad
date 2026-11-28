@@ -17,7 +17,7 @@ use crate::geom::arrangement::{Area, Ring};
 use crate::geom::intersect::line_line;
 use crate::geom::wall::{Body, ComponentFill, Detail, Drawn, Line, Spec, Stroke};
 use crate::geometry::{Bounds, point_in_polygon};
-use crate::jsmath::{TAU, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{TAU, cos, hypot, js_max, js_min, sin};
 use crate::vec2::Vec2;
 
 /// Lengths and parameters closer than this are the same.
@@ -110,7 +110,7 @@ fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     } else {
         0.0
     };
-    js_hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
+    hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
 }
 
 /// Whether `p` is inside the ring and not on it.
@@ -549,7 +549,7 @@ mod tests {
         parts
             .iter()
             .flat_map(|p| p.windows(2))
-            .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+            .map(|w| hypot(w[1].x - w[0].x, w[1].y - w[0].y))
             .sum()
     }
 

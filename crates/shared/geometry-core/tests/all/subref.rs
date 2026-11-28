@@ -8,7 +8,7 @@
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::Entity;
-use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::ops::subref::{
     Followed, Place, follow, follow_in, follow_path, follow_range, place_in, point, point_in,
     range_length,
@@ -605,10 +605,10 @@ fn nurbs_places_use_its_actual_knot_domain_and_keep_shape_through_knot_insertion
         let place = parameter_fraction(t);
         let a = point(&before, place).unwrap();
         let b = point(&after, place).unwrap();
-        assert!(js_hypot(a.x - b.x, a.y - b.y) < 1e-14);
-        assert!((js_hypot(a.x, a.y) - 1.).abs() < 1e-14);
+        assert!(hypot(a.x - b.x, a.y - b.y) < 1e-14);
+        assert!((hypot(a.x, a.y) - 1.).abs() < 1e-14);
         assert!(
-            matches!(follow(place,&before,Some(&after)),Followed::At(_,q) if js_hypot(a.x-q.x,a.y-q.y)<1e-14)
+            matches!(follow(place,&before,Some(&after)),Followed::At(_,q) if hypot(a.x-q.x,a.y-q.y)<1e-14)
         );
     }
     assert!(
@@ -646,7 +646,7 @@ fn nurbs_near_place_uses_the_curve_and_does_not_bind_a_control_point_or_chord() 
     assert!(d < 0.002);
     same_place("nearest fraction", p, parameter_fraction(0.5));
     let q = point(&e, p).unwrap();
-    assert!((js_hypot(q.x, q.y) - 1.).abs() < 1e-14);
+    assert!((hypot(q.x, q.y) - 1.).abs() < 1e-14);
     same_place(
         "exact snap",
         place_at(&e, SnapKind::Nearest, at).unwrap(),

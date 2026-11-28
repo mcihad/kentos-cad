@@ -13,7 +13,7 @@ use crate::entity::{Shape, area_parts};
 use crate::geom::affine::{Affine, apply, apply_linear, is_reflection, length_scale};
 use crate::geom::bulge::{bulge_arc, bulge_of_sweep};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
-use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_min, sin};
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, path_of, point_at_s, tangent_at_s};
 use crate::store::labels::{LABEL_LINE, LABEL_PARAGRAPH_MASK, LABEL_PIECE_LINE};
@@ -63,7 +63,7 @@ fn turned(v: Vec2, rotation: f64) -> Vec2 {
 fn tangent(e: &Edge, t: f64) -> Vec2 {
     match *e {
         Edge::Seg { a, b } => {
-            let l = js_hypot(b.x - a.x, b.y - a.y);
+            let l = hypot(b.x - a.x, b.y - a.y);
             Vec2::new((b.x - a.x) / l, (b.y - a.y) / l)
         }
         Edge::Arc { a0, sweep, .. } => {
@@ -166,7 +166,7 @@ impl Curve {
     pub fn chord(&self, p: Vec2, rotation: f64) -> f64 {
         let last = self.pts.last().copied().unwrap_or(Vec2::new(0.0, 0.0));
         let d = turned(last, rotation);
-        if js_hypot(d.x, d.y) > ONE_POINT {
+        if hypot(d.x, d.y) > ONE_POINT {
             return degrees(atan2(d.y, d.x));
         }
         self.edges(p, rotation)
@@ -389,7 +389,7 @@ impl<'a> Along<'a> {
             return ((self.rotation % 360.0) + 360.0) % 360.0;
         };
         let (dx, dy) = (last.mid.x - first.mid.x, last.mid.y - first.mid.y);
-        if letters.len() == 1 || js_hypot(dx, dy) <= ONE_POINT {
+        if letters.len() == 1 || hypot(dx, dy) <= ONE_POINT {
             return degrees(atan2(first.tangent.y, first.tangent.x));
         }
         degrees(atan2(dy, dx))
@@ -685,7 +685,7 @@ fn stretch(path: &Path, s0: f64, s1: f64) -> (Vec<Vec2>, Vec<f64>) {
     let mut kept_b = Vec::with_capacity(bulges.len());
     for i in 1..vs.len() {
         let last = kept_v[kept_v.len() - 1];
-        if js_hypot(vs[i].x - last.x, vs[i].y - last.y) <= ONE_POINT {
+        if hypot(vs[i].x - last.x, vs[i].y - last.y) <= ONE_POINT {
             continue;
         }
         kept_v.push(vs[i]);
@@ -738,7 +738,7 @@ pub fn piece(shape: &Shape, click: Vec2, length: f64, share: f64) -> Option<(Vec
         return None;
     }
     let (first, last) = (vs[0], vs[vs.len() - 1]);
-    let rotation = if js_hypot(last.x - first.x, last.y - first.y) <= ONE_POINT {
+    let rotation = if hypot(last.x - first.x, last.y - first.y) <= ONE_POINT {
         let t = tangent_at_s(&path, start);
         degrees(atan2(t.y, t.x))
     } else {

@@ -253,5 +253,5 @@ fn only_a_cad_phase_build_is_cut_on_the_curve() {
         "{}",
         kentos_geometry_core::jsmath::atan2(y, x)
     );
-    assert!((kentos_geometry_core::jsmath::js_hypot(x, y) - 10.).abs() < 1e-12);
+    assert!((kentos_geometry_core::jsmath::hypot(x, y) - 10.).abs() < 1e-12);
 }

@@ -9,7 +9,7 @@
 use std::collections::HashMap;
 
 use crate::api::Op;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::ops::elevation::Elevated;
 use crate::text::edit::increment;
@@ -66,7 +66,7 @@ impl Grid {
             for dy in -1..=1 {
                 for &i in self.cells.get(&(cx + dx, cy + dy)).into_iter().flatten() {
                     let q = at(i);
-                    if js_hypot(q.x - p.x, q.y - p.y) <= TOUCH && best.is_none_or(|b| i < b) {
+                    if hypot(q.x - p.x, q.y - p.y) <= TOUCH && best.is_none_or(|b| i < b) {
                         best = Some(i);
                     }
                 }

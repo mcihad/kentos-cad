@@ -6,9 +6,7 @@
 
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{
-    PI, atan2, cos, js_hypot, js_max, js_min, js_round, sin, truthy,
-};
+use kentos_geometry_core::jsmath::{PI, atan2, cos, hypot, js_max, js_min, js_round, sin, truthy};
 use kentos_style_core::js::number;
 
 use crate::path::{
@@ -492,8 +490,8 @@ fn rotate_plus(s: &Obj, angle: f64) -> Json {
 /// rotate property grows); anything else turns them into paths. Text moves
 /// and scales its size. None for a shape of no known kind.
 pub fn transform_shape(s: &Obj, m: &Matrix) -> Result<Option<Obj>, String> {
-    let sx = js_hypot(m[0], m[1]);
-    let sy = js_hypot(m[2], m[3]);
+    let sx = hypot(m[0], m[1]);
+    let sy = hypot(m[2], m[3]);
     let angle = (atan2(m[1], m[0]) * 180.0) / PI;
     let axis_aligned = m[1].abs() < 1e-12 && m[2].abs() < 1e-12;
     let uniform = (sx - sy).abs() < 1e-9

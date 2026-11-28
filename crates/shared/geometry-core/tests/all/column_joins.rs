@@ -8,7 +8,7 @@ use kentos_geometry_core::api::json::{Flat, Json};
 use kentos_geometry_core::geom::arch::ColumnSpec;
 use kentos_geometry_core::geom::column_join::{Foot, WallAt, cut, joined};
 use kentos_geometry_core::geom::wall::{Drawn, Spec, drawn};
-use kentos_geometry_core::jsmath::{js_hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{hypot, js_max, js_min};
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
@@ -34,7 +34,7 @@ fn ring_area(r: &[Vec2]) -> f64 {
 
 fn length(pts: &[Vec2]) -> f64 {
     pts.windows(2)
-        .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+        .map(|w| hypot(w[1].x - w[0].x, w[1].y - w[0].y))
         .sum()
 }
 

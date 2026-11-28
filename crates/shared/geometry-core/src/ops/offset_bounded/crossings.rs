@@ -63,7 +63,7 @@ pub(super) fn count(s: &Shape) -> Result<usize, String> {
     Ok(count)
 }
 fn overlaps(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> bool {
-    let length = crate::jsmath::js_hypot(b.x - a.x, b.y - a.y);
+    let length = crate::jsmath::hypot(b.x - a.x, b.y - a.y);
     if length == 0. {
         return false;
     }

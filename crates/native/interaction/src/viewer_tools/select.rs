@@ -34,7 +34,7 @@ use kentos_commands::{EditOperation, EntitiesEdit, EntityEdit};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::ops::grips::mid_grip_segment;
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_native_application::geometry::{edit_geometry, shape};
@@ -353,7 +353,7 @@ impl Select {
             screen: p.screen,
             world: p.raw,
         });
-        let moved = js_hypot(p.screen[0] - start.screen[0], p.screen[1] - start.screen[1]);
+        let moved = hypot(p.screen[0] - start.screen[0], p.screen[1] - start.screen[1]);
         if !self.dragging && moved > DRAG_THRESHOLD {
             self.dragging = true;
             cx.selection.set_hover(None);
@@ -364,7 +364,7 @@ impl Select {
     /// turns hot), the box selects, or the click picks.
     pub fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if let Some(g) = self.param.as_mut().filter(|g| !g.hot) {
-            if js_hypot(p.screen[0] - g.down[0], p.screen[1] - g.down[1]) > DRAG_THRESHOLD {
+            if hypot(p.screen[0] - g.down[0], p.screen[1] - g.down[1]) > DRAG_THRESHOLD {
                 if let Some(mut g) = self.param.take() {
                     g.follow(p.world, cx);
                     g.commit(cx);
@@ -375,7 +375,7 @@ impl Select {
             return;
         }
         if let Some(g) = self.room.as_mut().filter(|g| !g.hot) {
-            if js_hypot(p.screen[0] - g.down[0], p.screen[1] - g.down[1]) > DRAG_THRESHOLD {
+            if hypot(p.screen[0] - g.down[0], p.screen[1] - g.down[1]) > DRAG_THRESHOLD {
                 if let Some(mut g) = self.room.take() {
                     g.follow(p.world, cx);
                     g.commit(None, cx);
@@ -386,7 +386,7 @@ impl Select {
             return;
         }
         if let Some(g) = self.grip.as_mut().filter(|g| !g.hot) {
-            if js_hypot(p.screen[0] - g.down[0], p.screen[1] - g.down[1]) > DRAG_THRESHOLD {
+            if hypot(p.screen[0] - g.down[0], p.screen[1] - g.down[1]) > DRAG_THRESHOLD {
                 let at = self.grip_point.unwrap_or(p.world);
                 self.commit(at, cx);
             } else {
@@ -809,7 +809,7 @@ impl Select {
             );
             return;
         }
-        if js_hypot(dx, dy) <= 1e-9 {
+        if hypot(dx, dy) <= 1e-9 {
             self.grip = keep.map(|g| GripEdit { hot: true, ..g });
             return;
         }
@@ -1199,7 +1199,7 @@ pub(crate) fn grip_at(screen: [f64; 2], cx: &Context<'_>) -> Option<(Slot, usize
                 continue;
             }
             let s = cx.view.to_screen(p);
-            let d = js_hypot(s[0] - screen[0], s[1] - screen[1]);
+            let d = hypot(s[0] - screen[0], s[1] - screen[1]);
             if d <= best {
                 best = d;
                 found = Some((set.slot, index, p));

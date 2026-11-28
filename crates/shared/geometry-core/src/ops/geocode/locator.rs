@@ -16,7 +16,7 @@ use crate::entity::Shape;
 use crate::geom::bulge::bulge_ring_area;
 use crate::geom::intersect::closest_on_edge;
 use crate::geometry::{Bounds, dist};
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{hypot, js_max};
 use crate::ops::generate::pole::pole;
 use crate::ops::spatial_query::{Geometry, geometry_of, in_or_on};
 use crate::store::rtree::{Nearer, NearestQueue, PackedTree};
@@ -207,7 +207,7 @@ fn point_bounds(p: Vec2) -> Bounds {
 pub(super) fn box_gap(b: &Bounds, p: Vec2) -> f64 {
     let dx = js_max(js_max(b.min_x - p.x, 0.0), p.x - b.max_x);
     let dy = js_max(js_max(b.min_y - p.y, 0.0), p.y - b.max_y);
-    js_hypot(dx, dy)
+    hypot(dx, dy)
 }
 
 /// The distance from `p` to a line's edges and the nearest point (the first of equal ones in the edges' order).

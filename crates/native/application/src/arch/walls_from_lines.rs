@@ -15,7 +15,7 @@ use kentos_commands::{
     WallsFromMode,
 };
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::jsmath::{atan2, cos, js_hypot, sin, tan};
+use kentos_geometry_core::jsmath::{atan2, cos, hypot, sin, tan};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
@@ -131,7 +131,7 @@ fn pairs(lines: &[(usize, Vec2, Vec2)], max_width: f64, angle: f64) -> Vec<Paire
     }
     let mut candidates = Vec::new();
     for (x, &(i, a, b)) in lines.iter().enumerate() {
-        let len = js_hypot(b.x - a.x, b.y - a.y);
+        let len = hypot(b.x - a.x, b.y - a.y);
         if len <= EPS {
             continue;
         }
@@ -140,7 +140,7 @@ fn pairs(lines: &[(usize, Vec2, Vec2)], max_width: f64, angle: f64) -> Vec<Paire
             y: (b.y - a.y) / len,
         };
         for &(j, c, e) in &lines[x + 1..] {
-            let lj = js_hypot(e.x - c.x, e.y - c.y);
+            let lj = hypot(e.x - c.x, e.y - c.y);
             if lj <= EPS {
                 continue;
             }
@@ -198,7 +198,7 @@ fn pairs(lines: &[(usize, Vec2, Vec2)], max_width: f64, angle: f64) -> Vec<Paire
         taken.insert(c.i);
         taken.insert(c.j);
         let &(_, a, b) = lines.iter().find(|(k, ..)| *k == c.i).unwrap_or(&lines[0]);
-        let len = js_hypot(b.x - a.x, b.y - a.y);
+        let len = hypot(b.x - a.x, b.y - a.y);
         let u = Vec2 {
             x: (b.x - a.x) / len,
             y: (b.y - a.y) / len,

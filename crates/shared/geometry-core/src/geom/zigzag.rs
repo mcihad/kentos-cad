@@ -4,7 +4,7 @@
 //! a size of their own, break into pieces in a band thinner than them or sloping across them.
 
 use crate::geometry::point_in_polygon;
-use crate::jsmath::{js_floor, js_hypot};
+use crate::jsmath::{hypot, js_floor};
 use crate::ops::generate::bounding::convex_hull;
 use crate::vec2::Vec2;
 
@@ -25,7 +25,7 @@ pub fn fitted(ring: &[Vec2], least: f64) -> Vec<Vec<Vec2>> {
     let mut best: Option<(f64, Vec2, Vec2)> = None;
     for i in 0..n {
         let (a, b) = (hull[i], hull[(i + 1) % n]);
-        let l = js_hypot(b.x - a.x, b.y - a.y);
+        let l = hypot(b.x - a.x, b.y - a.y);
         if !(l > 0.0) {
             continue;
         }
@@ -102,7 +102,7 @@ fn clip(pts: &[Vec2], ring: &[Vec2]) -> Vec<Vec<Vec2>> {
             if point_in_polygon(at(a, d, (w[0] + w[1]) / 2.0), ring) {
                 if run
                     .last()
-                    .is_some_and(|l| js_hypot(l.x - p0.x, l.y - p0.y) < 1e-12)
+                    .is_some_and(|l| hypot(l.x - p0.x, l.y - p0.y) < 1e-12)
                 {
                     run.push(p1);
                 } else {
@@ -180,7 +180,7 @@ mod tests {
             }
             for w in inner.windows(3) {
                 assert!(
-                    (js_hypot(w[2].x - w[0].x, w[2].y - w[0].y) - thick).abs() < 1e-9,
+                    (hypot(w[2].x - w[0].x, w[2].y - w[0].y) - thick).abs() < 1e-9,
                     "{w:?}"
                 );
             }

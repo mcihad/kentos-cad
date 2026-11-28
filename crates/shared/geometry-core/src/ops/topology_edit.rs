@@ -716,8 +716,8 @@ fn merged(b: &Path, a: &Path) -> Vec<(Span, Span)> {
     }
     let (p, v, q) = (b.pts[prev], b.pts[j], b.pts[next]);
     let (l1, l2) = (
-        crate::jsmath::js_hypot(v.x - p.x, v.y - p.y),
-        crate::jsmath::js_hypot(q.x - v.x, q.y - v.y),
+        crate::jsmath::hypot(v.x - p.x, v.y - p.y),
+        crate::jsmath::hypot(q.x - v.x, q.y - v.y),
     );
     if !(l1 + l2 > 0.0) {
         return Vec::new();

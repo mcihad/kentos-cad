@@ -428,7 +428,7 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   - [x] Platformun `hypot`'una giden 586 çağrı ve `libm::hypot` sayısal temele (20 crate); bekçi
     `scripts/dev/platform_math.py` platformun matematik yöntemlerini ve `js_` yardımcılarını sayar, sayı yalnız azalır.
     Bu sırada bulunan: eşit uzunluktaki kaçış yollarının seçimi son basamağa bağlıydı (düzeltildi, ADR 9403 §7).
-  - [ ] Adlar: `js_hypot` → `hypot` (702 çağrı; mekanik).
+  - [x] Ad: `js_hypot` → `hypot` (890 kullanım, 233 dosya; mekanik, davranış aynı).
   - Açık, bu işten bağımsız (ADR 9403 §6): DWG codec'inin bir sınaması, Python kanalının tam koşusunda
     `cad.arch.performance` ve `cad.arch.ifc` durumları, `fixtures/raster/v1/georef.json` üretecinin ortam farkı.
   - [ ] Davranışı değişmeyen adlar (`minimum`, `maximum`, `sign`, sıralama).

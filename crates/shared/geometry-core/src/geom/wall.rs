@@ -22,7 +22,7 @@ use crate::geom::bulge::{bulge_path_outline, has_bulges};
 use crate::geom::hatch_pattern::library_pattern;
 use crate::geom::offset::{OffsetResult, offset_bulge_path};
 use crate::geometry::signed_area;
-use crate::jsmath::{PI, atan2, js_hypot, js_max, js_min};
+use crate::jsmath::{PI, atan2, hypot, js_max, js_min};
 use crate::vec2::Vec2;
 
 /// Conservative path box used by the native wall join candidate search.
@@ -668,7 +668,7 @@ fn nearest_on(line: &[Vec2], p: Vec2) -> Option<Vec2> {
             0.0
         };
         let q = Vec2::new(a.x + t * dx, a.y + t * dy);
-        let d = js_hypot(q.x - p.x, q.y - p.y);
+        let d = hypot(q.x - p.x, q.y - p.y);
         if best.is_none_or(|(e, _)| d < e) {
             best = Some((d, q));
         }
@@ -681,7 +681,7 @@ fn along(line: &[Vec2], s: f64) -> Option<Vec2> {
     let mut left = s;
     for w in line.windows(2) {
         let (a, b) = (w[0], w[1]);
-        let len = js_hypot(b.x - a.x, b.y - a.y);
+        let len = hypot(b.x - a.x, b.y - a.y);
         if left <= len {
             let k = if len > 0.0 { left / len } else { 0.0 };
             return Some(Vec2::new(a.x + k * (b.x - a.x), a.y + k * (b.y - a.y)));
@@ -701,10 +701,7 @@ fn zigzags(first: &[Stroke], second: &[Stroke], least: f64) -> Vec<Shape> {
             .iter()
             .filter_map(|o| nearest_on(o, p))
             .min_by(|a, b| {
-                crate::jsmath::js_cmp(
-                    js_hypot(a.x - p.x, a.y - p.y),
-                    js_hypot(b.x - p.x, b.y - p.y),
-                )
+                crate::jsmath::js_cmp(hypot(a.x - p.x, a.y - p.y), hypot(b.x - p.x, b.y - p.y))
             })
     };
     let mut out = Vec::new();
@@ -712,7 +709,7 @@ fn zigzags(first: &[Stroke], second: &[Stroke], least: f64) -> Vec<Shape> {
         let line = st.line.outline(st.closed);
         let length: f64 = line
             .windows(2)
-            .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+            .map(|w| hypot(w[1].x - w[0].x, w[1].y - w[0].y))
             .sum();
         let Some(middle) = along(&line, length / 2.0) else {
             continue;
@@ -720,7 +717,7 @@ fn zigzags(first: &[Stroke], second: &[Stroke], least: f64) -> Vec<Shape> {
         let Some(across) = foot(middle) else {
             continue;
         };
-        let thick = js_hypot(across.x - middle.x, across.y - middle.y);
+        let thick = hypot(across.x - middle.x, across.y - middle.y);
         // At the limit it draws (a 5 cm layer at 1:50), the measured thickness a hair under it.
         if thick <= 1e-6 || thick < least * (1.0 - 1e-9) || length <= thick / 2.0 {
             continue;
@@ -993,7 +990,7 @@ fn curtain_pieces(
     let mut start = 0.0;
     for i in 0..stretches {
         let (a, b) = (pts[i], pts[(i + 1) % n]);
-        let length = js_hypot(b.x - a.x, b.y - a.y);
+        let length = hypot(b.x - a.x, b.y - a.y);
         if length <= 1e-9 {
             continue;
         }
@@ -1164,7 +1161,7 @@ fn near_ring(ring: &[Vec2], p: Vec2) -> f64 {
             } else {
                 0.0
             };
-            js_hypot(a.x + dx * t - p.x, a.y + dy * t - p.y)
+            hypot(a.x + dx * t - p.x, a.y + dy * t - p.y)
         })
         .fold(f64::INFINITY, js_min)
 }

@@ -401,7 +401,7 @@ fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
     s.put_json(&column(4.0, 0.0)).unwrap();
     let length = |pts: &[Vec2]| -> f64 {
         pts.windows(2)
-            .map(|w| crate::jsmath::js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+            .map(|w| crate::jsmath::hypot(w[1].x - w[0].x, w[1].y - w[0].y))
             .sum()
     };
     let look = |s: &Store| {

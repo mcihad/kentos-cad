@@ -20,7 +20,7 @@
 use crate::geom::bulge::{bulge_arc, bulge_of_sweep};
 use crate::geom::wall::{JoinMode, left_face};
 use crate::geom::wall_join::{JOIN_TOLERANCE, WallIn};
-use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_min, js_sign, sin};
+use crate::jsmath::{PI, atan2, cos, hypot, js_max, js_min, js_sign, sin};
 use crate::ops::edge_shift_arcs::{Curve, meet, sweep_to};
 use crate::ops::wall_shift::{
     Gap, Moved, TIE, bulge, edge, edge_count, ends_at, host_at, inline, level,
@@ -40,7 +40,7 @@ fn cross(a: Vec2, b: Vec2) -> f64 {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(b.x - a.x, b.y - a.y)
+    hypot(b.x - a.x, b.y - a.y)
 }
 
 fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {
@@ -51,7 +51,7 @@ fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {
 /// The arc's way round at `p` on it: square to the radius, turning as it turns (`turn` ±1).
 fn tangent(c: Vec2, p: Vec2, turn: f64) -> Vec2 {
     let d = sub(p, c);
-    let l = js_hypot(d.x, d.y);
+    let l = hypot(d.x, d.y);
     Vec2::new(-d.y * turn / l, d.x * turn / l)
 }
 

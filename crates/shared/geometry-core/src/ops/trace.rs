@@ -21,7 +21,7 @@ use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::overlay::{joinable, localize, origin_of};
 use crate::geometry::Bounds;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::ops::areas::line_source;
 use crate::store::rtree::PackedTree;
@@ -172,7 +172,7 @@ impl TraceGraph {
             let piece = &self.built.pieces[h as usize];
             for v in [piece.from, piece.to] {
                 let w = self.built.verts.pos[v];
-                if js_hypot(w.x - q.x, w.y - q.y) <= TOL {
+                if hypot(w.x - q.x, w.y - q.y) <= TOL {
                     return Some(Spot::Vertex(v));
                 }
             }
@@ -300,7 +300,7 @@ impl TraceGraph {
     /// either is off the line work, they are the same point, or nothing
     /// joins them.
     pub fn path(&self, a: Vec2, b: Vec2) -> Option<Traced> {
-        if js_hypot(a.x - b.x, a.y - b.y) <= TOL {
+        if hypot(a.x - b.x, a.y - b.y) <= TOL {
             return None;
         }
         let (sa, sb) = (self.spot(a)?, self.spot(b)?);
@@ -526,7 +526,7 @@ mod tests {
             let ok = match (got, want) {
                 (None, None) => true,
                 (Some(g), Some(w)) if exact => g == w,
-                (Some(g), Some(w)) => js_hypot(g.x - w.x, g.y - w.y) <= 1e-9,
+                (Some(g), Some(w)) => hypot(g.x - w.x, g.y - w.y) <= 1e-9,
                 _ => false,
             };
             if !ok {
@@ -576,7 +576,7 @@ mod tests {
                     if exact.contains(&i) {
                         p == q
                     } else {
-                        js_hypot(p.x - q.x, p.y - q.y) <= 1e-9
+                        hypot(p.x - q.x, p.y - q.y) <= 1e-9
                     }
                 })
                 && bulges.len() == got.bulges.len()

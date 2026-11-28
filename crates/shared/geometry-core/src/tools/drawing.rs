@@ -12,7 +12,7 @@ use crate::geom::bulge::{bulge_at, bulge_of_sweep, segment_tangent};
 use crate::geom::ellipse::{EllipseGeom, param_at_polar};
 use crate::geom::shapes::regular_polygon;
 use crate::geometry::dist;
-use crate::jsmath::{PI, asin, atan2, cos, js_hypot, js_sign, or, sin, tan};
+use crate::jsmath::{PI, asin, atan2, cos, hypot, js_sign, or, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -194,7 +194,7 @@ pub fn xline_direction(mode: &str, pts: &[Vec2], p: Vec2, angle: f64) -> Option<
             let v = unit_toward(pts[0], p);
             let (u, v) = (u?, v?);
             let s = Vec2::new(u.x + v.x, u.y + v.y);
-            let l = js_hypot(s.x, s.y);
+            let l = hypot(s.x, s.y);
             // Opposite arms: the bisector is square to them.
             Some(if l < 1e-12 {
                 Vec2::new(-u.y, u.x)

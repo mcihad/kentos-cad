@@ -8,7 +8,7 @@ use crate::block::{insert_local_xy, insert_matrix_xy, shows_nothing};
 use crate::block_dynamic::{GripKind, ParamGrip};
 use crate::entity::{ParamValue, Params, Shape};
 use crate::geom::affine::{apply, apply_linear};
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{hypot, js_max};
 use crate::vec2::Vec2;
 
 impl Store {
@@ -51,7 +51,7 @@ impl Store {
                 from: g.from.map(|f| apply(&m, f)),
                 along: g.along.and_then(|u| {
                     let w = apply_linear(&m, u);
-                    let n = js_hypot(w.x, w.y);
+                    let n = hypot(w.x, w.y);
                     (n > 0.0).then(|| Vec2::new(w.x / n, w.y / n))
                 }),
                 ..g

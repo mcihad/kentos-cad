@@ -19,7 +19,7 @@ use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::offset::{OffsetResult, offset_bulge_path, offset_path, side_of};
 use crate::geom::region::{subtract_areas, union_areas};
 use crate::geometry::point_in_polygon;
-use crate::jsmath::{js_hypot, js_min};
+use crate::jsmath::{hypot, js_min};
 use crate::op;
 use crate::ops::curve_cuts::{
     Geometry, construction_of, ellipse_of, offset_construction, offset_ellipse,
@@ -212,7 +212,7 @@ pub fn offset_entity(e: &Shape, distance: f64, through: Vec2) -> Geometry {
             }
         }
         Shape::Circle { c, r } | Shape::Arc { c, r, .. } => {
-            let outside = js_hypot(through.x - c.x, through.y - c.y) > *r;
+            let outside = hypot(through.x - c.x, through.y - c.y) > *r;
             let r = r + if outside { distance } else { -distance };
             if r <= 1e-9 {
                 return Geometry::Error(
@@ -529,7 +529,7 @@ fn bulged_side(e: &Shape, p: Vec2) -> i32 {
             }
             Edge::Arc { c, r, sweep, .. } => {
                 // Inside the circle is left of a counter-clockwise arc.
-                let inside = js_hypot(p.x - c.x, p.y - c.y) < r;
+                let inside = hypot(p.x - c.x, p.y - c.y) < r;
                 if inside == (sweep > 0.0) { 1 } else { -1 }
             }
         };

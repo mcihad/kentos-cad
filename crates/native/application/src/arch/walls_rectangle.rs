@@ -8,7 +8,7 @@ use kentos_commands::{
 };
 use kentos_domain::Document;
 use kentos_geometry_core::geometry::signed_area;
-use kentos_geometry_core::jsmath::{cos, js_hypot, sin};
+use kentos_geometry_core::jsmath::{cos, hypot, sin};
 
 use crate::checks::error;
 use crate::{ExecutionContext, codes, shapes, walls_create};
@@ -169,7 +169,7 @@ fn dimensions(input: &WallsRectangle) -> (f64, f64) {
     match &input.frame {
         RectangleFrame::Size { length, width, .. } => (*length, *width),
         RectangleFrame::Area { area, length, .. } => (*length, area / length),
-        RectangleFrame::Edge { a, b, width } => (js_hypot(b.x - a.x, b.y - a.y), width.abs()),
+        RectangleFrame::Edge { a, b, width } => (hypot(b.x - a.x, b.y - a.y), width.abs()),
         RectangleFrame::Corners { a, b } => {
             let rotation = input.rotation.unwrap_or(0.0);
             let (c, s) = (cos(rotation), sin(rotation));

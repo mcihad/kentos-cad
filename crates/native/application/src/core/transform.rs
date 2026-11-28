@@ -51,7 +51,7 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::affine::{Affine, similarity};
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geometry::dist;
-use kentos_geometry_core::jsmath::{js_hypot, js_max};
+use kentos_geometry_core::jsmath::{hypot, js_max};
 use kentos_geometry_core::ops::arrange::{self, Mode};
 use kentos_geometry_core::ops::rubber::{Link, RubberError, Sheet};
 use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape, transform_shape_in};
@@ -488,7 +488,7 @@ const NUMBER_FIX: &str = "Dönüşümün sayılarını sonlu verin.";
 /// Whether a linear part [a, b, c, d] (columns (a, b) and (c, d)) squashes
 /// the plane: its determinant within 1e-12 of its columns' lengths' product.
 fn singular([a, b, c, d]: [f64; 4]) -> bool {
-    (a * d - b * c).abs() <= 1e-12 * js_hypot(a, b) * js_hypot(c, d)
+    (a * d - b * c).abs() <= 1e-12 * hypot(a, b) * hypot(c, d)
 }
 
 fn refuse_singular() -> Stop {

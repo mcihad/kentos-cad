@@ -6,7 +6,7 @@
 
 use crate::entity::Shape;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{cos, js_hypot, js_max, js_min, js_sign, sin};
+use crate::jsmath::{cos, hypot, js_max, js_min, js_sign, sin};
 use crate::ops::convert::{Zs, paths};
 use crate::ops::edges::edge_length;
 use crate::ops::path::path_of;
@@ -80,7 +80,7 @@ impl Walk {
         };
         let dir = match *e {
             Edge::Seg { a, b } => {
-                let l = js_hypot(b.x - a.x, b.y - a.y);
+                let l = hypot(b.x - a.x, b.y - a.y);
                 if l > 0.0 {
                     Vec2::new((b.x - a.x) / l, (b.y - a.y) / l)
                 } else {

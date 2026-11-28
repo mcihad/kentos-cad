@@ -2,7 +2,7 @@
 use super::tests::{c, dim, r, solve_of};
 use super::*;
 use crate::geom::ellipse::{EllipseGeom, ellipse_point};
-use crate::jsmath::{PI, TAU, cos, js_hypot, sin};
+use crate::jsmath::{PI, TAU, cos, hypot, sin};
 use crate::vec2::Vec2;
 const CENTER: Element = Element::Point(PointAt::Center);
 const START: Element = Element::Point(PointAt::Start);
@@ -46,7 +46,7 @@ fn at(s: &Shape, t: f64) -> Vec2 {
     )
 }
 fn close(a: Vec2, b: Vec2) {
-    assert!(js_hypot(a.x - b.x, a.y - b.y) < 1e-8, "{a:?} != {b:?}");
+    assert!(hypot(a.x - b.x, a.y - b.y) < 1e-8, "{a:?} != {b:?}");
 }
 #[test]
 fn ellipse_center_at_large_world_coordinates_preserves_axes_and_closedness() {
@@ -108,7 +108,7 @@ fn full_ellipse_axis_is_driven_by_real_seam_point_without_opening_curve() {
     else {
         panic!()
     };
-    assert!((js_hypot(major.x, major.y) * ratio - 2.).abs() < 1e-9);
+    assert!((hypot(major.x, major.y) * ratio - 2.).abs() < 1e-9);
     assert_eq!((*t0, *t1), (0., TAU));
 }
 #[test]
@@ -296,7 +296,7 @@ fn ellipse_center_ray_turns_a_quarter_without_collapsing_axes() {
                 panic!()
             };
             close(actual, center);
-            assert!((js_hypot(major.x, major.y) - 4.).abs() < 1e-8);
+            assert!((hypot(major.x, major.y) - 4.).abs() < 1e-8);
             assert!((ratio - 0.5).abs() < 1e-8);
             assert_eq!((t0, t1), (0., 0.));
             assert!((if vertical { major.x } else { major.y }).abs() < 1e-8);
@@ -368,7 +368,7 @@ fn ellipse_ray_alignment_uses_the_true_partial_end_and_nearest_direction() {
             end.x * initial.x > 0.,
             "must not flip the selected ray's half plane"
         );
-        assert!(js_hypot(major.x, major.y) > 0. && ratio > 0. && ratio <= 1.);
+        assert!(hypot(major.x, major.y) > 0. && ratio > 0. && ratio <= 1.);
         assert!(t1 > t0 && t1 - t0 < TAU);
     }
 }
@@ -416,9 +416,9 @@ fn a_dragged_ellipse_start_is_a_point_target_not_a_lock_on_all_seven_parameters(
     close(c, Vec2::new(0., 0.));
     close(at(&out.shapes[0], t0), target);
     let end = at(&out.shapes[0], t1);
-    assert!((js_hypot(target.x - end.x, target.y - end.y) - 20f64.sqrt()).abs() < 1e-8);
+    assert!((hypot(target.x - end.x, target.y - end.y) - 20f64.sqrt()).abs() < 1e-8);
     assert!(
-        js_hypot(end.x, end.y - 2.) > 1e-3,
+        hypot(end.x, end.y - 2.) > 1e-3,
         "the unchanged endpoint must be free to satisfy the dimension"
     );
     assert_eq!(
@@ -616,7 +616,7 @@ fn explicit_axis_targets_leave_other_radius_free_instead_of_holding_the_seam() {
     use crate::ops::grips::{ellipse_axis_after_grip, ellipse_axis_point, move_grip};
     let before = ellipse(Vec2::new(0., 0.), 4., 2., 0., 0.6, 0.6);
     let original = at(&before, 0.6);
-    let distance = js_hypot(original.x, original.y);
+    let distance = hypot(original.x, original.y);
     let cs = [
         c(Rule::Fix { a: r(0, CENTER) }),
         dim(
@@ -655,7 +655,7 @@ fn explicit_axis_targets_leave_other_radius_free_instead_of_holding_the_seam() {
             panic!()
         };
         let p = at(&out.shapes[0], t0);
-        assert!((js_hypot(p.x, p.y) - distance).abs() < 1e-9);
+        assert!((hypot(p.x, p.y) - distance).abs() < 1e-9);
         assert!(
             (p.x - original.x).abs() > 0.1,
             "the undragged seam must be free to follow its own bond"

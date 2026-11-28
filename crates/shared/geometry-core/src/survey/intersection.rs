@@ -4,7 +4,7 @@
 
 use super::{Unit, bearing, distance, distinct, finite, from_bearing, positive};
 use crate::api::Op;
-use crate::jsmath::{PI, cos, js_hypot, sin};
+use crate::jsmath::{PI, cos, hypot, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -70,7 +70,7 @@ pub fn resection(
         let k = cos(w) / s / 2.0;
         // Right normal of (dx, dy), scaled by the chord: (dy, −dx).
         let m = Vec2::new((u.x + v.x) / 2.0 + dy * k, (u.y + v.y) / 2.0 - dx * k);
-        Some((m, js_hypot(m.x - u.x, m.y - u.y)))
+        Some((m, hypot(m.x - u.x, m.y - u.y)))
     };
     let (Some((m1, r1)), Some((m2, r2))) = (centre(a, b, al), centre(b, c, be)) else {
         return Err(
@@ -78,7 +78,7 @@ pub fn resection(
         );
     };
     let (ux, uy) = (m2.x - m1.x, m2.y - m1.y);
-    let gap = js_hypot(ux, uy);
+    let gap = hypot(ux, uy);
     let strength = gap / (r1 + r2);
     if !(strength > 1e-9) {
         return Err("Nokta tehlike dairesinde: A, B, C ve durulan nokta aynı çember üzerinde, çözüm belirsiz. Başka bir bilinen nokta seçin.".into());

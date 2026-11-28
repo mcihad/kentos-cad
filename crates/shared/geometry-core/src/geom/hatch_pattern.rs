@@ -11,7 +11,7 @@ use std::sync::OnceLock;
 use crate::api::Op;
 use crate::entity::HatchPattern;
 use crate::geom::hatch::MAX_HATCH_LINES;
-use crate::jsmath::{PI, atan2, cos, js_cmp, js_hypot, js_max, js_min, sin, stable_sort};
+use crate::jsmath::{PI, atan2, cos, hypot, js_cmp, js_max, js_min, sin, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -123,7 +123,7 @@ fn ts(name: &'static str, description: &'static str, lines: Vec<PatternLine>) ->
 /// fitted to its thickness instead (`geom::wall::FITTED_INSULATION`).
 fn zigzag_rows(h: f64, p: f64) -> Vec<PatternLine> {
     let up = atan2(h, p / 2.0);
-    let side = js_hypot(p / 2.0, h);
+    let side = hypot(p / 2.0, h);
     let (cos_up, sin_up) = (cos(up), sin(up));
     let degrees = up * 180.0 / PI;
     vec![

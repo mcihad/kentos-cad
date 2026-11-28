@@ -6,7 +6,7 @@ use crate::api::json::{FromJson, Json};
 use crate::entity::{Shape, area_parts, entity_area};
 use crate::geom::centroid::shape_centroid;
 use crate::geom::intersect::{Edge, point_at};
-use crate::jsmath::{atan2, cos, js_hypot, js_max_all, js_min_all, sin};
+use crate::jsmath::{atan2, cos, hypot, js_max_all, js_min_all, sin};
 use crate::ops::edges::{edge_length, entity_edges};
 use crate::ops::path::{path_of, point_at_s};
 use crate::vec2::Vec2;
@@ -194,7 +194,7 @@ pub fn interior_point(s: &Shape) -> Option<Vec2> {
             let mut best: Option<(f64, Vec2)> = None;
             for part in area_parts(s).iter() {
                 if let Shape::Point { p, .. } = part {
-                    let d = js_hypot(p.x - mean.x, p.y - mean.y);
+                    let d = hypot(p.x - mean.x, p.y - mean.y);
                     if best.is_none_or(|(b, _)| d < b) {
                         best = Some((d, *p));
                     }

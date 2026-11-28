@@ -17,7 +17,7 @@
 use crate::api::json::{FromJson, Json, ToJson, field};
 use crate::block::{Piece, PieceStroke};
 use crate::entity::Shape;
-use crate::jsmath::{atan2, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{atan2, cos, hypot, js_max, js_min, sin};
 use crate::text::{Font, TextAlign, width_em};
 use crate::vec2::Vec2;
 
@@ -199,7 +199,7 @@ pub fn detail_bubble(points: &[Vec2], spec: &Spec) -> Option<Vec2> {
 }
 
 fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {
-    let l = js_hypot(b.x - a.x, b.y - a.y);
+    let l = hypot(b.x - a.x, b.y - a.y);
     (l > 0.0).then(|| Vec2::new((b.x - a.x) / l, (b.y - a.y) / l))
 }
 
@@ -256,7 +256,7 @@ pub fn pieces(points: &[Vec2], spec: &Spec, scale: f64) -> Vec<Piece> {
                 let side = if spec.flip { -1.0 } else { 1.0 };
                 // The look side: left of the line's first part, the right when flipped.
                 let look = Vec2::new(-along.y * side, along.x * side);
-                let len = js_min(js_hypot(end.x - inner.x, end.y - inner.y), 3.0 * h);
+                let len = js_min(hypot(end.x - inner.x, end.y - inner.y), 3.0 * h);
                 let start = Vec2::new(end.x - d.x * len, end.y - d.y * len);
                 let off = 0.15 * h;
                 out.push(line(
@@ -287,7 +287,7 @@ pub fn pieces(points: &[Vec2], spec: &Spec, scale: f64) -> Vec<Piece> {
             if let Some(u) = unit(c, b) {
                 let from = Vec2::new(c.x + u.x * rr, c.y + u.y * rr);
                 let to = Vec2::new(b.x - u.x * r, b.y - u.y * r);
-                if js_hypot(b.x - c.x, b.y - c.y) > rr + r {
+                if hypot(b.x - c.x, b.y - c.y) > rr + r {
                     out.push(line(from, to));
                 }
             }

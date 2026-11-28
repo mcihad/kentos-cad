@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::offset::offset_path;
-use kentos_geometry_core::jsmath::{PI, cos, js_hypot, js_max, js_min, js_round, sin};
+use kentos_geometry_core::jsmath::{PI, cos, hypot, js_max, js_min, js_round, sin};
 
 use super::generate::{self, Gen};
 use super::model::{
@@ -859,7 +859,7 @@ fn emit_fill_layer(
                     from,
                     to,
                     centre: [(x0 + x1) / 2.0, (y0 + y1) / 2.0],
-                    radius: js_hypot(x1 - x0, y1 - y0) / 2.0,
+                    radius: hypot(x1 - x0, y1 - y0) / 2.0,
                     level,
                 },
                 rings,

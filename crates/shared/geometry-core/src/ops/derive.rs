@@ -19,7 +19,7 @@
 use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geom::curve_outline::{ellipse_outline_tol, spline_outline_tol};
 use crate::geom::ellipse::EllipseGeom;
-use crate::jsmath::{PI, asin, cos, js_hypot, js_max, sin};
+use crate::jsmath::{PI, asin, cos, hypot, js_max, sin};
 use crate::vec2::Vec2;
 
 /// The derivation's algorithm and its version, as a dataset records them.
@@ -182,7 +182,7 @@ pub fn distance_to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     } else {
         0.0
     };
-    js_hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
+    hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
 }
 
 #[cfg(test)]
@@ -202,7 +202,7 @@ mod tests {
             );
             // Every point is on the circle.
             for p in &run.pts {
-                let d = js_hypot(p.x - 10.0, p.y + 3.0);
+                let d = hypot(p.x - 10.0, p.y + 3.0);
                 assert!((d - r).abs() <= 1e-12 * js_max(r, 1.0), "{d} {r}");
             }
         }

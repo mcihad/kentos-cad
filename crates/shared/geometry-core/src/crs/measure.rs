@@ -12,7 +12,7 @@
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
 use crate::geom::bulge::{bulge_arc, bulge_at};
-use crate::jsmath::{acos, cos, js_hypot, js_max, sin};
+use crate::jsmath::{acos, cos, hypot, js_max, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -120,10 +120,10 @@ fn ring_points(ring: &Ring, closed: bool) -> Vec<Vec2> {
 fn length(points: &[Vec2], closed: bool) -> f64 {
     let mut total = 0.0;
     for w in points.windows(2) {
-        total += js_hypot(w[1].x - w[0].x, w[1].y - w[0].y);
+        total += hypot(w[1].x - w[0].x, w[1].y - w[0].y);
     }
     if closed && let (Some(first), Some(last)) = (points.first(), points.last()) {
-        total += js_hypot(first.x - last.x, first.y - last.y);
+        total += hypot(first.x - last.x, first.y - last.y);
     }
     total
 }

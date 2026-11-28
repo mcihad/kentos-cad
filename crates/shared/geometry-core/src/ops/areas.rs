@@ -10,7 +10,7 @@ use crate::geom::arrangement::{Area, Ring, Source};
 use crate::geom::bulge::{bulge_at, has_bulges};
 use crate::geom::curve_outline::{ellipse_outline, spline_outline};
 use crate::geom::ellipse::is_full_ellipse;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
@@ -116,7 +116,7 @@ pub fn area_of_entity(e: &Shape) -> Option<Area> {
                 return None;
             }
             let (f, l) = (pts[0], pts[n - 1]);
-            if js_hypot(f.x - l.x, f.y - l.y) > CLOSE_TOL {
+            if hypot(f.x - l.x, f.y - l.y) > CLOSE_TOL {
                 return None;
             }
             // Drop the repeated end; the last segment's bulge becomes the closing one.

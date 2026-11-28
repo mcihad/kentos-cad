@@ -25,7 +25,7 @@ use kentos_commands::{
 };
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
-use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::ops::transform::{TextPolicy, transform_shape_in};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_native_application::geometry::{shape, with_shape};
@@ -445,7 +445,7 @@ impl<S: Stages> Tool for Modify<S> {
                     // The first corner stays on the drawing through a pan or a zoom (docs/adr/0277).
                     press.from = cx.view.to_screen(press.from_world);
                     press.to_world = p.raw;
-                    let moved = js_hypot(p.screen[0] - press.from[0], p.screen[1] - press.from[1]);
+                    let moved = hypot(p.screen[0] - press.from[0], p.screen[1] - press.from[1]);
                     if !press.dragging && moved > DRAG_THRESHOLD {
                         press.dragging = true;
                         cx.selection.set_hover(None);

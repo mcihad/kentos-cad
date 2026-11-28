@@ -15,7 +15,7 @@ use crate::Vec2;
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{TAU, acos, atan2, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{TAU, acos, atan2, cos, hypot, js_max, js_min, sin};
 
 /// A deep view (plan/render.md RM-24, docs/adr/9220): the box round it and how far a chord may stray from its curve
 /// in the box (a quarter pixel at the view's scale), world units.
@@ -138,7 +138,7 @@ impl Conic {
 
     /// Its longer half axis.
     fn reach(&self) -> f64 {
-        js_max(js_hypot(self.u.x, self.u.y), js_hypot(self.v.x, self.v.y))
+        js_max(hypot(self.u.x, self.u.y), hypot(self.v.x, self.v.y))
     }
 }
 
@@ -153,7 +153,7 @@ fn crossings(k: &Conic, t0: f64, turn: f64, span: f64, b: &Bounds, out: &mut Vec
         (k.u.y, k.v.y, b.max_y - k.c.y, false),
     ];
     for (cu, cv, room, upright) in edges {
-        let r = js_hypot(cu, cv);
+        let r = hypot(cu, cv);
         if !(r > 0.0) || (room / r).abs() > 1.0 {
             continue;
         }
@@ -373,7 +373,7 @@ mod tests {
         assert_eq!(cut.len(), 4);
         for c in &cut[1..3] {
             let cross = (q.x - p.x) * (c.y - p.y) - (q.y - p.y) * (c.x - p.x);
-            let length = js_hypot(q.x - p.x, q.y - p.y);
+            let length = hypot(q.x - p.x, q.y - p.y);
             assert!(
                 (cross / length).abs() < 1e-9,
                 "{c:?} is off the segment by {}",
@@ -403,7 +403,7 @@ mod tests {
             })
             .map(|w| {
                 let m = v((w[0].x + w[1].x) / 2.0, (w[0].y + w[1].y) / 2.0);
-                r - js_hypot(m.x - c.x, m.y - c.y)
+                r - hypot(m.x - c.x, m.y - c.y)
             })
             .fold(0.0, js_max)
     }
@@ -415,7 +415,7 @@ mod tests {
         let (tol, b) = (1e-4, BOX);
         let pts = arc_in_box(c, r, 0.0, TAU, &b, tol);
         for p in &pts {
-            let d = js_hypot(p.x - c.x, p.y - c.y);
+            let d = hypot(p.x - c.x, p.y - c.y);
             assert!((d - r).abs() < 1e-9, "{p:?} lies on the circle");
         }
         assert!(
@@ -529,7 +529,7 @@ mod tests {
         for p in &pts {
             let q = unit(*p);
             assert!(
-                (js_hypot(q.x, q.y) - 1.0).abs() < 1e-12,
+                (hypot(q.x, q.y) - 1.0).abs() < 1e-12,
                 "{p:?} on the ellipse"
             );
         }
@@ -548,7 +548,7 @@ mod tests {
                     c.x + major.x * cos(tm) + minor.x * sin(tm),
                     c.y + major.y * cos(tm) + minor.y * sin(tm),
                 );
-                worst = js_max(worst, js_hypot(on.x - m.x, on.y - m.y));
+                worst = js_max(worst, hypot(on.x - m.x, on.y - m.y));
             }
         }
         assert!(worst > 0.0 && worst <= tol * 1.000_001, "{worst}");
@@ -576,7 +576,7 @@ mod tests {
             .expect("second vertex")];
         assert!(between.len() > 36, "{}", between.len());
         for p in between {
-            assert!((js_hypot(p.x + 19.5, p.y) - 20.0).abs() < 1e-9, "{p:?}");
+            assert!((hypot(p.x + 19.5, p.y) - 20.0).abs() < 1e-9, "{p:?}");
         }
         let c = v(-19.5, 0.0);
         assert!(sagitta(c, 20.0, between, Some(&BOX)) <= 1e-4 * 1.000_001);

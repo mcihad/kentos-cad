@@ -16,8 +16,8 @@ use std::hash::BuildHasherDefault;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, on_edge_arc, point_at};
 use crate::geometry::Bounds;
 use crate::jsmath::{
-    PI, TAU, atan2, cos, js_cmp, js_hypot, js_max, js_max_all, js_min, js_min_all, js_round,
-    js_sign, sin, stable_sort,
+    PI, TAU, atan2, cos, hypot, js_cmp, js_max, js_max_all, js_min, js_min_all, js_round, js_sign,
+    sin, stable_sort,
 };
 use crate::predicates::{orient2d, orientation};
 use crate::store::IdHasher;
@@ -155,7 +155,7 @@ impl Vertices {
 
 pub fn edge_len(e: &Edge) -> f64 {
     match *e {
-        Edge::Seg { a, b } => js_hypot(b.x - a.x, b.y - a.y),
+        Edge::Seg { a, b } => hypot(b.x - a.x, b.y - a.y),
         Edge::Arc { r, sweep, .. } => r * sweep.abs(),
     }
 }
@@ -292,7 +292,7 @@ pub fn winding(edges: &[Edge], p: Vec2) -> f64 {
         };
         let a = point_at(e, 0.0);
         let b = point_at(e, 1.0);
-        let in_disk = js_hypot(p.x - c.x, p.y - c.y) < r;
+        let in_disk = hypot(p.x - c.x, p.y - c.y) < r;
         if sweep.abs() >= TAU - 1e-12 {
             if in_disk {
                 total += js_sign(sweep) * TAU;
@@ -454,8 +454,8 @@ impl<'a> WindingIndex<'a> {
                     let tol = 1e-9 * js_max(1.0, r);
                     let s0 = point_at(e, 0.0);
                     let s1 = point_at(e, 1.0);
-                    if js_hypot(hit.x - s0.x, hit.y - s0.y) < tol
-                        || js_hypot(hit.x - s1.x, hit.y - s1.y) < tol
+                    if hypot(hit.x - s0.x, hit.y - s0.y) < tol
+                        || hypot(hit.x - s1.x, hit.y - s1.y) < tol
                     {
                         degenerate = true;
                     }
@@ -698,7 +698,7 @@ fn build_with<D: Counts, L: Limits>(
                     cross * cross <= TOL * TOL * (dx * dx + dy * dy) * (1.0 + 1e-9)
                 }
                 Edge::Arc { c, r, .. } => {
-                    (js_hypot(p.x - c.x, p.y - c.y) - r).abs() <= TOL * (1.0 + 1e-9)
+                    (hypot(p.x - c.x, p.y - c.y) - r).abs() <= TOL * (1.0 + 1e-9)
                 }
             };
             if !near {
@@ -741,7 +741,7 @@ fn build_with<D: Counts, L: Limits>(
             let same = index.get(&key).and_then(|list| {
                 list.iter().copied().find(|&pi| {
                     let m = point_at(&pieces[pi].edge, 0.5);
-                    js_hypot(m.x - mid.x, m.y - mid.y) <= 10.0 * TOL
+                    hypot(m.x - mid.x, m.y - mid.y) <= 10.0 * TOL
                 })
             });
             let cut = local[src].is_cut();
@@ -1237,7 +1237,7 @@ mod tests {
                 let b = point_at(e, 1.0);
                 let (ax, ay, bx, by) = (a.x - p.x, a.y - p.y, b.x - p.x, b.y - p.y);
                 total += atan2(ax * by - ay * bx, ax * bx + ay * by);
-                if js_hypot(p.x - c.x, p.y - c.y) < r {
+                if hypot(p.x - c.x, p.y - c.y) < r {
                     let side = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
                     if if sweep > 0.0 { side < 0.0 } else { side > 0.0 } {
                         total += js_sign(sweep) * TAU;
@@ -1428,7 +1428,7 @@ mod tests {
         let circles = vec![disc(Vec2::new(0.0, 0.0), r), disc(Vec2::new(d, 0.0), r)];
         let (b, o) = built(&[vec![band], circles]);
         let top = Vec2::new(d / 2.0 - o.x, r - o.y);
-        let close = |p: Vec2| js_hypot(p.x - top.x, p.y - top.y) < 1e-4;
+        let close = |p: Vec2| hypot(p.x - top.x, p.y - top.y) < 1e-4;
         let at_top = b
             .pieces
             .iter()

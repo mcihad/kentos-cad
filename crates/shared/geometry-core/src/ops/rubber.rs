@@ -15,7 +15,7 @@
 
 use crate::api::Op;
 use crate::api::json::{ToJson, field};
-use crate::jsmath::{js_hypot, js_max, log};
+use crate::jsmath::{hypot, js_max, log};
 use crate::op;
 use crate::predicates::orientation;
 use crate::vec2::Vec2;
@@ -117,7 +117,7 @@ impl Sheet {
         let centre = Vec2::new(first.x + sx / n as f64, first.y + sy / n as f64);
         let mut size: f64 = 0.0;
         for l in links {
-            size = js_max(size, js_hypot(l.from.x - centre.x, l.from.y - centre.y));
+            size = js_max(size, hypot(l.from.x - centre.x, l.from.y - centre.y));
         }
         let sources: Vec<Vec2> = links
             .iter()
@@ -384,7 +384,7 @@ mod tests {
                         Vec::<[f64; 4]>::from_json(expected.get("jacobian")).expect("jacobian");
                     for (i, &p) in probes.iter().enumerate() {
                         let got = sheet.map(p);
-                        let d = js_hypot(got.x - map[i].x, got.y - map[i].y);
+                        let d = hypot(got.x - map[i].x, got.y - map[i].y);
                         if d.is_nan() || d > metres {
                             off.push(format!("{name}: probe {i}: {got:?} ≠ {:?} ({d} m)", map[i]));
                         }
@@ -442,7 +442,7 @@ mod tests {
         for l in links {
             let p = sheet.map(l.from);
             assert!(
-                js_hypot(p.x - l.to.x, p.y - l.to.y) < 1e-9,
+                hypot(p.x - l.to.x, p.y - l.to.y) < 1e-9,
                 "{p:?} ≠ {:?}",
                 l.to
             );

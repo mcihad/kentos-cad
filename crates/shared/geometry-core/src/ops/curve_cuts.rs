@@ -14,7 +14,7 @@ use crate::geom::intersect::{
     Edge, closest_on_edge, intersect_edges, line_circle_params, line_line, on_edge_arc,
 };
 use crate::jsmath::{
-    TAU, atan2, js_cmp, js_hypot, js_max, js_max_all, js_min, js_min_all, or, stable_sort,
+    TAU, atan2, hypot, js_cmp, js_max, js_max_all, js_min, js_min_all, or, stable_sort,
 };
 use crate::vec2::Vec2;
 
@@ -203,7 +203,7 @@ pub fn extend_ellipse(e: &EllipseGeom, pick: Vec2, boundaries: &[Edge]) -> Geome
     }
     let s = ellipse_point(e, e.t0);
     let f = ellipse_point(e, e.t1);
-    let at_end = js_hypot(pick.x - f.x, pick.y - f.y) <= js_hypot(pick.x - s.x, pick.y - s.y);
+    let at_end = hypot(pick.x - f.x, pick.y - f.y) <= hypot(pick.x - s.x, pick.y - s.y);
     let gap = TAU - ellipse_sweep(e);
     let mut best = f64::INFINITY;
     for t in ellipse_crossings(&full(e), boundaries) {
@@ -244,7 +244,7 @@ pub fn offset_ellipse(e: &EllipseGeom, d: f64, through: Vec2) -> Geometry {
     let tan = ellipse_derivative(e, t);
     // Counter-clockwise parameterisation: the outside is right of travel.
     let outward = (through.x - q.x) * tan.y - (through.y - q.y) * tan.x > 0.0;
-    let a = js_hypot(e.major.x, e.major.y);
+    let a = hypot(e.major.x, e.major.y);
     let b = a * e.ratio;
     if !outward && d >= (b * b) / a - 1e-9 {
         return Geometry::Error(
@@ -261,7 +261,7 @@ pub fn offset_ellipse(e: &EllipseGeom, d: f64, through: Vec2) -> Geometry {
         let u = e.t0 + (sw * i) / n;
         let p = ellipse_point(e, u);
         let dp = ellipse_derivative(e, u);
-        let l = or(js_hypot(dp.x, dp.y), 1.0);
+        let l = or(hypot(dp.x, dp.y), 1.0);
         let s = if outward { d } else { -d };
         pts.push(Vec2::new(p.x + (dp.y / l) * s, p.y - (dp.x / l) * s));
         i += 1.0;

@@ -715,7 +715,7 @@ fn opening_lines(
         outline(&mut lines, a, b, sill, head);
         let (mut a2, mut b2, mut low, mut high) = (a, b, sill, head);
         if let Some(f) = o.frame.filter(|f| *f > 0.0) {
-            let len = kentos_geometry_core::jsmath::js_hypot(b.x - a.x, b.y - a.y);
+            let len = kentos_geometry_core::jsmath::hypot(b.x - a.x, b.y - a.y);
             if len > 2.0 * f && head - sill > 2.0 * f {
                 let t = f / len;
                 a2 = P::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
@@ -843,7 +843,7 @@ fn curtain(
     let mut start = 0.0;
     for i in 0..stretches {
         let (a, b) = (p(w.pts[i]), p(w.pts[(i + 1) % n]));
-        let length = kentos_geometry_core::jsmath::js_hypot(b.x - a.x, b.y - a.y);
+        let length = kentos_geometry_core::jsmath::hypot(b.x - a.x, b.y - a.y);
         if length <= 2.0 * face {
             start += length;
             continue;
@@ -1568,7 +1568,7 @@ fn rain_look(element: &str) -> Look {
 /// roof's: no level is written for them, no face of theirs is named.
 fn rain_water(rain: &Rain, m: &mut Model) {
     use kentos_geometry_core::geom::roof as core;
-    use kentos_geometry_core::jsmath::js_hypot;
+    use kentos_geometry_core::jsmath::hypot;
     let Rain {
         roof: k,
         pts,
@@ -1612,7 +1612,7 @@ fn rain_water(rain: &Rain, m: &mut Model) {
                 c.y + (along.y * s + across.y * t) * half,
             )
         };
-        let back = js_hypot(way.down.x - way.outlet.x, way.down.y - way.outlet.y);
+        let back = hypot(way.down.x - way.outlet.x, way.down.y - way.outlet.y);
         let mut top = bottom;
         if back > 1e-6 {
             // The swan neck: its top at the gutter's bottom over the outlet, falling 1:1 to the wall; upright it is
@@ -2323,7 +2323,7 @@ pub fn building_facings(doc: &Document) -> Vec<(usize, f64)> {
         for i in 0..ring.len() {
             let (p, q) = (ring[i], ring[(i + 1) % ring.len()]);
             let (dx, dy) = (q.x - p.x, q.y - p.y);
-            let len = kentos_geometry_core::jsmath::js_hypot(dx, dy);
+            let len = kentos_geometry_core::jsmath::hypot(dx, dy);
             if len > 1e-9 {
                 // Counter-clockwise: outside is on the right.
                 length[rank_of(n, P::new(dy / len, -dx / len))] += len;

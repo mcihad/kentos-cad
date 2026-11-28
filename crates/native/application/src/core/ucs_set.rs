@@ -74,7 +74,7 @@ fn check_input(input: &UcsSet) -> Result<(), Stop> {
             ));
     }
     if let UcsTo::TwoPoints { origin, x_point } = &input.to
-        && kentos_geometry_core::jsmath::js_hypot(x_point.x - origin.x, x_point.y - origin.y)
+        && kentos_geometry_core::jsmath::hypot(x_point.x - origin.x, x_point.y - origin.y)
             < UCS_SAME
     {
         return Err(fail(

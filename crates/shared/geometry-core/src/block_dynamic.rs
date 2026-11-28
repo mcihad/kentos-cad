@@ -7,7 +7,7 @@ use crate::api::json::{FromJson, Json};
 use crate::entity::{Entity, ParamValue, Params};
 use crate::geom::affine::{Affine, compose, translation};
 use crate::geometry::Bounds;
-use crate::jsmath::{atan2, cos, js_hypot, js_max, js_round, sin};
+use crate::jsmath::{atan2, cos, hypot, js_max, js_round, sin};
 use crate::ops::stretch::stretch_entity;
 use crate::ops::transform::transform_shape;
 use crate::vec2::Vec2;
@@ -202,7 +202,7 @@ pub struct Dynamic {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(b.x - a.x, b.y - a.y)
+    hypot(b.x - a.x, b.y - a.y)
 }
 
 fn text(v: &Json, key: &str) -> Option<String> {

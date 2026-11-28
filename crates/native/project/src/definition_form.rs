@@ -17,7 +17,7 @@ use kentos_contracts::{
 };
 
 use kentos_geometry_core::crs::text::{self as core_text, Refusal};
-use kentos_geometry_core::jsmath::{PI, atan2, js_hypot};
+use kentos_geometry_core::jsmath::{PI, atan2, hypot};
 use kentos_geometry_core::ops::fit::{self as solver, FitError, FitKind, FitPair};
 use kentos_geometry_core::vec2::Vec2;
 
@@ -539,7 +539,7 @@ pub fn fit_plane(rows: &[FitRow], kind: PlaneKind) -> Result<PlaneFit, String> {
             east: t.x - (a * o.x - b * o.y),
             north: t.y - (b * o.x + a * o.y),
             rotation: atan2(b, a) * (180.0 / PI),
-            scale: js_hypot(a, b),
+            scale: hypot(a, b),
         },
         [a, b, c, d] => CrsPlane::Affine {
             a,

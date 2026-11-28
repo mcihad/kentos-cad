@@ -20,7 +20,7 @@ use super::{DimensionGeom, Look};
 use crate::entity::Shape;
 use crate::geom::bulge::{BulgeArc, bulge_arc, bulge_at, bulge_ring_area};
 use crate::geom::intersect::{Edge, closest_on_edge};
-use crate::jsmath::{js_hypot, js_min};
+use crate::jsmath::{hypot, js_min};
 use crate::vec2::Vec2;
 
 /// What Hızlı ölçü writes: the dimensions, and how many objects were
@@ -76,7 +76,7 @@ impl Run {
     fn side_of(&self, p: Vec2) -> f64 {
         match self.arc() {
             Some(arc) => {
-                let inside = js_hypot(p.x - arc.c.x, p.y - arc.c.y) <= arc.r;
+                let inside = hypot(p.x - arc.c.x, p.y - arc.c.y) <= arc.r;
                 if (arc.sweep > 0.0) == inside {
                     1.0
                 } else {

@@ -13,7 +13,7 @@ use super::{
     is_areas, is_paths, is_points, taken,
 };
 use crate::geometry::Bounds;
-use crate::jsmath::{js_hypot, js_max, js_min, js_round};
+use crate::jsmath::{hypot, js_max, js_min, js_round};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
 
@@ -63,14 +63,14 @@ fn near(a: &Bounds, b: &Bounds, t: f64) -> bool {
 fn box_to_point(b: &Bounds, p: Vec2) -> f64 {
     let dx = js_max(js_max(b.min_x - p.x, p.x - b.max_x), 0.0);
     let dy = js_max(js_max(b.min_y - p.y, p.y - b.max_y), 0.0);
-    js_hypot(dx, dy)
+    hypot(dx, dy)
 }
 
 /// The distance between two boxes (0 when they meet).
 fn box_to_box(a: &Bounds, b: &Bounds) -> f64 {
     let dx = js_max(js_max(a.min_x - b.max_x, b.min_x - a.max_x), 0.0);
     let dy = js_max(js_max(a.min_y - b.max_y, b.min_y - a.max_y), 0.0);
-    js_hypot(dx, dy)
+    hypot(dx, dy)
 }
 
 /// The farthest a point of one box is from the nearest point of the other: no point of `a` is farther than it
@@ -78,7 +78,7 @@ fn box_to_box(a: &Bounds, b: &Bounds) -> f64 {
 fn farthest(a: &Bounds, b: &Bounds) -> f64 {
     let dx = js_max(js_max(a.max_x - b.min_x, b.max_x - a.min_x), 0.0);
     let dy = js_max(js_max(a.max_y - b.min_y, b.max_y - a.min_y), 0.0);
-    js_hypot(dx, dy)
+    hypot(dx, dy)
 }
 
 fn grown(b: &Bounds, t: f64) -> Bounds {

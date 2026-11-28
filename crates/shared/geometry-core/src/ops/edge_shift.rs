@@ -18,7 +18,7 @@ use crate::entity::{Entity, Shape, is_multi_part};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_at, bulge_path_edges, bulge_ring_area};
 use crate::geom::intersect::closest_on_edge;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -166,7 +166,7 @@ fn motion(shape: &Shape, ring: usize, edge: usize) -> Result<(Rings, Motion), &'
     }
     let (a, b) = (pts[i], pts[j]);
     let t = sub(b, a);
-    let length = js_hypot(t.x, t.y);
+    let length = hypot(t.x, t.y);
     if !(length > 0.0) {
         return Err(NO_EDGE);
     }
@@ -189,7 +189,7 @@ fn motion(shape: &Shape, ring: usize, edge: usize) -> Result<(Rings, Motion), &'
     // it moves `ê / (ê·n)`.
     let slide = |from: Vec2, to: Vec2| -> Result<(Vec2, f64), &'static str> {
         let d = sub(to, from);
-        let l = js_hypot(d.x, d.y);
+        let l = hypot(d.x, d.y);
         if !(l > 0.0) {
             return Err(PARALLEL);
         }
@@ -262,7 +262,7 @@ fn edge_normal(r: &Ring, ring: usize, closed: bool, edge: usize) -> Result<Vec2,
         Some(arc) => {
             let m = crate::geom::bulge::segment_mid(a, b, bulge);
             let (vx, vy) = (m.x - arc.c.x, m.y - arc.c.y);
-            let l = js_hypot(vx, vy);
+            let l = hypot(vx, vy);
             if arc.sweep > 0.0 {
                 Vec2::new(-vy / l, vx / l)
             } else {
@@ -271,7 +271,7 @@ fn edge_normal(r: &Ring, ring: usize, closed: bool, edge: usize) -> Result<Vec2,
         }
         None => {
             let t = sub(b, a);
-            let l = js_hypot(t.x, t.y);
+            let l = hypot(t.x, t.y);
             if !(l > 0.0) {
                 return Err(NO_EDGE);
             }

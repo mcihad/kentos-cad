@@ -40,7 +40,7 @@
 use super::{Unit, bearing, distinct, finite, positive, signed};
 use crate::api::Op;
 use crate::crs::ground::{Grid, grid_factor};
-use crate::jsmath::{PI, cos, js_hypot, sin};
+use crate::jsmath::{PI, cos, hypot, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -569,7 +569,7 @@ fn adjusted(input: &TraverseInput) -> Result<TraverseResult, String> {
         legs: out,
         angle_misclosure,
         angle_correction: angle_misclosure.map(|_| unit.of(correction)),
-        linear_misclosure: fy.zip(fx).map(|(y, x)| js_hypot(y, x)),
+        linear_misclosure: fy.zip(fx).map(|(y, x)| hypot(y, x)),
         fy,
         fx,
         length,

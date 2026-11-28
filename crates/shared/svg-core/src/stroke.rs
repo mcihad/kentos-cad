@@ -11,7 +11,7 @@
 
 use kentos_geometry_core::geom::arrangement::{Rule, Source};
 use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::jsmath::{PI, TAU, atan2, cos, js_hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{PI, TAU, atan2, cos, hypot, js_max, js_min};
 use kentos_geometry_core::vec2::Vec2;
 
 use crate::bezier::{
@@ -85,7 +85,7 @@ fn sub(a: Pt, b: Pt) -> Pt {
     [a[0] - b[0], a[1] - b[1]]
 }
 fn unit(a: Pt) -> Pt {
-    let l = js_hypot(a[0], a[1]);
+    let l = hypot(a[0], a[1]);
     if l > 1e-15 {
         [a[0] / l, a[1] / l]
     } else {
@@ -111,7 +111,7 @@ fn poly_of(sp: &SubPath, tol: f64) -> Poly {
     let mut node: Vec<bool> = Vec::new();
     let push = |pts: &mut Vec<Pt>, node: &mut Vec<bool>, p: Pt, is_node: bool| {
         if let Some(q) = pts.last()
-            && js_hypot(p[0] - q[0], p[1] - q[1]) < 1e-12
+            && hypot(p[0] - q[0], p[1] - q[1]) < 1e-12
         {
             if let Some(last) = node.last_mut() {
                 *last = *last || is_node;
@@ -158,7 +158,7 @@ fn poly_of(sp: &SubPath, tol: f64) -> Poly {
     if sp.closed && pts.len() > 1 {
         let a = pts[0];
         let b = pts[pts.len() - 1];
-        if js_hypot(a[0] - b[0], a[1] - b[1]) < 1e-12 {
+        if hypot(a[0] - b[0], a[1] - b[1]) < 1e-12 {
             pts.pop();
             node.pop();
         }
@@ -230,7 +230,7 @@ fn dashed(p: &Poly, pattern: &[f64]) -> Vec<Poly> {
     for i in 1..pts.len() {
         let mut a = pts[i - 1];
         let b = pts[i];
-        let mut seg = js_hypot(b[0] - a[0], b[1] - a[1]);
+        let mut seg = hypot(b[0] - a[0], b[1] - a[1]);
         while seg > left {
             let t = left / seg;
             let q: Pt = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];

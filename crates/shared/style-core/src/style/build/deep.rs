@@ -184,7 +184,7 @@ mod tests {
     use crate::style::build::{LayerObjects, MODE_SET, Program, View, build_layer_with};
     use kentos_geometry_core::api::json::Json;
     use kentos_geometry_core::geom::deep::COARSE_STEP;
-    use kentos_geometry_core::jsmath::{js_hypot, js_max};
+    use kentos_geometry_core::jsmath::{hypot, js_max};
     use kentos_geometry_core::store::Store;
 
     const BOX: Bounds = Bounds {
@@ -393,7 +393,7 @@ mod tests {
         assert_eq!(pts[0], v(-19.5, -20.0));
         assert!(
             pts.iter()
-                .all(|p| p.x == -19.5 || (js_hypot(p.x + 19.5, p.y) - 20.0).abs() < 1e-9)
+                .all(|p| p.x == -19.5 || (hypot(p.x + 19.5, p.y) - 20.0).abs() < 1e-9)
         );
         // A straight area, and a wide polyline (its band follows its vertices): drawn as they are.
         let straight = Shape::Polygon {
@@ -448,7 +448,7 @@ mod tests {
         let worst = (0..ring.len())
             .map(|i| {
                 let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
-                r - js_hypot((a.x + b.x) / 2.0 - c.x, (a.y + b.y) / 2.0 - c.y)
+                r - hypot((a.x + b.x) / 2.0 - c.x, (a.y + b.y) / 2.0 - c.y)
             })
             .fold(0.0, js_max);
         assert!(worst <= tol * 1.000_001, "{worst}");

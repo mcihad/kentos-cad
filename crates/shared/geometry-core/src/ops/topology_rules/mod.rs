@@ -22,7 +22,7 @@ use crate::geom::arrangement::{Area, edge_box, edge_len};
 use crate::geom::bulge::bulge_arc;
 use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::{PI, js_hypot, js_max, js_min, stable_sort};
+use crate::jsmath::{PI, hypot, js_max, js_min, stable_sort};
 use crate::ops::geoprocess::{Class, class_of};
 use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
@@ -510,7 +510,7 @@ impl Boxes {
 pub(crate) fn box_dist(b: &Bounds, p: Vec2) -> f64 {
     let dx = js_max(js_max(b.min_x - p.x, p.x - b.max_x), 0.0);
     let dy = js_max(js_max(b.min_y - p.y, p.y - b.max_y), 0.0);
-    js_hypot(dx, dy)
+    hypot(dx, dy)
 }
 
 /// A distance's lower bound with room for its rounding: what a best-first search may order a box by when what it
@@ -529,7 +529,7 @@ fn grow(b: &mut Bounds, by: &Bounds) {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(b.x - a.x, b.y - a.y)
+    hypot(b.x - a.x, b.y - a.y)
 }
 
 /// A ring or a path of an object as written: its part, its place in the

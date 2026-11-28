@@ -3,7 +3,7 @@
 
 use crate::api::Op;
 use crate::geom::quadrature::integrate;
-use crate::jsmath::{js_hypot, js_max, js_min, or};
+use crate::jsmath::{hypot, js_max, js_min, or};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -62,7 +62,7 @@ fn segment_distance(p: Vec2, a: Vec2, c: Vec2) -> f64 {
             js_max(0.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
         )
     };
-    js_hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
+    hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
 }
 
 /// [`catmull_rom`]'s curve with its `per_span` steps a span, and in and near `b` each step halved until its middle
@@ -156,7 +156,7 @@ fn reflect(a: Vec2, b: Vec2) -> Vec2 {
 
 /// Centripetal knot spacing; a tiny epsilon keeps coincident points finite.
 fn knot(a: Vec2, b: Vec2) -> f64 {
-    or(js_hypot(b.x - a.x, b.y - a.y).sqrt(), 1e-6)
+    or(hypot(b.x - a.x, b.y - a.y).sqrt(), 1e-6)
 }
 
 fn lerp(a: Vec2, b: Vec2, ta: f64, tb: f64, t: f64) -> Vec2 {
@@ -274,7 +274,7 @@ fn bezier_length(b: &[Vec2; 4]) -> f64 {
     let speed = |s: f64| {
         let r = 1.0 - s;
         let (k0, k1, k2) = (3.0 * r * r, 6.0 * r * s, 3.0 * s * s);
-        js_hypot(
+        hypot(
             d[0].x * k0 + d[1].x * k1 + d[2].x * k2,
             d[0].y * k0 + d[1].y * k1 + d[2].y * k2,
         )
@@ -375,7 +375,7 @@ mod tests {
     }
 
     fn dist(a: Vec2, b: Vec2) -> f64 {
-        js_hypot(a.x - b.x, a.y - b.y)
+        hypot(a.x - b.x, a.y - b.y)
     }
 
     fn same_curve(pts: &[Vec2], tol: f64) {

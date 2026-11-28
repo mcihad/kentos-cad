@@ -2,7 +2,7 @@
 use crate::{
     Vec2,
     entity::Shape,
-    jsmath::{TAU, cos, js_hypot, js_max, sin},
+    jsmath::{TAU, cos, hypot, js_max, sin},
 };
 pub const MAX_POINTS: usize = 65_536;
 fn complex() -> String {
@@ -30,7 +30,7 @@ pub fn conic(
     closed: bool,
     tol: f64,
 ) -> Result<Vec<Vec2>, String> {
-    let radius = js_hypot(major.x, major.y) * js_max(ratio.abs(), 1.);
+    let radius = hypot(major.x, major.y) * js_max(ratio.abs(), 1.);
     let n = count(sweep, radius, tol)?.max(if closed { 8 } else { 1 });
     let length = n + usize::from(!closed);
     if length > MAX_POINTS {
@@ -131,7 +131,7 @@ pub fn outline(shape: &Shape, tol: f64) -> Result<Option<(Vec<Vec2>, bool)>, Str
             for span in crate::geom::spline::catmull_rom_beziers(pts, *closed) {
                 let p = span.ctrl;
                 let second = |a: Vec2, b: Vec2, c: Vec2| {
-                    6. * js_hypot(c.x - 2. * b.x + a.x, c.y - 2. * b.y + a.y)
+                    6. * hypot(c.x - 2. * b.x + a.x, c.y - 2. * b.y + a.y)
                 };
                 let n = count(
                     1.,
@@ -205,7 +205,7 @@ mod tests {
                     center.y + major.y * cos(t) + major.x * 0.4 * sin(t),
                 );
                 assert!(
-                    js_hypot((a.x + b.x) / 2. - expected.x, (a.y + b.y) / 2. - expected.y)
+                    hypot((a.x + b.x) / 2. - expected.x, (a.y + b.y) / 2. - expected.y)
                         <= tolerance + 1e-9
                 );
             }

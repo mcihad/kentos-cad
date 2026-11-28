@@ -11,7 +11,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use super::{Kind, Out, TOUCH, TopoWorks, Work};
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::vec2::Vec2;
 
 /// A vertex: its object, path and index.
@@ -58,7 +58,7 @@ impl Grid {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(b.x - a.x, b.y - a.y)
+    hypot(b.x - a.x, b.y - a.y)
 }
 
 struct Node {

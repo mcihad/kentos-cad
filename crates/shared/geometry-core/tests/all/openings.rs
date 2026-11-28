@@ -379,7 +379,7 @@ fn a_niche_on_a_curved_wall_has_its_back_round_the_walls_centre() {
 }
 
 fn js_hypot_of(p: Vec2) -> f64 {
-    kentos_geometry_core::jsmath::js_hypot(p.x, p.y)
+    kentos_geometry_core::jsmath::hypot(p.x, p.y)
 }
 
 /// Pocket doors in arc walls (docs/adr/0787 §2; scripts/fixtures/arc_pocket_cases.py): the jambs radial, the leaves

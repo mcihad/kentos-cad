@@ -10,7 +10,7 @@ use crate::geom::arrangement::{Area, TOL, WindingIndex};
 use crate::geom::intersect::{Edge, intersect_edges, point_at};
 use crate::geom::region::net_area;
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::vec2::Vec2;
 
 /// The piece of an edge between parameters `t0` and `t1`, from `p0` to `p1` (exact ends kept).
@@ -45,18 +45,18 @@ fn split_edge(e: &Edge, boundary: &[Edge], boxes: &[Bounds]) -> Vec<Edge> {
         }
     }
     cuts.sort_by(|a, b| a.0.total_cmp(&b.0));
-    cuts.dedup_by(|b, a| js_hypot(b.1.x - a.1.x, b.1.y - a.1.y) <= TOL);
+    cuts.dedup_by(|b, a| hypot(b.1.x - a.1.x, b.1.y - a.1.y) <= TOL);
     let (start, end) = (point_at(e, 0.0), point_at(e, 1.0));
     let mut out = Vec::with_capacity(cuts.len() + 1);
     let (mut t0, mut p0) = (0.0, start);
     for (t, p) in cuts {
-        if js_hypot(p.x - p0.x, p.y - p0.y) > TOL {
+        if hypot(p.x - p0.x, p.y - p0.y) > TOL {
             out.push(sub_edge(e, t0, t, p0, p));
             t0 = t;
             p0 = p;
         }
     }
-    if js_hypot(end.x - p0.x, end.y - p0.y) > TOL || out.is_empty() {
+    if hypot(end.x - p0.x, end.y - p0.y) > TOL || out.is_empty() {
         out.push(sub_edge(e, t0, 1.0, p0, end));
     }
     out

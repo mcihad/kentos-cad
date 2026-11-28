@@ -9,7 +9,7 @@
 use crate::entity::Shape;
 use crate::geom::bulge::bulge_arc;
 use crate::geom::intersect::{line_circle_params, line_line};
-use crate::jsmath::{TAU, atan2, js_hypot};
+use crate::jsmath::{TAU, atan2, hypot};
 use crate::ops::subref::Place;
 use crate::vec2::Vec2;
 
@@ -89,7 +89,7 @@ fn off_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     } else {
         0.0
     };
-    js_hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
+    hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
 }
 
 /// Whether `p` is inside the rings by the even-odd rule.
@@ -100,7 +100,7 @@ fn in_rings(p: Vec2, rings: &[Vec<Vec2>]) -> bool {
 /// Whether `p` is inside the body by more than [`TIE`].
 fn hides(body: &Body, p: Vec2) -> bool {
     match body {
-        Body::Circle(c, r) => js_hypot(p.x - c.x, p.y - c.y) < r - TIE,
+        Body::Circle(c, r) => hypot(p.x - c.x, p.y - c.y) < r - TIE,
         Body::Rings(rings) => {
             in_rings(p, rings)
                 && rings.iter().all(|ring| {
@@ -153,7 +153,7 @@ pub fn references(
     faces: Faces,
     columns: Columns,
 ) -> Result<Crossed, String> {
-    let length = js_hypot(to.x - from.x, to.y - from.y);
+    let length = hypot(to.x - from.x, to.y - from.y);
     if !(length >= SHORTEST) {
         return Err(
             "Kesen çizgi çok kısa; ölçülecek duvarların içinden geçen bir çizgi çizin.".into(),
@@ -236,7 +236,7 @@ pub fn references(
                     let met = line_circle_params(from, to, middle, r)
                         .into_iter()
                         .any(|t| (0.0..=1.0).contains(&t))
-                        || js_hypot(from.x - middle.x, from.y - middle.y) <= r;
+                        || hypot(from.x - middle.x, from.y - middle.y) <= r;
                     if met {
                         found.push(centre);
                     }

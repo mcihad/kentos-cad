@@ -36,7 +36,7 @@ use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_mid};
 use crate::geom::ellipse::{EllipseGeom, ellipse_length, ellipse_point, param_of_point};
 use crate::geom::intersect::closest_on_edge;
-use crate::jsmath::{TAU, atan2, js_hypot, js_max, js_min};
+use crate::jsmath::{TAU, atan2, hypot, js_max, js_min};
 use crate::ops::edges::entity_edges;
 use crate::store::snap::SnapKind;
 use crate::vec2::Vec2;
@@ -993,12 +993,12 @@ fn t_on_segment(a: Vec2, b: Vec2, at: Vec2) -> Option<f64> {
     }
     let t = clamp01(((at.x - a.x) * dx + (at.y - a.y) * dy) / ll);
     let q = lerp(a, b, t);
-    (js_hypot(q.x - at.x, q.y - at.y) <= near_enough(at)).then_some(t)
+    (hypot(q.x - at.x, q.y - at.y) <= near_enough(at)).then_some(t)
 }
 
 /// The fraction of a signed sweep from `a0` at which `at` lies on the circle's arc; none off it.
 fn t_on_arc(c: Vec2, r: f64, a0: f64, sw: f64, at: Vec2) -> Option<f64> {
-    if (js_hypot(at.x - c.x, at.y - c.y) - r).abs() > near_enough(at) {
+    if (hypot(at.x - c.x, at.y - c.y) - r).abs() > near_enough(at) {
         return None;
     }
     let th = atan2(at.y - c.y, at.x - c.x);
@@ -1031,7 +1031,7 @@ fn along_at(e: &Entity, at: Vec2) -> Option<Place> {
             let u = c.closest(at);
             let q = c.point(u);
             let (lo, hi) = c.domain();
-            (js_hypot(q.x - at.x, q.y - at.y) <= near_enough(at))
+            (hypot(q.x - at.x, q.y - at.y) <= near_enough(at))
                 .then(|| whole(clamp01((u - lo) / (hi - lo))))
         }
         Shape::Ellipse {
@@ -1050,7 +1050,7 @@ fn along_at(e: &Entity, at: Vec2) -> Option<Place> {
             };
             let p = param_of_point(&g, at);
             let q = ellipse_point(&g, p);
-            if js_hypot(q.x - at.x, q.y - at.y) > near_enough(at) {
+            if hypot(q.x - at.x, q.y - at.y) > near_enough(at) {
                 return None;
             }
             let sw = sweep(*t0, *t1);
@@ -1340,7 +1340,7 @@ pub fn edge_line(e: &Entity, place: Place) -> Option<(Vec2, Vec2)> {
 fn edge_piece(a: Vec2, b: Vec2, k: f64, t0: f64, t1: f64) -> f64 {
     match edge_arc(a, b, k) {
         Some((_, r, _, sw)) => r * sw.abs() * (t1 - t0),
-        None => js_hypot(b.x - a.x, b.y - a.y) * (t1 - t0),
+        None => hypot(b.x - a.x, b.y - a.y) * (t1 - t0),
     }
 }
 
@@ -1383,7 +1383,7 @@ pub fn range_length(e: &Entity, from: Place, to: Place) -> Option<f64> {
     }
     let behind = (i1, t1) < (i0, t0);
     match &e.shape {
-        Shape::Line { a, b } => (!behind).then(|| js_hypot(b.x - a.x, b.y - a.y) * (t1 - t0)),
+        Shape::Line { a, b } => (!behind).then(|| hypot(b.x - a.x, b.y - a.y) * (t1 - t0)),
         Shape::Arc { r, a0, a1, .. } => (!behind).then(|| r * sweep(*a0, *a1) * (t1 - t0)),
         Shape::Nurbs { closed, .. } => {
             let c = crate::geom::nurbs::of(&e.shape)?;
@@ -1540,7 +1540,7 @@ fn near_on(e: &Entity, at: Vec2, tol: f64) -> Near {
         .filter_map(|p| point(e, p).map(|q| (p, q)))
         .chain(vertex_places(&e.shape));
     for (p, q) in candidates {
-        let d = js_hypot(q.x - at.x, q.y - at.y);
+        let d = hypot(q.x - at.x, q.y - at.y);
         if d <= tol && point_best.is_none_or(|(_, b)| d < b) {
             point_best = Some((p, d));
         }
@@ -1549,7 +1549,7 @@ fn near_on(e: &Entity, at: Vec2, tol: f64) -> Near {
     // would either fail the on-curve check or bind an approximation.
     if let Some(c) = crate::geom::nurbs::of(&e.shape) {
         let q = c.point(c.closest(at));
-        let d = js_hypot(q.x - at.x, q.y - at.y);
+        let d = hypot(q.x - at.x, q.y - at.y);
         return Near {
             point: point_best,
             edge: (d <= tol).then_some((q, d)),

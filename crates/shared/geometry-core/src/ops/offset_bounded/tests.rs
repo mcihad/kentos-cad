@@ -106,7 +106,7 @@ fn ellipse_parallel_checks_the_normal_not_an_inflated_ellipse() {
             let t = core::f64::consts::TAU * i as f64 / 3000.;
             let p = ellipse_point(&e, t);
             let t = ellipse_derivative(&e, t);
-            let n = js_hypot(t.x, t.y);
+            let n = hypot(t.x, t.y);
             let q = v(
                 p.x + direction * 0.2 * t.y / n,
                 p.y - direction * 0.2 * t.x / n,
@@ -161,7 +161,7 @@ fn weighted_multispan_and_unclamped_knots_follow_the_same_analytic_curve() {
         let (a, b) = n.domain();
         for i in 0..=3000 {
             let ds = n.derivs(a + (b - a) * i as f64 / 3000., 1);
-            let speed = js_hypot(ds[1].x, ds[1].y);
+            let speed = hypot(ds[1].x, ds[1].y);
             let p = v(
                 ds[0].x - signed * ds[1].y / speed,
                 ds[0].y + signed * ds[1].x / speed,

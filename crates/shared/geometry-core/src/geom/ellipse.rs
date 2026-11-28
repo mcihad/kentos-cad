@@ -5,7 +5,7 @@ use crate::api::Op;
 use crate::geom::arc::{norm_angle, sweep};
 use crate::geom::intersect::{line_circle_params, tangent_points};
 use crate::geom::quadrature::integrate;
-use crate::jsmath::{PI, TAU, atan2, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, TAU, atan2, cos, hypot, js_max, js_min, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -32,7 +32,7 @@ pub fn minor_axis(e: &EllipseGeom) -> Vec2 {
     Vec2::new(-e.major.y * e.ratio, e.major.x * e.ratio)
 }
 pub fn major_length(e: &EllipseGeom) -> f64 {
-    js_hypot(e.major.x, e.major.y)
+    hypot(e.major.x, e.major.y)
 }
 pub fn ellipse_sweep(e: &EllipseGeom) -> f64 {
     sweep(e.t0, e.t1)
@@ -130,7 +130,7 @@ pub fn ellipse_length(e: &EllipseGeom) -> f64 {
     let sw = ellipse_sweep(e);
     let f = |t: f64| {
         let d = ellipse_derivative(e, t);
-        js_hypot(d.x, d.y)
+        hypot(d.x, d.y)
     };
     // ∫|C′(t)|dt by adaptive Gauss–Legendre to 10⁻¹⁴ of it (docs/adr/0149
     // §3), in eight pieces so a flat ellipse's sharp turns each get theirs.
@@ -292,7 +292,7 @@ pub fn ellipse_from_axis(p1: Vec2, p2: Vec2, other_half: f64) -> Option<EllipseG
 /// Ellipse from its centre, one axis end and the other half-axis length.
 pub fn ellipse_from_center(c: Vec2, axis_end: Vec2, other_half: f64) -> Option<EllipseGeom> {
     let v = Vec2::new(axis_end.x - c.x, axis_end.y - c.y);
-    let a = js_hypot(v.x, v.y);
+    let a = hypot(v.x, v.y);
     let b = other_half.abs();
     if a < 1e-9 || b < 1e-9 {
         return None;

@@ -7,7 +7,7 @@
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::{Blocks, shows_nothing};
 use kentos_geometry_core::entity::{Entity, Shape};
-use kentos_geometry_core::jsmath::{atan2, cos, js_hypot, js_max, js_min, sin};
+use kentos_geometry_core::jsmath::{atan2, cos, hypot, js_max, js_min, sin};
 use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
@@ -94,7 +94,7 @@ fn curve(s: &Shape) -> Option<Curve> {
             t1,
         } => {
             let (c, mj, ratio) = (*c, *major, *ratio);
-            let a = js_hypot(mj.x, mj.y);
+            let a = hypot(mj.x, mj.y);
             let mn = Vec2::new(-mj.y * ratio, mj.x * ratio);
             let t1 = if t1 < t0 {
                 t1 + std::f64::consts::TAU
@@ -240,8 +240,7 @@ fn check_piece(name: &str, got: &Shape, want: &Value) {
             for q in &pts[..=k] {
                 let (x, y) = (q.x - c.x, q.y - c.y);
                 let (cs, sn) = ((x * v.y - y * v.x) / d, (u.x * y - u.y * x) / d);
-                let off =
-                    (js_hypot(cs, sn) - 1.0).abs() * js_max(js_hypot(u.x, u.y), js_hypot(v.x, v.y));
+                let off = (hypot(cs, sn) - 1.0).abs() * js_max(hypot(u.x, u.y), hypot(v.x, v.y));
                 assert!(off <= 1e-4, "{name}: köşe {q:?} görüntüden {off} m uzak");
             }
         }

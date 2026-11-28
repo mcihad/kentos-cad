@@ -108,7 +108,7 @@ pub fn fill(
     let mut start = 0.0;
     for i in 0..stretches {
         let (a, b) = (pts[i], pts[(i + 1) % n]);
-        let length = crate::jsmath::js_hypot(b.x - a.x, b.y - a.y);
+        let length = crate::jsmath::hypot(b.x - a.x, b.y - a.y);
         if middle >= start - EPS && middle <= start + length + EPS && length > 2.0 * face {
             let bays = divisions(length, spacing);
             let (k0, k1) = chosen(&bays, s0 - start, s1 - start, middle - start, false)?;

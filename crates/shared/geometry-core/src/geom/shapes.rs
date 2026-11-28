@@ -5,7 +5,7 @@ use crate::api::Op;
 use crate::geom::arc::{ArcGeom, norm_angle};
 use crate::geom::bulge::{bulge_arc, tangent_bulge};
 use crate::geometry::{dist, signed_area};
-use crate::jsmath::{PI, asin, atan2, cos, js_hypot, js_max, js_min, js_round, or, sin, tan};
+use crate::jsmath::{PI, asin, atan2, cos, hypot, js_max, js_min, js_round, or, sin, tan};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -13,7 +13,7 @@ fn sub(a: Vec2, b: Vec2) -> Vec2 {
     Vec2::new(a.x - b.x, a.y - b.y)
 }
 fn len(v: Vec2) -> f64 {
-    js_hypot(v.x, v.y)
+    hypot(v.x, v.y)
 }
 fn ang(from: Vec2, to: Vec2) -> f64 {
     atan2(to.y - from.y, to.x - from.x)

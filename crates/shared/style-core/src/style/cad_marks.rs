@@ -5,7 +5,7 @@ use super::{
     model::Unit,
     prim::{FillPaint, Sink, StrokeStyle},
 };
-use kentos_geometry_core::jsmath::{atan2, cos, js_hypot, js_max, js_sign, sin};
+use kentos_geometry_core::jsmath::{atan2, cos, hypot, js_max, js_sign, sin};
 use kentos_geometry_core::{
     Vec2,
     api::json::Json,
@@ -95,7 +95,7 @@ impl EllipseRoute {
         Ok(route)
     }
     fn speed(&self, t: f64) -> f64 {
-        js_hypot(sin(t), self.geom.ratio * cos(t))
+        hypot(sin(t), self.geom.ratio * cos(t))
     }
     fn run(&self, a: f64, b: f64) -> f64 {
         if a == b {
@@ -204,7 +204,7 @@ impl Route {
         Some(edge.sample(d).0)
     }
     fn push(&mut self, a: Vec2, b: Vec2, arc: Option<BulgeArc>) -> Result<(), String> {
-        let length = arc.map_or_else(|| js_hypot(b.x - a.x, b.y - a.y), |a| a.r * a.sweep.abs());
+        let length = arc.map_or_else(|| hypot(b.x - a.x, b.y - a.y), |a| a.r * a.sweep.abs());
         if arc.is_some_and(|v| {
             !v.c.x.is_finite()
                 || !v.c.y.is_finite()
@@ -818,7 +818,7 @@ mod tests {
                     let (at, direction) = metric.sample(distance, 1e-12).unwrap();
                     let want = Vec2::new(c.x + 0.6 * x - 0.8 * y, c.y + 0.8 * x + 0.6 * y);
                     assert!(
-                        js_hypot(at.x - want.x, at.y - want.y) < 1e-8,
+                        hypot(at.x - want.x, at.y - want.y) < 1e-8,
                         "ratio={ratio}: {at:?} vs {want:?}"
                     );
                     let dx = -0.6 * sin(t) - 0.8 * ratio * cos(t);

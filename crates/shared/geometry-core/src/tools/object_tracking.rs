@@ -6,7 +6,7 @@
 //! The viewport feeds it world coordinates and a world tolerance.
 
 use crate::api::Op;
-use crate::jsmath::{PI, cos, js_hypot, js_round, sin, truthy};
+use crate::jsmath::{PI, cos, hypot, js_round, sin, truthy};
 use crate::op;
 use crate::store::snap::Extension;
 use crate::vec2::Vec2;
@@ -150,7 +150,7 @@ pub fn track_point(
                 continue;
             }
             let x = Vec2::new(ra.o.x + ra.d.x * t, ra.o.y + ra.d.y * t);
-            let err = js_hypot(x.x - p.x, x.y - p.y);
+            let err = hypot(x.x - p.x, x.y - p.y);
             if err <= tol && best.as_ref().is_none_or(|(_, e)| err < *e) {
                 let lines = vec![
                     TrackLine {

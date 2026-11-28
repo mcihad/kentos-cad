@@ -14,7 +14,7 @@ use kentos_commands::{
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::jsmath::{cos, js_hypot, js_sign, sin};
+use kentos_geometry_core::jsmath::{cos, hypot, js_sign, sin};
 use kentos_geometry_core::ops::edges::entity_edges;
 use kentos_geometry_core::tools::ucs::Frame;
 use kentos_geometry_core::vec2::Vec2;
@@ -183,7 +183,7 @@ fn one(doc: &Document, c: &PointConstruction, path: &str) -> Result<Vec2, Stop> 
                     &pe,
                 )
             })?;
-            let len = js_hypot(b.x - a.x, b.y - a.y);
+            let len = hypot(b.x - a.x, b.y - a.y);
             let u = Vec2::new((b.x - a.x) / len, (b.y - a.y) / len);
             Ok(Vec2::new(from.x + u.x * d, from.y + u.y * d))
         }
@@ -219,7 +219,7 @@ fn one(doc: &Document, c: &PointConstruction, path: &str) -> Result<Vec2, Stop> 
             check_point(b, &pb)?;
             distance(*d, path)?;
             let (a, b) = (point_of(doc, a, &pa)?, point_of(doc, b, &pb)?);
-            let len = js_hypot(b.x - a.x, b.y - a.y);
+            let len = hypot(b.x - a.x, b.y - a.y);
             if len < 1e-9 {
                 return Err(refuse(
                     codes::SAME_POINTS,
@@ -265,7 +265,7 @@ fn extension(doc: &Document, end: &ObjectEnd, d: f64, path: &str) -> Result<Vec2
     ) {
         return Err(not_an_end());
     }
-    let near = |p: Vec2| js_hypot(p.x - at.x, p.y - at.y) <= AT_END;
+    let near = |p: Vec2| hypot(p.x - at.x, p.y - at.y) <= AT_END;
     let mut found: Vec<(Edge, bool)> = Vec::new();
     for edge in entity_edges(&shape) {
         let (s, t) = match edge {
@@ -288,7 +288,7 @@ fn extension(doc: &Document, end: &ObjectEnd, d: f64, path: &str) -> Result<Vec2
     Ok(match edge {
         Edge::Seg { a, b } => {
             let (from, to) = if at_start { (b, a) } else { (a, b) };
-            let len = js_hypot(to.x - from.x, to.y - from.y);
+            let len = hypot(to.x - from.x, to.y - from.y);
             Vec2::new(
                 to.x + (to.x - from.x) / len * d,
                 to.y + (to.y - from.y) / len * d,

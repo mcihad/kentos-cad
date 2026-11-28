@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 use kentos_geometry_core::api::json::{FromJson, Json, read_field};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::{PI, cos, js_floor, js_hypot, js_max, js_min, or, sin};
+use kentos_geometry_core::jsmath::{PI, cos, hypot, js_floor, js_max, js_min, or, sin};
 
 use crate::bezier::{
     Cubic, bez, bez_deriv, flatten_cubic, flatten_sub_path_tol, nearest_on_cubic, ring_signed_area,
@@ -502,7 +502,7 @@ impl SnapIndex {
     pub fn query(&self, p: Pt, r: f64, from: Option<Pt>) -> Option<SnapHit> {
         let mut best: Option<SnapHit> = None;
         let offer = |best: &mut Option<SnapHit>, q: Pt, kind: Kind, label: &'static str| {
-            let d = js_hypot(q[0] - p[0], q[1] - p[1]);
+            let d = hypot(q[0] - p[0], q[1] - p[1]);
             if d > r {
                 return;
             }
@@ -705,7 +705,7 @@ fn perpendicular_foot(seg: &Seg, from: Pt, p: Pt) -> Option<Pt> {
     let f = |u: f64| {
         let q = bez(c, u);
         let d = bez_deriv(c, u);
-        let l = or(js_hypot(d[0], d[1]), 1.0);
+        let l = or(hypot(d[0], d[1]), 1.0);
         ((q[0] - from[0]) * d[0] + (q[1] - from[1]) * d[1]) / l
     };
     solve(&f, t0).map(|t| bez(c, t))
@@ -717,7 +717,7 @@ fn tangent_point(c: &Cubic, from: Pt, p: Pt) -> Option<Pt> {
     let f = |u: f64| {
         let q = bez(c, u);
         let d = bez_deriv(c, u);
-        let l = or(js_hypot(d[0], d[1]), 1.0);
+        let l = or(hypot(d[0], d[1]), 1.0);
         ((q[0] - from[0]) * d[1] - (q[1] - from[1]) * d[0]) / l
     };
     solve(&f, t0).map(|t| bez(c, t))

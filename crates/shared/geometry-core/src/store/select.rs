@@ -21,7 +21,7 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::leader;
 use crate::geom::region::ring_area;
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
-use crate::jsmath::{PI, js_cmp, js_hypot, js_max, js_min, stable_sort};
+use crate::jsmath::{PI, hypot, js_cmp, js_max, js_min, stable_sort};
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::ops::holes::{HoleAt, hole_at, hole_ring};
 use crate::text::Font;
@@ -49,7 +49,7 @@ impl Store {
             let e = &it.shape;
             let area = match e {
                 Shape::Polygon { .. } if inside_polygon(e, p) => entity_area(e),
-                Shape::Circle { c, r } if js_hypot(p.x - c.x, p.y - c.y) <= *r => Some(PI * r * r),
+                Shape::Circle { c, r } if hypot(p.x - c.x, p.y - c.y) <= *r => Some(PI * r * r),
                 Shape::Ellipse {
                     c,
                     major,
@@ -137,7 +137,7 @@ impl Store {
             max_x: c.x + r,
             max_y: c.y + r,
         };
-        let within = |p: &Vec2| js_hypot(p.x - c.x, p.y - c.y) <= r;
+        let within = |p: &Vec2| hypot(p.x - c.x, p.y - c.y) <= r;
         let mut out = Vec::new();
         for it in self.candidates(&super::padded(q, 0.0)) {
             if !self.pickable(it) {
@@ -355,7 +355,7 @@ fn touches_circle(e: &Shape, c: Vec2, r: f64, font: Font) -> bool {
     }
     match e {
         Shape::Polygon { .. } => inside_polygon(e, c),
-        Shape::Circle { c: o, r: ro } => js_hypot(c.x - o.x, c.y - o.y) <= *ro,
+        Shape::Circle { c: o, r: ro } => hypot(c.x - o.x, c.y - o.y) <= *ro,
         Shape::Hatch { ring, holes, .. } => {
             point_in_polygon(c, ring) && !holes.iter().flatten().any(|h| point_in_polygon(c, h))
         }

@@ -9,7 +9,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 
 use crate::api::Op;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::ops::elevation::{Elevated, ON};
 use crate::text::edit::search;
@@ -272,7 +272,7 @@ pub fn duplicate_points(points: &[DupPoint], by: DupBy, keep: Keep) -> Duplicate
                             let near = if exact {
                                 a == p.p
                             } else {
-                                js_hypot(a.x - p.p.x, a.y - p.p.y) <= tolerance
+                                hypot(a.x - p.p.x, a.y - p.p.y) <= tolerance
                             };
                             if near && best.is_none_or(|b| g < b) {
                                 best = Some(g);
@@ -341,7 +341,7 @@ pub fn follow_point(
             path.zs.resize(path.pts.len(), None);
         }
         for (k, p) in path.pts.iter_mut().enumerate() {
-            if js_hypot(p.x - from.x, p.y - from.y) <= ON {
+            if hypot(p.x - from.x, p.y - from.y) <= ON {
                 *p = to;
                 if set_z {
                     path.zs[k] = z;

@@ -7,7 +7,7 @@
 //! test, the refusals word for word; by name, as the web calls them.
 
 use kentos_geometry_core::api::run_named;
-use kentos_geometry_core::jsmath::{atan2, js_hypot, js_max, js_min};
+use kentos_geometry_core::jsmath::{atan2, hypot, js_max, js_min};
 use serde_json::{Value, json};
 
 fn file() -> Value {
@@ -302,7 +302,7 @@ fn timing() {
                     let t = atan2(ty - sy, tx - sx);
                     let noise = ((i * 31 + j * 17 + k * 7) % 5) as f64 - 2.0;
                     let reading = (t - z).rem_euclid(TAU) * 200.0 / PI + noise * 1e-4;
-                    let distance = (k < 2).then(|| js_hypot(ty - sy, tx - sx) + noise * 0.001);
+                    let distance = (k < 2).then(|| hypot(ty - sy, tx - sx) + noise * 0.001);
                     rows.push(json!({ "station": name(i, j), "target": name(a, b), "direction": reading, "distance": distance }));
                 }
             }

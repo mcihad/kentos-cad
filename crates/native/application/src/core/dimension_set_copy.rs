@@ -7,7 +7,7 @@ use std::collections::{HashMap, HashSet};
 use kentos_commands::{DimensionSet, DimensionSetId, Entity, EntityId, Vec2};
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geom::affine::{Affine, apply, apply_linear, is_reflection};
-use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::jsmath::hypot;
 use kentos_geometry_core::vec2::Vec2 as CoreVec2;
 
 use crate::checks::{Stop, error};
@@ -57,7 +57,7 @@ fn moved(m: &Affine, p: Vec2) -> Vec2 {
 /// A direction turned by `m`'s linear part, of unit length, made to read (docs/adr/0729 §1).
 fn turned(m: &Affine, d: Vec2) -> Vec2 {
     let v = apply_linear(m, CoreVec2::new(d.x, d.y));
-    let l = js_hypot(v.x, v.y);
+    let l = hypot(v.x, v.y);
     crate::dimension_sets::readable(Vec2 {
         x: v.x / l,
         y: v.y / l,

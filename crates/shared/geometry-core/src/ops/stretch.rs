@@ -8,7 +8,7 @@ use crate::entity::{Entity, Part, Shape, entity_geometry};
 use crate::geom::arc::{ArcGeom, arc_end, arc_mid, arc_start, arc_through};
 use crate::geom::arrangement::Ring;
 use crate::geometry::Bounds;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -20,7 +20,7 @@ fn inside(p: Vec2, r: &Bounds) -> bool {
 /// `f`; none when the new chord has no length.
 fn with_height(s: Vec2, m: Vec2, f: Vec2, s2: Vec2, f2: Vec2) -> Option<Vec2> {
     let (cx, cy) = ((s.x + f.x) / 2.0, (s.y + f.y) / 2.0);
-    let height = js_hypot(m.x - cx, m.y - cy);
+    let height = hypot(m.x - cx, m.y - cy);
     // Which side of the chord from s to f the middle is on: +1 its left.
     let side = if (f.x - s.x) * (m.y - s.y) - (f.y - s.y) * (m.x - s.x) >= 0.0 {
         1.0
@@ -28,7 +28,7 @@ fn with_height(s: Vec2, m: Vec2, f: Vec2, s2: Vec2, f2: Vec2) -> Option<Vec2> {
         -1.0
     };
     let (ux, uy) = (f2.x - s2.x, f2.y - s2.y);
-    let length = js_hypot(ux, uy);
+    let length = hypot(ux, uy);
     if length == 0.0 {
         return None;
     }

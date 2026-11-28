@@ -3,7 +3,7 @@
 //! ends, the jambs of the edge's other openings, where other walls' faces cross it); this picks the nearest on each
 //! side by one rule, so the desktop, the headless server and the shared cases agree.
 
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::vec2::Vec2;
 
 /// Slack, metres: a reference at a jamb (a touching opening) counts on that side.
@@ -63,7 +63,7 @@ pub fn crossing(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<f64> {
     let r = (b.x - a.x, b.y - a.y);
     let q = (d.x - c.x, d.y - c.y);
     let den = r.0 * q.1 - r.1 * q.0;
-    if den.abs() <= 1e-12 * js_hypot(r.0, r.1) * js_hypot(q.0, q.1) {
+    if den.abs() <= 1e-12 * hypot(r.0, r.1) * hypot(q.0, q.1) {
         return None;
     }
     let w = (c.x - a.x, c.y - a.y);

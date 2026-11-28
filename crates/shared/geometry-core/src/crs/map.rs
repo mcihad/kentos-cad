@@ -93,9 +93,8 @@ impl MapProjection {
                     ms.iter().map(|p| p.x).sum::<f64>() / k,
                     ms.iter().map(|p| p.y).sum::<f64>() / k,
                 );
-                self.forward(p).map_or(0.0, |q| {
-                    crate::jsmath::js_hypot(q.x - chord.x, q.y - chord.y)
-                })
+                self.forward(p)
+                    .map_or(0.0, |q| crate::jsmath::hypot(q.x - chord.x, q.y - chord.y))
             };
             for (i, j) in [(0, 1), (1, 2), (2, 0)] {
                 worst = js_max(worst, stray(&[t[i], t[j]], &[m[i], m[j]]));
@@ -233,7 +232,7 @@ impl MapProjection {
             let mid = Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
             if let Some(mm) = self.forward(mid) {
                 let chord = Vec2::new((ma.x + mb.x) / 2.0, (ma.y + mb.y) / 2.0);
-                if crate::jsmath::js_hypot(mm.x - chord.x, mm.y - chord.y) > self.tolerance {
+                if crate::jsmath::hypot(mm.x - chord.x, mm.y - chord.y) > self.tolerance {
                     self.split(a, mid, ma, mm, depth - 1, out);
                     self.split(mid, b, mm, mb, depth - 1, out);
                     return;

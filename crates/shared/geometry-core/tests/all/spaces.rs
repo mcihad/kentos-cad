@@ -173,7 +173,7 @@ fn a_void_is_crossed_inside_its_parts() {
     let cross = lines(space::void_cross(&[l]));
     let length: f64 = cross
         .iter()
-        .map(|(a, b)| kentos_geometry_core::jsmath::js_hypot(b.x - a.x, b.y - a.y))
+        .map(|(a, b)| kentos_geometry_core::jsmath::hypot(b.x - a.x, b.y - a.y))
         .sum();
     assert!((length - 3.0 * 8f64.sqrt()).abs() < 1e-9, "{cross:?}");
     // A 4 × 4 void with a 2 × 2 hole in its middle: each diagonal in two pieces.

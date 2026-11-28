@@ -17,7 +17,7 @@ use crate::geom::hatch::hatch_lines;
 use crate::geom::hatch_pattern::pattern_pieces;
 use crate::geom::intersect::Edge;
 use crate::geom::leader;
-use crate::jsmath::{PI, cos, js_hypot, js_max, sin};
+use crate::jsmath::{PI, cos, hypot, js_max, sin};
 use crate::op;
 use crate::ops::curve_cuts::Cut;
 use crate::text::{Font, width_em};
@@ -50,7 +50,7 @@ fn least_radius(e: &Shape, outline: &[Vec2]) -> f64 {
     match e {
         Shape::Circle { r, .. } | Shape::Arc { r, .. } => *r,
         Shape::Ellipse { major, ratio, .. } => {
-            let a = js_hypot(major.x, major.y);
+            let a = hypot(major.x, major.y);
             a * ratio * ratio
         }
         _ => outline
@@ -59,9 +59,9 @@ fn least_radius(e: &Shape, outline: &[Vec2]) -> f64 {
                 let (a, b, c) = (w[0], w[1], w[2]);
                 let cross = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
                 (cross.abs() > 0.0).then(|| {
-                    let ab = js_hypot(b.x - a.x, b.y - a.y);
-                    let bc = js_hypot(c.x - b.x, c.y - b.y);
-                    let ca = js_hypot(a.x - c.x, a.y - c.y);
+                    let ab = hypot(b.x - a.x, b.y - a.y);
+                    let bc = hypot(c.x - b.x, c.y - b.y);
+                    let ca = hypot(a.x - c.x, a.y - c.y);
                     (ab * bc * ca) / (2.0 * cross.abs())
                 })
             })
@@ -326,9 +326,7 @@ pub fn explode_with(e: &Shape, value_text: &str, font: Font, density: Option<Den
             };
             // An angular dimension's arc comes out as one arc, not as the chords it is drawn with.
             let on_arc = |p: Vec2| match arc {
-                Some((c, r, ..)) => {
-                    (js_hypot(p.x - c.x, p.y - c.y) - r).abs() < 1e-9 * js_max(1.0, r)
-                }
+                Some((c, r, ..)) => (hypot(p.x - c.x, p.y - c.y) - r).abs() < 1e-9 * js_max(1.0, r),
                 None => false,
             };
             let mut pieces: Vec<Entity> = l
@@ -512,7 +510,7 @@ fn segment_pieces(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> Vec<Ent
     for i in 0..count {
         let a = pts[i];
         let b = pts[(i + 1) % n];
-        if js_hypot(b.x - a.x, b.y - a.y) < 1e-12 {
+        if hypot(b.x - a.x, b.y - a.y) < 1e-12 {
             continue;
         }
         match bulge_arc(a, b, bulge_at(bulges, i)) {

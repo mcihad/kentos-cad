@@ -13,7 +13,7 @@
 //! ([`ViewChange`]).
 
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::jsmath::hypot;
 
 use crate::Vec2;
 use crate::format::Format;
@@ -210,7 +210,7 @@ impl Tool for ZoomWindow {
     fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if let Some((_, from)) = self.first
             && !self.done
-            && js_hypot(p.screen[0] - from[0], p.screen[1] - from[1]) > DRAG_THRESHOLD
+            && hypot(p.screen[0] - from[0], p.screen[1] - from[1]) > DRAG_THRESHOLD
         {
             self.finish(p.raw, cx);
         }

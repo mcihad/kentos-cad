@@ -4,7 +4,7 @@
 
 use crate::api::Op;
 use crate::geom::intersect::{circle_circle, line_line};
-use crate::jsmath::{PI, atan2, cos, js_cmp, js_hypot, sin, stable_sort};
+use crate::jsmath::{PI, atan2, cos, hypot, js_cmp, sin, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -14,7 +14,7 @@ fn sub(a: Vec2, b: Vec2) -> Vec2 {
 
 fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {
     let d = sub(b, a);
-    let l = js_hypot(d.x, d.y);
+    let l = hypot(d.x, d.y);
     if l < 1e-12 {
         None
     } else {

@@ -7,7 +7,7 @@
 //! every function returns new sub-paths and leaves its input alone.
 
 use kentos_geometry_core::jsmath::{
-    PI, acos, js_cmp, js_hypot, js_max, js_min, or, sin, stable_sort, tan,
+    PI, acos, hypot, js_cmp, js_max, js_min, or, sin, stable_sort, tan,
 };
 
 use crate::bezier::{
@@ -57,7 +57,7 @@ fn node_at_mut(subs: &mut [SubPath], r: NodeRef) -> Option<&mut PathNode> {
 }
 
 fn len(x: f64, y: f64) -> f64 {
-    js_hypot(x, y)
+    hypot(x, y)
 }
 
 /// Neighbours of node i along its sub-path (None past an open end).

@@ -12,7 +12,7 @@
 use kentos_commands::{CommandResult, Entity, WallsEdit, WallsOperation};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::geom::wall::left_face;
-use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::jsmath::hypot;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, wall_distances, walls_edit};
 
@@ -92,7 +92,7 @@ pub fn grips(doc: &Document, spatial: &Spatial, ids: &[Slot]) -> Vec<RoomGrip> {
                     continue;
                 }
                 let (a, b) = (pts[k], pts[(k + 1) % n]);
-                let l = js_hypot(b.x - a.x, b.y - a.y);
+                let l = hypot(b.x - a.x, b.y - a.y);
                 if l <= 1e-6 {
                     continue;
                 }
@@ -162,7 +162,7 @@ fn facing(
                 continue;
             }
             let (a, b) = (pts[k], pts[(k + 1) % n]);
-            let l = js_hypot(b.x - a.x, b.y - a.y);
+            let l = hypot(b.x - a.x, b.y - a.y);
             if l <= 0.0 {
                 continue;
             }
@@ -193,7 +193,7 @@ pub(crate) fn grip_at(screen: [f64; 2], cx: &Context<'_>) -> Option<RoomGrip> {
     let mut best = REACH;
     for g in grips(cx.doc, cx.spatial, cx.selection.ids()) {
         let s = cx.view.to_screen(g.at);
-        let d = js_hypot(s[0] - screen[0], s[1] - screen[1]);
+        let d = hypot(s[0] - screen[0], s[1] - screen[1]);
         if d <= best {
             best = d;
             found = Some(g);

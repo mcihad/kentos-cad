@@ -16,7 +16,7 @@ pub use super::session::GnssSession;
 use super::session::{Group, whitener};
 use super::sparse::{Envelope, reverse_cuthill_mckee};
 use super::{ObservationResult, Observed, Statistics, name_key, statistics};
-use crate::jsmath::{atan2, cos, js_hypot, js_max, sin};
+use crate::jsmath::{atan2, cos, hypot, js_max, sin};
 
 /// A station: its name, its coordinates when known (m), whether they are held, and when weighted their standard
 /// deviations (m) or their full covariance xx, xy, xz, yy, yz, zz (m²; a known point's north, east, up deviations turned
@@ -244,7 +244,7 @@ pub fn geodetic(p: [f64; 3]) -> (f64, f64) {
     let f = 1.0 / 298.257_222_101;
     let e2 = f * (2.0 - f);
     let lon = atan2(p[1], p[0]);
-    let r = js_hypot(p[0], p[1]);
+    let r = hypot(p[0], p[1]);
     let mut lat = atan2(p[2], r * (1.0 - e2));
     for _ in 0..10 {
         let s = sin(lat);
@@ -275,7 +275,7 @@ pub fn to_geodetic(a: f64, inv_f: f64, p: [f64; 3]) -> (f64, f64, f64) {
     let f = 1.0 / inv_f;
     let e2 = f * (2.0 - f);
     let lon = atan2(p[1], p[0]);
-    let r = js_hypot(p[0], p[1]);
+    let r = hypot(p[0], p[1]);
     let mut lat = atan2(p[2], r * (1.0 - e2));
     for _ in 0..10 {
         let s = sin(lat);

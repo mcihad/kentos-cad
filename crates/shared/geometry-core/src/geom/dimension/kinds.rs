@@ -15,7 +15,7 @@ use super::{
 };
 use crate::geom::arc::norm_angle;
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, TAU, atan2, cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{PI, TAU, atan2, cos, hypot, js_max, js_min, sin};
 use crate::vec2::Vec2;
 
 /// Why a dimension of docs/adr/0147 cannot be laid out: `layout_dimension`
@@ -91,7 +91,7 @@ pub(super) fn fault(d: &DimensionGeom) -> Option<DimensionFault> {
             let Some(c) = d.c else {
                 return Some(ArcNoCentre);
             };
-            let r = js_hypot(a.x - c.x, a.y - c.y);
+            let r = hypot(a.x - c.x, a.y - c.y);
             if r < 1e-9 {
                 return Some(ArcNoRadius);
             }
@@ -105,20 +105,20 @@ pub(super) fn fault(d: &DimensionGeom) -> Option<DimensionFault> {
             if d.c.is_none() {
                 return Some(JoggedNoCentre);
             }
-            if js_hypot(b.x - a.x, b.y - a.y) < 1e-9 {
+            if hypot(b.x - a.x, b.y - a.y) < 1e-9 {
                 return Some(JoggedNoRadius);
             }
             jogged_frame(d).is_none().then_some(JoggedCentre)
         }
         Some("azimuth" | "slope") => {
-            if js_hypot(b.x - a.x, b.y - a.y) < 1e-9 {
+            if hypot(b.x - a.x, b.y - a.y) < 1e-9 {
                 return Some(EdgeTooShort);
             }
             (d.style.as_deref() == Some("slope") && (d.za.is_none() || d.zb.is_none()))
                 .then_some(SlopeNoElevations)
         }
-        Some("centerMark") => (js_hypot(b.x - a.x, b.y - a.y) < 1e-9).then_some(MarkNoRadius),
-        Some("centerLine") => (js_hypot(b.x - a.x, b.y - a.y) < 1e-9).then_some(EdgeTooShort),
+        Some("centerMark") => (hypot(b.x - a.x, b.y - a.y) < 1e-9).then_some(MarkNoRadius),
+        Some("centerLine") => (hypot(b.x - a.x, b.y - a.y) < 1e-9).then_some(EdgeTooShort),
         Some("elevation") => d.za.is_none().then_some(LevelNoElevation),
         _ => None,
     }
@@ -187,7 +187,7 @@ pub(super) fn ordinate(d: &DimensionGeom) -> Option<DimensionLayout> {
     } else {
         (vec![[start, b]], (start, b))
     };
-    let t = js_hypot(tail.1.x - tail.0.x, tail.1.y - tail.0.y);
+    let t = hypot(tail.1.x - tail.0.x, tail.1.y - tail.0.y);
     let v = if t > 0.0 {
         Vec2::new((tail.1.x - tail.0.x) / t, (tail.1.y - tail.0.y) / t)
     } else {
@@ -218,7 +218,7 @@ pub(super) fn ordinate(d: &DimensionGeom) -> Option<DimensionLayout> {
 pub(super) fn arc_length(d: &DimensionGeom) -> Option<DimensionLayout> {
     let (a, b, h) = (d.a, d.b, d.height);
     let c = d.c?;
-    let r = js_hypot(a.x - c.x, a.y - c.y);
+    let r = hypot(a.x - c.x, a.y - c.y);
     if r < 1e-9 {
         return None;
     }
@@ -316,7 +316,7 @@ pub(super) fn jog_at(d: &DimensionGeom, p: Vec2) -> Option<f64> {
 fn jogged_frame(d: &DimensionGeom) -> Option<(Vec2, f64, f64)> {
     let (a, b) = (d.a, d.b);
     let c = d.c?;
-    let r = js_hypot(b.x - a.x, b.y - a.y);
+    let r = hypot(b.x - a.x, b.y - a.y);
     if r < 1e-9 {
         return None;
     }
@@ -350,7 +350,7 @@ pub(super) fn jogged(d: &DimensionGeom) -> Option<DimensionLayout> {
     if jog > 1e-9 {
         lines.push([p1, p2]);
     }
-    let last = js_hypot(b.x - p2.x, b.y - p2.y);
+    let last = hypot(b.x - p2.x, b.y - p2.y);
     if last > 1e-9 {
         lines.push([p2, b]);
     }
@@ -375,7 +375,7 @@ pub(super) fn jogged(d: &DimensionGeom) -> Option<DimensionLayout> {
         d2: b,
         text_at,
         rotation,
-        value: js_hypot(b.x - a.x, b.y - a.y),
+        value: hypot(b.x - a.x, b.y - a.y),
         unit,
         prefix,
         pick,
@@ -392,7 +392,7 @@ pub(super) fn jogged(d: &DimensionGeom) -> Option<DimensionLayout> {
 pub(super) fn arrowed(d: &DimensionGeom, slope: bool) -> Option<DimensionLayout> {
     let (a, b, h) = (d.a, d.b, d.height);
     let dd = Vec2::new(b.x - a.x, b.y - a.y);
-    let length = js_hypot(dd.x, dd.y);
+    let length = hypot(dd.x, dd.y);
     if length < 1e-9 {
         return None;
     }

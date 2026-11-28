@@ -13,7 +13,7 @@
 //! the edge's first line). The positions of an event are worked out once and shared by every face it bounds.
 
 use crate::Vec2;
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 
 /// Why the skeleton cannot be had.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -120,7 +120,7 @@ pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, 
     let edges: Vec<Edge> = (0..n)
         .map(|k| {
             let (a, b) = (ring[k], ring[(k + 1) % n]);
-            let l = js_hypot(b.x - a.x, b.y - a.y);
+            let l = hypot(b.x - a.x, b.y - a.y);
             let d = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
             let nn = Vec2::new(-d.y, d.x);
             Edge {
@@ -198,7 +198,7 @@ pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, 
                 let at = made
                     .iter()
                     .copied()
-                    .find(|&nd| js_hypot(nodes[nd].0.x - q.x, nodes[nd].0.y - q.y) <= tol);
+                    .find(|&nd| hypot(nodes[nd].0.x - q.x, nodes[nd].0.y - q.y) <= tol);
                 node_of.push(at.unwrap_or_else(|| {
                     nodes.push((*q, t));
                     made.push(nodes.len() - 1);
@@ -353,7 +353,7 @@ fn chain(
             for q in ring {
                 if clean
                     .last()
-                    .is_none_or(|l: &(Vec2, f64)| js_hypot(l.0.x - q.0.x, l.0.y - q.0.y) > 1e-9)
+                    .is_none_or(|l: &(Vec2, f64)| hypot(l.0.x - q.0.x, l.0.y - q.0.y) > 1e-9)
                 {
                     clean.push(q);
                 }
@@ -464,7 +464,7 @@ mod tests {
                 continue;
             };
             let (a, b) = (ring[k], ring[(k + 1) % n]);
-            let l = js_hypot(b.x - a.x, b.y - a.y);
+            let l = hypot(b.x - a.x, b.y - a.y);
             for (q, z) in face {
                 let dist = ((b.x - a.x) * (q.y - a.y) - (b.y - a.y) * (q.x - a.x)) / l;
                 assert!(

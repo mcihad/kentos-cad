@@ -19,7 +19,7 @@ use crate::entity::{Entity, Shape, ellipse_geom, is_multi_part};
 use crate::geom::ellipse::{closest_param, ellipse_derivative, ellipse_point};
 use crate::geom::intersect::Edge;
 use crate::geom::spline::catmull_rom_beziers;
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{hypot, js_max};
 use crate::op;
 use crate::ops::edges::edge_length;
 use crate::ops::path::{Path, nearest_s, path_of, point_at_s, tangent_at_s};
@@ -157,7 +157,7 @@ fn spline_foot(pts: &[Vec2], closed: bool, p: Vec2) -> Option<(Vec2, Vec2)> {
             for k in 0..=SAMPLES {
                 let u = k as f64 / SAMPLES as f64;
                 let (at, _, _) = bezier(&span.ctrl, u);
-                let d = js_hypot(o.x + at.x - p.x, o.y + at.y - p.y);
+                let d = hypot(o.x + at.x - p.x, o.y + at.y - p.y);
                 if d < best {
                     (best, bu) = (d, u);
                 }
@@ -188,7 +188,7 @@ fn spline_foot(pts: &[Vec2], closed: bool, p: Vec2) -> Option<(Vec2, Vec2)> {
             }
         }
         let (at, d, _) = bezier(c, u);
-        let gap = js_hypot(at.x - px, at.y - py);
+        let gap = hypot(at.x - px, at.y - py);
         if best.is_none_or(|(g, _, _)| gap < g) {
             best = Some((gap, Vec2::new(o.x + at.x, o.y + at.y), d));
         }
@@ -224,7 +224,7 @@ fn curve_foot(e: &Shape, p: Vec2) -> Option<(Vec2, Vec2)> {
 /// A curve's derivative as a unit direction turned the way the path runs
 /// there (`along`, its chord's).
 fn way_of(d: Vec2, along: Vec2) -> Option<Vec2> {
-    let l = js_hypot(d.x, d.y);
+    let l = hypot(d.x, d.y);
     if !(l > 0.0) {
         return None;
     }
@@ -337,7 +337,7 @@ pub fn reading(e: &Shape, from_end: bool, p: Vec2) -> Option<Reading> {
             (s, point_at_s(&path, s), tangent_at_s(&path, s))
         }
     };
-    let away = js_hypot(p.x - q.x, p.y - q.y);
+    let away = hypot(p.x - q.x, p.y - q.y);
     // (p − q) · right, right = (t.y, −t.x).
     let side = (p.x - q.x) * t.y - (p.y - q.y) * t.x;
     let offset = if side < 0.0 { -away } else { away };
@@ -423,7 +423,7 @@ pub fn km_text(value: f64, decimals: usize) -> String {
 /// Mesafe ve eğim (docs/adr/0188 §4): a slope distance `s` at `percent`
 /// slope as its horizontal `s / √(1 + (e/100)²)` and the rise over it.
 pub fn slope(s: f64, percent: f64) -> Slope {
-    let horizontal = s / js_hypot(1.0, percent / 100.0);
+    let horizontal = s / hypot(1.0, percent / 100.0);
     Slope {
         horizontal,
         rise: horizontal * percent / 100.0,
@@ -438,7 +438,7 @@ fn bisector_way(k: Vec2, a: Vec2, b: Vec2) -> Option<Vec2> {
         Vec2::new(a.x - k.x, a.y - k.y),
         Vec2::new(b.x - k.x, b.y - k.y),
     );
-    let (la, lb) = (js_hypot(ka.x, ka.y), js_hypot(kb.x, kb.y));
+    let (la, lb) = (hypot(ka.x, ka.y), hypot(kb.x, kb.y));
     if !(la > 0.0 && lb > 0.0) {
         return None;
     }
@@ -447,7 +447,7 @@ fn bisector_way(k: Vec2, a: Vec2, b: Vec2) -> Option<Vec2> {
         Vec2::new(kb.x / lb, kb.y / lb),
     );
     let w = Vec2::new(ua.x + ub.x, ua.y + ub.y);
-    let lw = js_hypot(w.x, w.y);
+    let lw = hypot(w.x, w.y);
     if lw < 1e-12 {
         return Some(Vec2::new(-ua.y, ua.x));
     }

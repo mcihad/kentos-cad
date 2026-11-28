@@ -19,7 +19,7 @@ use crate::geom::bulge::bulge_of_sweep;
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::overlay::{overlay, overlay_buffers};
 use crate::geom::region::{area_source, net_area, ring_edges};
-use crate::jsmath::js_hypot;
+use crate::jsmath::hypot;
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::entity_edges;
 use crate::ops::parts::one_area;
@@ -50,7 +50,7 @@ fn path_of(edges: Vec<Edge>) -> Vec<Edge> {
     edges
         .into_iter()
         .filter(|e| match *e {
-            Edge::Seg { a, b } => js_hypot(b.x - a.x, b.y - a.y) > TOL,
+            Edge::Seg { a, b } => hypot(b.x - a.x, b.y - a.y) > TOL,
             Edge::Arc { .. } => true,
         })
         .collect()
@@ -240,7 +240,7 @@ pub fn chain(edges: Vec<Edge>) -> Vec<Vec<Edge>> {
             Some(run)
                 if run.last().is_some_and(|l| {
                     let end = point_at(l, 1.0);
-                    js_hypot(end.x - start.x, end.y - start.y) <= TOL
+                    hypot(end.x - start.x, end.y - start.y) <= TOL
                 }) =>
             {
                 run.push(e);

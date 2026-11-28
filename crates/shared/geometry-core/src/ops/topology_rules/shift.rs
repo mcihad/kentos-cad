@@ -7,7 +7,7 @@
 use super::written;
 use crate::entity::Shape;
 use crate::geom::intersect::closest_on_edge;
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{hypot, js_max};
 use crate::vec2::Vec2;
 
 /// An object's source vertices kept and moved by a repair, and the farthest and total distance moved.
@@ -55,13 +55,13 @@ fn distance(s: &Shape, p: Vec2) -> Option<f64> {
     let mut take = |d: f64| best = Some(best.map_or(d, |b| if d < b { d } else { b }));
     if let Shape::Point { .. } = s {
         for q in points(s) {
-            take(js_hypot(p.x - q.x, p.y - q.y));
+            take(hypot(p.x - q.x, p.y - q.y));
         }
         return best;
     }
     for w in written(s) {
         if w.pts.len() == 1 {
-            take(js_hypot(p.x - w.pts[0].x, p.y - w.pts[0].y));
+            take(hypot(p.x - w.pts[0].x, p.y - w.pts[0].y));
         }
         for k in 0..w.edge_count() {
             take(closest_on_edge(&w.edge(k), p).d);

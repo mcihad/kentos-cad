@@ -191,7 +191,7 @@ pub fn across(target: &Shape, side: Vec2) -> Option<Vec2> {
     let (nearest, distance) = if let Some((p, _)) = offset_bounded::nearest(target, side) {
         (
             p,
-            kentos_geometry_core::jsmath::js_hypot(p.x - side.x, p.y - side.y),
+            kentos_geometry_core::jsmath::hypot(p.x - side.x, p.y - side.y),
         )
     } else {
         let n = entity_edges(target)
@@ -332,7 +332,7 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
         let d = given.unwrap_or_else(|| {
             offset_bounded::nearest(&target, point).map_or_else(
                 || through_distance(&target, point),
-                |(p, _)| kentos_geometry_core::jsmath::js_hypot(p.x - point.x, p.y - point.y),
+                |(p, _)| kentos_geometry_core::jsmath::hypot(p.x - point.x, p.y - point.y),
             )
         });
         sources.push((*uid).clone());

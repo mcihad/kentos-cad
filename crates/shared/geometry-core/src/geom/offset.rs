@@ -5,7 +5,7 @@ use crate::api::Op;
 use crate::geom::arc::norm_angle;
 use crate::geom::bulge::{bulge_arc, bulge_of_sweep, clean_bulge_path};
 use crate::geom::intersect::{circle_circle, line_circle_params, line_line};
-use crate::jsmath::{atan2, js_cmp, js_hypot, js_max, js_min, or, stable_sort};
+use crate::jsmath::{atan2, hypot, js_cmp, js_max, js_min, or, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -31,7 +31,7 @@ pub fn offset_path(pts: &[Vec2], d: f64, closed: bool) -> Vec<Vec2> {
         let b = pts[(i + 1) % n];
         let dx = b.x - a.x;
         let dy = b.y - a.y;
-        let l = js_hypot(dx, dy);
+        let l = hypot(dx, dy);
         if l < 1e-12 {
             continue;
         }
@@ -51,7 +51,7 @@ pub fn offset_path(pts: &[Vec2], d: f64, closed: bool) -> Vec<Vec2> {
     ) {
         None => out.push(s2.a), // collinear
         Some(h) => {
-            if js_hypot(h.p.x - corner.x, h.p.y - corner.y) > MITER_LIMIT * d.abs() {
+            if hypot(h.p.x - corner.x, h.p.y - corner.y) > MITER_LIMIT * d.abs() {
                 out.push(s1.b);
                 out.push(s2.a);
             } else {
@@ -87,7 +87,7 @@ pub fn side_of(pts: &[Vec2], closed: bool, p: Vec2) -> i32 {
         let dy = b.y - a.y;
         let l2 = or(dx * dx + dy * dy, 1.0);
         let t = js_max(0.0, js_min(1.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2));
-        let dd = js_hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+        let dd = hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
         if dd < best {
             best = dd;
             side = if dx * (p.y - a.y) - dy * (p.x - a.x) >= 0.0 {
@@ -167,7 +167,7 @@ pub fn offset_bulge_path(pts: &[Vec2], bulges: &[f64], d: f64, closed: bool) -> 
         } else {
             let dx = b.x - a.x;
             let dy = b.y - a.y;
-            let l = js_hypot(dx, dy);
+            let l = hypot(dx, dy);
             if l < 1e-12 {
                 continue;
             }
@@ -194,12 +194,12 @@ pub fn offset_bulge_path(pts: &[Vec2], bulges: &[f64], d: f64, closed: bool) -> 
     for k in 0..joins {
         let p1 = pieces[k];
         let p2 = pieces[(k + 1) % m];
-        if js_hypot(p1.b.x - p2.a.x, p1.b.y - p2.a.y) < 1e-9 {
+        if hypot(p1.b.x - p2.a.x, p1.b.y - p2.a.y) < 1e-9 {
             continue; // tangent continuation
         }
         let corner = corners[k];
         let mut hits = support_hits(&p1, &p2);
-        let dist = |u: &Vec2| js_hypot(u.x - corner.x, u.y - corner.y);
+        let dist = |u: &Vec2| hypot(u.x - corner.x, u.y - corner.y);
         stable_sort(&mut hits, &mut |u, v| js_cmp(dist(u) - dist(v), 0.0));
         match hits.first() {
             Some(&hit) if dist(&hit) <= MITER_LIMIT * d.abs() => {

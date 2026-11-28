@@ -12,7 +12,7 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, param_on, p
 use crate::geom::overlay::overlay;
 use crate::geom::region::{orient_ring, ring_area, ring_edges};
 use crate::geometry::Bounds;
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::ops::areas::areas_of_entity;
 use crate::ops::edges::entity_edges;
 use crate::vec2::Vec2;
@@ -81,7 +81,7 @@ pub struct Problem {
 }
 
 fn far(a: Vec2, b: Vec2) -> bool {
-    js_hypot(a.x - b.x, a.y - b.y) > TOL
+    hypot(a.x - b.x, a.y - b.y) > TOL
 }
 
 /// The first of two vertices one after another at one place (a closed ring's last and first too).
@@ -113,7 +113,7 @@ fn on_one_line(r: &Ring) -> bool {
     let mut pf = p0;
     let mut most = 0.0;
     for &p in &r.pts {
-        let d = js_hypot(p.x - p0.x, p.y - p0.y);
+        let d = hypot(p.x - p0.x, p.y - p0.y);
         if d > most {
             most = d;
             pf = p;
@@ -141,7 +141,7 @@ fn overlap(a: &Edge, b: &Edge) -> Option<(f64, Vec2)> {
     let (Edge::Seg { a: p, b: q }, Edge::Seg { a: r, b: s }) = (*a, *b) else {
         return None;
     };
-    let len = js_hypot(q.x - p.x, q.y - p.y);
+    let len = hypot(q.x - p.x, q.y - p.y);
     if len <= TOL {
         return None;
     }

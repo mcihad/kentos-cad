@@ -184,7 +184,7 @@ impl Out {
         });
         self.shift = crate::jsmath::js_max(
             self.shift,
-            crate::jsmath::js_hypot(to.x - from.x, to.y - from.y),
+            crate::jsmath::hypot(to.x - from.x, to.y - from.y),
         );
     }
 }

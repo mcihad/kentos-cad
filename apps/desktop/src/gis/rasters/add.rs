@@ -942,8 +942,8 @@ impl App {
         let pixel = match i.affine {
             Some([_, a, b, _, c, d]) => format!(
                 "{} × {} {}",
-                format.length_bare(kentos_geometry_core::jsmath::js_hypot(a, c)),
-                format.length_bare(kentos_geometry_core::jsmath::js_hypot(b, d)),
+                format.length_bare(kentos_geometry_core::jsmath::hypot(a, c)),
+                format.length_bare(kentos_geometry_core::jsmath::hypot(b, d)),
                 format.length_unit_label()
             ),
             None => "—".to_owned(),

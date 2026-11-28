@@ -13,7 +13,7 @@
 use crate::geom::bulge::bulge_arc;
 use crate::geom::intersect::{Edge, closest_on_edge, point_at as edge_point};
 use crate::geom::offset::{OffsetResult, offset_bulge_path};
-use crate::jsmath::{cos, js_hypot, js_max, js_min, sin, tan};
+use crate::jsmath::{cos, hypot, js_max, js_min, sin, tan};
 use crate::vec2::Vec2;
 
 /// A unit enum read and written as one of its words.
@@ -116,7 +116,7 @@ impl Step {
     fn tangent(&self, t: f64) -> Vec2 {
         match self.edge {
             Edge::Seg { a, b } => {
-                let l = js_hypot(b.x - a.x, b.y - a.y);
+                let l = hypot(b.x - a.x, b.y - a.y);
                 Vec2::new((b.x - a.x) / l, (b.y - a.y) / l)
             }
             Edge::Arc { a0, sweep, .. } => {
@@ -169,7 +169,7 @@ fn steps(part: &RoutePart) -> Vec<Step> {
                     },
                     arc.sweep.abs() * arc.r,
                 ),
-                None => (Edge::Seg { a, b }, js_hypot(b.x - a.x, b.y - a.y)),
+                None => (Edge::Seg { a, b }, hypot(b.x - a.x, b.y - a.y)),
             };
             let m = |k: usize| part.ms.get(k).copied().flatten();
             Step {
@@ -213,7 +213,7 @@ fn right_of(t: Vec2) -> Vec2 {
 }
 
 fn dist(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(a.x - b.x, a.y - b.y)
+    hypot(a.x - b.x, a.y - b.y)
 }
 
 /// Where a point is along a route: its closest place, the measure there
@@ -284,7 +284,7 @@ impl Walk {
         let s = &self.steps[k];
         let t = closest_on_edge(&s.edge, p).t;
         let foot = s.at(t);
-        let d = js_hypot(p.x - foot.x, p.y - foot.y);
+        let d = hypot(p.x - foot.x, p.y - foot.y);
         let (part, edge, along) = self.at[k];
         let rn = right_of(s.tangent(t));
         let side = ((p.x - foot.x) * rn.x + (p.y - foot.y) * rn.y) * self.dir;

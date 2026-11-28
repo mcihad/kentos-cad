@@ -10,7 +10,7 @@ use crate::entity::{Entity, Shape, area_parts, is_multi_part, join_parts};
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{BulgePath, bulge_at, clean_bulge_path, is_arc_bulge, reverse_bulge_path};
 use crate::geometry::dist_to_segment;
-use crate::jsmath::{PI, acos, atan, cos, js_hypot, js_max, js_min, sin, tan};
+use crate::jsmath::{PI, acos, atan, cos, hypot, js_max, js_min, sin, tan};
 use crate::op;
 use crate::ops::fillet::{CornerOp, CornerResult, corner_of_path};
 use crate::vec2::Vec2;
@@ -43,7 +43,7 @@ impl ToJson for Reshaped {
 }
 
 fn unit(a: Vec2, b: Vec2) -> Option<Vec2> {
-    let l = js_hypot(b.x - a.x, b.y - a.y);
+    let l = hypot(b.x - a.x, b.y - a.y);
     (l > 1e-12).then(|| Vec2::new((b.x - a.x) / l, (b.y - a.y) / l))
 }
 
@@ -165,7 +165,7 @@ pub fn corners_of_path_where(
         .collect();
     let edge_len = |i: usize| {
         let j = (i + 1) % n;
-        js_hypot(pts[j].x - pts[i].x, pts[j].y - pts[i].y)
+        hypot(pts[j].x - pts[i].x, pts[j].y - pts[i].y)
     };
     let eps = |l: f64| 1e-9 * js_max(1.0, l);
     // First each corner on its own edges.
@@ -443,7 +443,7 @@ fn simplify_path(
         keep[0] = true;
         let far = (1..n)
             .max_by(|&i, &j| {
-                let d = |k: usize| js_hypot(pts[k].x - pts[0].x, pts[k].y - pts[0].y);
+                let d = |k: usize| hypot(pts[k].x - pts[0].x, pts[k].y - pts[0].y);
                 d(i).total_cmp(&d(j))
             })
             .unwrap_or(1);
@@ -470,7 +470,7 @@ fn simplify_path(
         let back = (0..n).filter(|&i| !keep[i]).max_by(|&i, &j| {
             let d = |k: usize| {
                 kept.iter()
-                    .map(|q| js_hypot(pts[k].x - q.x, pts[k].y - q.y))
+                    .map(|q| hypot(pts[k].x - q.x, pts[k].y - q.y))
                     .fold(f64::INFINITY, js_min)
             };
             d(i).total_cmp(&d(j))

@@ -11,7 +11,7 @@
 
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_tangent};
 use crate::geometry::signed_area;
-use crate::jsmath::{TAU, cos, js_hypot, js_max, sin};
+use crate::jsmath::{TAU, cos, hypot, js_max, sin};
 use crate::vec2::Vec2;
 
 /// How far a mitre may reach from its vertex, in the wider half width.
@@ -66,7 +66,7 @@ fn edge_points(a: Vec2, b: Vec2, bulge: f64) -> Vec<Vec2> {
 
 /// An edge's strip from half width `h0` to `h1`.
 fn strip(a: Vec2, b: Vec2, bulge: f64, h0: f64, h1: f64) -> Option<Vec<Vec2>> {
-    if js_hypot(b.x - a.x, b.y - a.y) <= 0.0 {
+    if hypot(b.x - a.x, b.y - a.y) <= 0.0 {
         return None;
     }
     let Some(arc) = bulge_arc(a, b, bulge) else {
@@ -115,7 +115,7 @@ fn wedge(v: Vec2, tin: Vec2, hin: f64, tout: Vec2, hout: f64) -> Option<Vec<Vec2
     let d = Vec2::new(p2.x - p1.x, p2.y - p1.y);
     let s = (d.x * tout.y - d.y * tout.x) / cross;
     let m = Vec2::new(p1.x + tin.x * s, p1.y + tin.y * s);
-    let reach = js_hypot(m.x - v.x, m.y - v.y);
+    let reach = hypot(m.x - v.x, m.y - v.y);
     let ring = if s >= 0.0 && reach <= MITRE * js_max(hin, hout) {
         vec![v, p1, m, p2]
     } else {
@@ -247,7 +247,7 @@ mod tests {
         );
         let ring = &b.rings[0];
         for p in ring {
-            let r = js_hypot(p.x - 5.0, p.y);
+            let r = hypot(p.x - 5.0, p.y);
             assert!(
                 (r - 4.0).abs() < 1e-9 || (r - 6.0).abs() < 1e-9,
                 "{p:?} {r}"

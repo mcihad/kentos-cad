@@ -23,7 +23,7 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges};
 use crate::geom::region::{
     FaceIndex, intersect_areas, net_area, ring_edges, split_area, union_areas,
 };
-use crate::jsmath::{atan, js_hypot, js_max};
+use crate::jsmath::{atan, hypot, js_max};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -293,7 +293,7 @@ fn cut_path(pts: &[Vec2], b: &[f64], l: f64, p: Vec2) -> (Run, Run) {
 
 fn polyline_length(pts: &[Vec2]) -> f64 {
     pts.windows(2)
-        .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+        .map(|w| hypot(w[1].x - w[0].x, w[1].y - w[0].y))
         .sum()
 }
 
@@ -357,7 +357,7 @@ fn reshape_path(pts: &[Vec2], b: &[f64], sketch: &[Vec2]) -> Result<Shape, Resha
     let mut meetings: Vec<Meeting> = Vec::new();
     for m in found {
         if let Some(last) = meetings.last()
-            && js_hypot(m.p.x - last.p.x, m.p.y - last.p.y) <= 1e-9
+            && hypot(m.p.x - last.p.x, m.p.y - last.p.y) <= 1e-9
         {
             continue;
         }

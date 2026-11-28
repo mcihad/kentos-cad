@@ -20,7 +20,7 @@ use crate::Vec2;
 use crate::block::{Piece, PieceStroke};
 use crate::entity::Shape;
 use crate::geom::arch::{HEAD_MM, LABEL_MM, Level};
-use crate::jsmath::{js_hypot, js_max, js_min};
+use crate::jsmath::{hypot, js_max, js_min};
 use crate::text::TextAlign;
 
 /// Lengths, heights and areas closer than this are one, metres.
@@ -156,12 +156,12 @@ pub fn part_ring(pts: &[Vec2], spec: &RoofSpec, part: &Part) -> Option<Vec<Vec2>
                 .find(|f| inside(&f.ring, part.at))?;
             let k = edges.iter().position(|e| e.0 == face.edge)?;
             let (a, b) = (ring[k], ring[(k + 1) % n]);
-            let l = js_hypot(b.x - a.x, b.y - a.y);
+            let l = hypot(b.x - a.x, b.y - a.y);
             let along = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
             // Up the slope: the eaves' inward normal (counter-clockwise: its left).
             let up = Vec2::new(-along.y, along.x);
             let s = face.slope / 100.0;
-            (along, up, part.width, part.depth / js_hypot(1.0, s))
+            (along, up, part.width, part.depth / hypot(1.0, s))
         }
     };
     let (hw, hd) = (w / 2.0, d / 2.0);
@@ -298,7 +298,7 @@ fn ccw(pts: &[Vec2], slopes: &[Option<f64>]) -> (Vec<Vec2>, Edges) {
 /// A sloping edge's plane over its eaves: `z = c + dx·x + dy·y`, rising from the edge's line into the roof (its left,
 /// the eaves counter-clockwise) at `slope` per cent.
 fn plane(a: Vec2, b: Vec2, slope: f64) -> (f64, f64, f64) {
-    let len = js_hypot(b.x - a.x, b.y - a.y);
+    let len = hypot(b.x - a.x, b.y - a.y);
     let n = Vec2::new(-(b.y - a.y) / len, (b.x - a.x) / len);
     let s = slope / 100.0;
     (-s * (a.x * n.x + a.y * n.y), s * n.x, s * n.y)
@@ -327,14 +327,14 @@ fn clip(ring: &[Vec2], f: impl Fn(Vec2) -> f64) -> Vec<Vec2> {
     for p in out {
         if clean
             .last()
-            .is_none_or(|l| js_hypot(p.x - l.x, p.y - l.y) > EPS)
+            .is_none_or(|l| hypot(p.x - l.x, p.y - l.y) > EPS)
         {
             clean.push(p);
         }
     }
     while clean.len() > 1 {
         let (f0, l) = (clean[0], clean[clean.len() - 1]);
-        if js_hypot(f0.x - l.x, f0.y - l.y) <= EPS {
+        if hypot(f0.x - l.x, f0.y - l.y) <= EPS {
             clean.pop();
         } else {
             break;
@@ -379,7 +379,7 @@ fn convex(ring: &[Vec2]) -> bool {
             >= -EPS
                 * js_max(
                     1.0,
-                    js_hypot(b.x - a.x, b.y - a.y) * js_hypot(c.x - b.x, c.y - b.y),
+                    hypot(b.x - a.x, b.y - a.y) * hypot(c.x - b.x, c.y - b.y),
                 )
     })
 }
@@ -571,7 +571,7 @@ pub fn ridge_rise(pts: &[Vec2], spec: &RoofSpec) -> Result<f64, Problem> {
 }
 
 fn same(a: Vec2, b: Vec2) -> bool {
-    js_hypot(a.x - b.x, a.y - b.y) <= 1e-7
+    hypot(a.x - b.x, a.y - b.y) <= 1e-7
 }
 
 /// Whether `p` lies on an edge of the ring.
@@ -589,7 +589,7 @@ fn on_ring(ring: &[Vec2], p: Vec2) -> bool {
             return false;
         }
         let (qx, qy) = (a.x + dx * t, a.y + dy * t);
-        js_hypot(p.x - qx, p.y - qy) <= 1e-7
+        hypot(p.x - qx, p.y - qy) <= 1e-7
     })
 }
 
@@ -616,7 +616,7 @@ pub fn lines(pts: &[Vec2], spec: &RoofSpec) -> Result<Vec<RoofLine>, Problem> {
         let m = f.ring.len();
         for k in 0..m {
             let (a, b) = (f.ring[k], f.ring[(k + 1) % m]);
-            if js_hypot(b.x - a.x, b.y - a.y) <= 1e-7 {
+            if hypot(b.x - a.x, b.y - a.y) <= 1e-7 {
                 continue;
             }
             let mid = Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
@@ -793,7 +793,7 @@ pub(crate) fn pieces_at(pts: &[Vec2], spec: &RoofSpec, scale: f64, _level: Level
         // Down the face: from its edge's inward normal, backwards.
         let n = pts.len();
         let (a, b) = (pts[f.edge], pts[(f.edge + 1) % n]);
-        let l = js_hypot(b.x - a.x, b.y - a.y);
+        let l = hypot(b.x - a.x, b.y - a.y);
         let inward = if area2(pts) >= 0.0 {
             Vec2::new(-(b.y - a.y) / l, (b.x - a.x) / l)
         } else {
@@ -868,7 +868,7 @@ pub fn along_eaves(pts: &[Vec2], spec: &RoofSpec, d: f64) -> Vec<(usize, [Vec2; 
     // Each edge's outward normal.
     let normal = |i: usize| {
         let (a, b) = (pts[i], pts[(i + 1) % n]);
-        let l = js_max(js_hypot(b.x - a.x, b.y - a.y), EPS);
+        let l = js_max(hypot(b.x - a.x, b.y - a.y), EPS);
         if ccw {
             Vec2::new((b.y - a.y) / l, -(b.x - a.x) / l)
         } else {
@@ -888,7 +888,7 @@ pub fn along_eaves(pts: &[Vec2], spec: &RoofSpec, d: f64) -> Vec<(usize, [Vec2; 
             Vec2::new(e.x - c.x, e.y - c.y),
         );
         let den = r.x * s.y - r.y * s.x;
-        if den.abs() <= EPS * js_hypot(r.x, r.y) * js_hypot(s.x, s.y) {
+        if den.abs() <= EPS * hypot(r.x, r.y) * hypot(s.x, s.y) {
             return b;
         }
         let t = ((c.x - a.x) * s.y - (c.y - a.y) * s.x) / den;
@@ -972,7 +972,7 @@ pub fn downpipe_way(
     let mut best: Option<(f64, Vec2, Vec2)> = None;
     for i in (0..n).filter(|&i| spec.slopes[i].is_some()) {
         let (a, b) = (pts[i], pts[(i + 1) % n]);
-        let l = js_hypot(b.x - a.x, b.y - a.y);
+        let l = hypot(b.x - a.x, b.y - a.y);
         if l <= EPS {
             continue;
         }
@@ -984,7 +984,7 @@ pub fn downpipe_way(
         };
         let (px, py) = (part.at.x - a.x, part.at.y - a.y);
         let t = js_max(0.0, js_min(l, px * along.x + py * along.y));
-        let d = js_hypot(px - along.x * t, py - along.y * t);
+        let d = hypot(px - along.x * t, py - along.y * t);
         if best.is_none_or(|(bd, ..)| d < bd) {
             best = Some((d, along, out));
         }
@@ -1016,10 +1016,10 @@ fn edge_pieces(pts: &[Vec2], spec: &RoofSpec, scale: f64, h: f64) -> Vec<Piece> 
     // Its words along the longest line, read from below or from the right, on the side `side` (1 out, -1 in).
     let name = |lines: &[(usize, [Vec2; 2])], words: &str, side: f64| -> Option<Piece> {
         let (_, [a, b]) = lines.iter().max_by(|(_, p), (_, q)| {
-            js_hypot(p[1].x - p[0].x, p[1].y - p[0].y)
-                .total_cmp(&js_hypot(q[1].x - q[0].x, q[1].y - q[0].y))
+            hypot(p[1].x - p[0].x, p[1].y - p[0].y)
+                .total_cmp(&hypot(q[1].x - q[0].x, q[1].y - q[0].y))
         })?;
-        let l = js_max(js_hypot(b.x - a.x, b.y - a.y), EPS);
+        let l = js_max(hypot(b.x - a.x, b.y - a.y), EPS);
         let along = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
         let ccw = area2(pts) >= 0.0;
         let outward = if ccw {
@@ -1062,7 +1062,7 @@ fn edge_pieces(pts: &[Vec2], spec: &RoofSpec, scale: f64, h: f64) -> Vec<Piece> 
         let lines = along_eaves(pts, spec, -d);
         for (_, [a, b]) in &lines {
             out.push(narrow(segment(*a, *b)));
-            let l = js_hypot(b.x - a.x, b.y - a.y);
+            let l = hypot(b.x - a.x, b.y - a.y);
             if l <= EPS || step <= EPS {
                 continue;
             }
@@ -1120,7 +1120,7 @@ fn part_pieces(pts: &[Vec2], spec: &RoofSpec, h: f64) -> Vec<Piece> {
                 // The frame: each corner moved 5 cm in along both of the window's own sides.
                 let along = Vec2::new(ring[1].x - ring[0].x, ring[1].y - ring[0].y);
                 let down = Vec2::new(ring[3].x - ring[0].x, ring[3].y - ring[0].y);
-                let (la, ld) = (js_hypot(along.x, along.y), js_hypot(down.x, down.y));
+                let (la, ld) = (hypot(along.x, along.y), hypot(down.x, down.y));
                 if la > 2.0 * frame && ld > 2.0 * frame {
                     let (ua, ud) = (
                         Vec2::new(along.x / la * frame, along.y / la * frame),

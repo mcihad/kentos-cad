@@ -241,7 +241,7 @@ impl CornerTool {
     fn pulled_distance(&self, c: &Corner, cx: &Context<'_>) -> f64 {
         if matches!(c.site, Site::Curves { .. }) {
             return self.mouse.map_or(0., |p| {
-                kentos_geometry_core::jsmath::js_hypot(p.x - c.geom.at.x, p.y - c.geom.at.y)
+                kentos_geometry_core::jsmath::hypot(p.x - c.geom.at.x, p.y - c.geom.at.y)
             });
         }
         pulled_distance(&c.geom, self.mouse, cx.view.world_length(4.0))

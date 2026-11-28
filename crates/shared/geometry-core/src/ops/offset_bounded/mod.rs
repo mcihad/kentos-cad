@@ -12,7 +12,7 @@ use crate::entity::Shape;
 use crate::geom::ellipse::{closest_param, ellipse_derivative, ellipse_point, ellipse_sweep};
 use crate::geom::nurbs::{self, Nurbs, OwnedNurbs};
 use crate::geom::spline::catmull_rom_beziers;
-use crate::jsmath::{cos, js_hypot, js_max, js_min, sin};
+use crate::jsmath::{cos, hypot, js_max, js_min, sin};
 use crate::ops::curve_cuts::ellipse_of;
 use crate::vec2::Vec2;
 use bezier::Bezier;
@@ -44,7 +44,7 @@ struct Source {
     roundoff: f64,
 }
 fn point_distance(a: Vec2, b: Vec2) -> f64 {
-    js_hypot(a.x - b.x, a.y - b.y)
+    hypot(a.x - b.x, a.y - b.y)
 }
 fn side(t: Vec2, p: Vec2, q: Vec2, d: f64) -> f64 {
     if t.x * (q.y - p.y) - t.y * (q.x - p.x) > 0. {
@@ -181,7 +181,7 @@ fn source(s: &Shape, d: f64, through: Vec2) -> Result<Source, String> {
     let size = spans
         .iter()
         .flat_map(|b| b.0.iter())
-        .map(|p| js_hypot(p[0] / p[2], p[1] / p[2]))
+        .map(|p| hypot(p[0] / p[2], p[1] / p[2]))
         .fold(d, js_max);
     let magnitude = js_max(js_max(js_max(origin.x.abs(), origin.y.abs()), size), 1.);
     let roundoff = 256.

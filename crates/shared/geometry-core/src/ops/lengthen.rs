@@ -14,7 +14,7 @@ use crate::geom::ellipse::{
     EllipseGeom, ellipse_length, ellipse_sweep, is_full_ellipse, param_of_point,
 };
 use crate::geom::intersect::Edge;
-use crate::jsmath::{PI, TAU, atan2, cos, js_hypot, js_max, js_sign, or, sin};
+use crate::jsmath::{PI, TAU, atan2, cos, hypot, js_max, js_sign, or, sin};
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::ops::path::{nearest_s, path_of, sub_path};
@@ -348,7 +348,7 @@ fn lengthened(e: &Entity, at_end: bool, new_length: f64) -> Result<Entity, Why> 
             };
             match bulge_arc(pts[seg], pts[seg + 1], bulges[seg]) {
                 None => {
-                    let len = js_hypot(moving.x - fixed.x, moving.y - fixed.y);
+                    let len = hypot(moving.x - fixed.x, moving.y - fixed.y);
                     let k = (len + delta) / len;
                     let end = Vec2::new(
                         fixed.x + (moving.x - fixed.x) * k,
@@ -442,7 +442,7 @@ pub fn length_toward(e: &Shape, at_end: bool, p: Vec2) -> Option<f64> {
     match last {
         Edge::Seg { a, b } => {
             let (from, to) = if at_end { (a, b) } else { (b, a) };
-            let len = js_hypot(to.x - from.x, to.y - from.y);
+            let len = hypot(to.x - from.x, to.y - from.y);
             let t = ((p.x - from.x) * (to.x - from.x) + (p.y - from.y) * (to.y - from.y)) / len;
             Some(if t > len { before + t } else { inside })
         }
