@@ -10,9 +10,12 @@
 //! - **Axes:** the project's grids and the file's by their labels: the distance of the file's from the project's line
 //!   and the turn between them.
 //! - **Elements:** an element of the file and one of the drawing's model of the same class whose boxes stand within the
-//!   tolerance are the same element (matched); the file's other elements are set against every element of the drawing's
-//!   model (`kentos_ifc::clash`); the elements of the file's classes that neither match nor clash, on either side, are
-//!   said too.
+//!   tolerance are the same element (matched): the drawing's box as its frame is joined, or as drawn. The section model
+//!   joins the frame (docs/adr/8171 §2.1: a column cuts a beam, a slab holds what lies in it); another program joins it
+//!   by its own rules, a structural model's beam running over the columns: by the joined box alone, the section
+//!   building's 8 beams went unmatched and clashed with its columns and slab. The file's other elements are set against
+//!   every element of the drawing's model as joined (`kentos_ifc::clash`); the elements of the file's classes that
+//!   neither match nor clash, on either side, are said too.
 
 use std::path::Path;
 
@@ -237,6 +240,16 @@ fn check(doc: &Document, input: &UnderlayCheck) -> Result<(UnderlayChecked, Vec<
     let own_bodies: Vec<Body<'_>> =
         own.iter().enumerate().map(|(i, m)| Body { owner: i, positions: &m.vertices, triangles: &m.triangles }).collect();
     let own_boxes: Vec<Option<[f64; 6]>> = own_bodies.iter().map(clash::bounds).collect();
+    // The same elements' boxes as drawn, by their ids.
+    let unjoined = crate::arch_ifc::unjoined_model(doc);
+    let drawn: std::collections::HashMap<u128, [f64; 6]> = mesh::meshes(&unjoined)
+        .iter()
+        .filter(|m| matches!(m.kind, Kind::Element(_)))
+        .filter_map(|m| {
+            let body = Body { owner: 0, positions: &m.vertices, triangles: &m.triangles };
+            Some((m.id?, clash::bounds(&body)?))
+        })
+        .collect();
 
     // The file's bodies placed in the drawing.
     #[allow(clippy::type_complexity)]
@@ -262,7 +275,8 @@ fn check(doc: &Document, input: &UnderlayCheck) -> Result<(UnderlayChecked, Vec<
         if let Some(&i) = by_uid.iter().find(|&&i| {
             !own_taken[i]
                 && own_class(&own[i]).eq_ignore_ascii_case(class)
-                && own_boxes[i].as_ref().is_some_and(|b| same_box(b, &fbox, tolerance.max(1e-6)))
+                && (own_boxes[i].as_ref().into_iter().chain(own[i].id.and_then(|id| drawn.get(&id))))
+                    .any(|b| same_box(b, &fbox, tolerance.max(1e-6)))
         }) {
             own_taken[i] = true;
             file_matched[j] = true;

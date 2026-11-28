@@ -38,7 +38,7 @@ mod frame;
 #[path = "sections/ground.rs"]
 mod ground;
 use frame::{SlabAt, beam, column};
-pub use frame::MEMBER_ELEMENT;
+pub use frame::{MEMBER_ELEMENT, model, unjoined_model};
 
 /// The scale a section is drawn for (docs/adr/8042 §4, §6): the drawing's own (Çizim ölçeği), as its plans' words
 /// are; Mimarlar Odası's uygulama projesi 1/50 when the drawing has none. A section printed at another scale prints
@@ -320,8 +320,8 @@ fn floor_of(
         .map_or((0.0, None), |l| (l.2, l.3))
 }
 
-/// The model's solids for a section (docs/adr/8042 §3).
-pub fn model(doc: &Document) -> Model {
+/// The model's solids for a section (docs/adr/8042 §3), its frame joined (`frame::joins`) when `joined`.
+fn build(doc: &Document, joined: bool) -> Model {
     let mut m = Model {
         levels: levels(doc),
         ..Model::default()
@@ -381,7 +381,7 @@ pub fn model(doc: &Document) -> Model {
     for rain in std::mem::take(&mut m.rain) {
         rain_water(&rain, &mut m);
     }
-    frame::joins(doc, &mut m);
+    if joined { frame::joins(doc, &mut m); }
     m
 }
 

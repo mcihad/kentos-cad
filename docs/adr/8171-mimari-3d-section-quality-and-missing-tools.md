@@ -134,6 +134,12 @@ Her madde kendi bölümünü ekler: önce ve sonra resimleri, sınamalar, ölç�
     (dosya sınırının üstündeydi, 3334 → 3240 satır), `joins`.
   - `sections.rs`: `Model::structure` (döşemelerin taşıyıcı plakaları), `joins`'in çağrısı.
   - `crates/shared/ifc/src/quantities.rs`: kolonun iki yükseklikli gövdesinin miktarları.
+- **Sonradan bulunan gerileme (28 Kasım 2026):** MB-01'de altlık denetiminin sınamaları koşulmamıştı. Birleşimden beri
+  projenin kirişi kolonlarda kesildiği ve döşemenin altında durduğu için kutusu kısalıyordu. Statik modelin kirişi ise
+  kolonların üstünden kesintisiz geçiyor (0–12 m). Bu yüzden bölüm binasının 8 kirişi eşleşmiyor, kolon ve
+  döşemelerle "çakışıyordu" (27 yerine 19 eşleşme). Düzeltme ADR 8102 K163'te: eleman, birleşmiş kutusuyla ya da
+  çizildiği hâliyle eşleşir. Model bunun için birleşmemiş de kurulabilir (`sections::unjoined_model`,
+  `arch_ifc::unjoined_model`).
 
 ### MB-02 (27 Kasım 2026)
 

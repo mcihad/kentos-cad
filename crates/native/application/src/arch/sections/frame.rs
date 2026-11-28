@@ -15,6 +15,18 @@ use kentos_geometry_core::geom::region::{
 
 use super::*;
 
+/// The model's solids for a section (docs/adr/8042 §3), its frame joined: what the 3D view, the IFC and the drawn
+/// section read.
+pub fn model(doc: &Document) -> Model {
+    build(doc, true)
+}
+
+/// [`model`] with its columns and beams as drawn, not joined: an underlay's elements are recognised by them, another
+/// program joining its frame by its own rules (docs/adr/8102 §3; a structural model's beam runs over the columns).
+pub fn unjoined_model(doc: &Document) -> Model {
+    build(doc, false)
+}
+
 /// A slab as the section measures it: its rings, its top, its layers' thicknesses over and under its structure, its
 /// structure's thickness.
 pub(super) struct SlabAt {
