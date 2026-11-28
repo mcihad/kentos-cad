@@ -273,8 +273,9 @@ düzenlenir.
 ### Aşama 7 — Harness, belgeler ve kalan inceleme
 
 - [ ] **BK-70** (G2) Kılavuz §0 alan başına dosyalara bölünür; `TODOS.md`'nin biten bölümleri arşive.
-- [ ] **BK-71** (G3) Proje skill'leri (dilim kapatma, yeni komut, resim çekme) ve ajan tanımları; kökteki inceleme
-  dosyaları `docs/devir/`'e.
+- [~] **BK-71** (G3) Proje skill'leri ve ajan tanımları. Yazıldı: `.claude/skills/dilim-kapat`, `sunucu-db-sinamasi`,
+  `kod-incelemesi`; `.claude/agents/inceleyici.md` (salt okunur, Fable değil). Kalan: yeni komut skill'i (BK-21 tarifi
+  değiştirince), resim çekme skill'i, kökteki inceleme dosyalarının `docs/devir/`'e taşınması.
 - [ ] **BK-72** Sunucu, bulut istemcisi, eklenti konağı ve imza için aynı inceleme.
 
 ## Doğrulama
