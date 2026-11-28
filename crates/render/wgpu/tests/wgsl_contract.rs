@@ -2,8 +2,7 @@
 //! the same compiler wgpu runs, parses and validates the module; the Rust
 //! structs, attribute lists and pipelines agree with
 //! `shaders/wgsl/cad2d.layout.json`; and the WGSL agrees with both, as naga
-//! lays out its structs and types its entry points. The browser side of the
-//! check is `scripts/wgsl/browser-check.mjs`.
+//! lays out its structs and types its entry points.
 
 use std::collections::BTreeMap;
 use std::mem::{offset_of, size_of};

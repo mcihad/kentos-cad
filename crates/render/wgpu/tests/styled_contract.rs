@@ -4,7 +4,7 @@
 //! shared module and the native long-pattern extension (two bind groups: the
 //! frame with the atlas, then the style; Iced's device takes two); the
 //! uniforms, entry points, pipelines and vertex layouts the desktop builds are
-//! the contract's. The browser side is `scripts/wgsl/browser-check.mjs`.
+//! the contract's.
 
 use std::collections::BTreeMap;
 use std::mem::size_of;

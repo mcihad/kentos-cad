@@ -7,7 +7,7 @@
 // The pictures go to .run/gui-evidence/portal/ (CLAUDE.md: GUI evidence, never in Git).
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { launch, sleep } from '../../web/scripts/e2e/cdp.mjs';
+import { launch, sleep } from './cdp.mjs';
 
 const PORTAL = process.env.PORTAL_URL ?? 'http://127.0.0.1:5180/';
 const API = process.env.PORTAL_API ?? 'http://127.0.0.1:8797';

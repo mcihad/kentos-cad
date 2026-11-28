@@ -24,7 +24,7 @@ pub enum Kind {
 
 /// One of Desen's choices: its name in the prompt, what its menu entry
 /// says, what typing it gives, its icon and its wide sample in the menus
-/// (docs/adr/0186 §11; `scripts/ui/hatch_icons.py` draws both).
+/// (docs/adr/0186 §11).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Choice {
     pub name: String,

@@ -23,7 +23,6 @@ pnpm arch:deps           # yalnız bağımlılık yönü denetimi (ADR 0010, ARC
 cargo test -p kentos-desktop traces   # aynı izler masaüstünde, pencere açmadan, çekirdeklere paylaşılarak (ADR 0021)
 ./target/debug/kentos-cad kullan usage-parcel   # kullanım senaryosunu masaüstünde oynatıp adım adım resimle (.run/shots/kullanim; fixtures/interaction/README.md)
 scripts/usage/real/session.sh fixtures/interaction/real/daire-2p1.txt .run/gui-evidence/gercek-2p1 --modul mimari   # gerçek pencere: görünmez X ekranında (Xvfb) gerçek fare ve klavye olaylarıyla (XTEST), sahibin ayarlarının kopyasıyla; resimler ve KLM sayacı (scripts/usage/real/README.md, ADR 8000)
-python3 scripts/usage/compare.py usage-parcel   # iki platformun resimleri yan yana
 apps/desktop/scripts/cloud-live.sh   # masaüstünün bulut arayüzü gerçek kentosd ile (geliştirme veritabanı; görüntüler .run/shots/bulut-*; ADR 0041)
 cargo test -p kentos-desktop cloud::file_follow_tests::revision_screens -- --ignored --nocapture   # dosya projesinin revizyon resimleri, .run/shots/bulut-revizyon-* (ADR 0119)
 cargo test -p kentos-processing   # işlem araçlarının ortak durumları masaüstünde (fixtures/processing/v1, ADR 0084)
@@ -354,12 +353,10 @@ python3 scripts/fixtures/image_cases.py --check   # Resim ekle'nin çerçevesini
 KENTOS_SHOTS_ONLY=resim-ekle,resim-ekle-yazildi,resim-kirp,resim-kirpildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # resim nesnesinin resimleri, .run/shots/arac-resim-* (ADR 0192)
 python3 scripts/fixtures/edge_shift_cases.py --check   # Paralel kaydır'ın kenarlarını (dışarı ve içeri, saat yönü, delik, çoklu çizginin serbest ucu, harita koordinatları, irrasyonel boy, halkadaki yay, retler) ve hedef alanın uzaklığını kesirlerle ve 50 basamaklı mpmath ile bağımsız başvurudan denetle; durumlar fixtures/edge-shift/v1/cases.json (ADR 0191)
 KENTOS_SHOTS_ONLY=paralel-kaydir,paralel-kaydir-alan,paralel-kaydir-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Paralel kaydır'ın resimleri, .run/shots/arac-paralel-kaydir-* (ADR 0191)
-python3 scripts/ui/hatch_icons.py --check   # desenlerin ikonlarını ve Desen menülerinin geniş örneklerini (apps/web/src/ui/hatchIcons.ts) desenlerin tanımından yeniden üretip karşılaştır; değişince --check'siz yazar (ADR 0186 §11)
 KENTOS_SHOTS_ONLY=tarama-araci,tarama-desenler,tarama-coklu,tarama-iliskili,tarama-oznitelikler,tarama-desen-menusu,tarama-oznitelikler-desen cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # tarama eklerinin resimleri, .run/shots/arac-tarama-* (ADR 0186)
 python3 scripts/fixtures/leader_cases.py --check   # kılavuzun yerleşimini (ok başı, kol, not) kuraldan denetle (ADR 0146)
 python3 scripts/fixtures/annotation_scale_cases.py --check   # açıklamaların yüksekliklerini ve ölçek ya da genel yükseklik değişince izlemeyi bağımsız başvurudan denetle; durumlar fixtures/text/v1/scale.json (ADR 0205)
 python3 scripts/fixtures/dimension_ext_calls.py --check   # TypeScript'ten kaydedilmiş ölçü çağrılarının uzatma çizgilerini (ext) kayıtlı çizgilerinden denetle (ADR 0205 §6)
-python3 scripts/ui/arrow_icons.py --check   # kılavuzun ok uçlarının simgelerini (apps/web/src/ui/arrowIcons.ts) uçların tanımından yeniden üretip karşılaştır (ADR 0205 §7)
 python3 scripts/fixtures/annotation_scene.py --check   # ADR 0205 resimlerinin sahnesini (fixtures/interaction/v1/annotations.kcad) denetle
 cargo test -p kentos-desktop labels::annotation_screens -- --ignored --nocapture   # açıklamaların resimleri, .run/shots/aciklama-* (ADR 0205)
 python3 scripts/fixtures/dimension_cases.py --check   # yeni ölçü türlerinin yerleşimini kurallardan denetle (ADR 0147)
@@ -823,7 +820,6 @@ cargo test -p kentos-desktop second_crs::tests::screens -- --ignored --nocapture
 cargo test -p kentos-desktop calc::convert::tests::screens -- --ignored --nocapture   # Koordinat dönüştür penceresinin resimleri, .run/shots/donustur-* (ADR 0167 §4)
 python3 scripts/fixtures/point_dedupe_cases.py --check   # Çift noktaları ayıkla'nın gruplarını, ortalamasını, bağlı çizgilerini ve İçe aktar sonrası hedefini kurallardan denetle (ADR 0153 §5)
 cargo test --release -p kentos-geometry-core --test curve_perf -- --ignored --nocapture   # 2 000 eğri ve 500 elips arasında kenet, tıklama ve kesişim penceresi süreleri (ADR 0149 §5.3)
-node scripts/wgsl/browser-check.mjs   # paylaşılan WGSL'yi Chrome WebGPU'da derler ve çizer
 cargo test -p kentos-render-wgpu --test styled_precision   # stilli çizimin uzak karolarda hassasiyeti, gölgelendiricinin float32 adımlarıyla (ADR 0157)
 KENTOS_GPU_TESTS=1 cargo test -p kentos-render-wgpu --test gpu   # gerçek GPU'da hassasiyet
 nice -n 10 bash scripts/perf/rebuild-times.sh [rust|wasm|all]   # gerçek bir düzenlemeden sonra yeniden derleme süreleri: test ikilileri, masaüstü, WASM'ın iki profili (ADR 0170)

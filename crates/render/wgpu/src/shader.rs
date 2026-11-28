@@ -1,9 +1,7 @@
 //! The shared WGSL (`shaders/wgsl`, TODOS.md REN-04/05) as this crate compiles
 //! it. WGSL has no includes: a module is its source files joined in the order
 //! the layout file lists them (`cad2d.layout.json` → `sources`). The common
-//! parts (frame, colour, marks) come first, the pipelines' entry points after;
-//! the browser check (`scripts/wgsl/browser-check.mjs`) joins the same files
-//! the same way.
+//! parts (frame, colour, marks) come first, the pipelines' entry points after.
 
 /// The module's source files: path under `shaders/wgsl`, and text.
 pub const SOURCES: [(&str, &str); 7] = [

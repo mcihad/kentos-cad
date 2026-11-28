@@ -289,7 +289,10 @@ düzenlenir.
 - [ ] **BK-22** (B3) İşleyici iskeleti: `Result → CommandResult` dönüşümü ve `checks::fail` ortak; `create_command!`
   genellenir.
 - [ ] **BK-23** (B4) Masaüstü kataloğu tek dosyada; birleşmeden önceki ve sonraki kataloğun eşitliği sınamayla
-  kanıtlanır. `PORTED` BK-32'nin işleyici tablosundan türer.
+  kanıtlanır. `PORTED` BK-32'nin işleyici tablosundan türer. Taban dosyası bugün `docs/inventory/web.json`'dır
+  (web'in dondurulmuş envanteri; ADR 9402 §4): adı ve yeri bu maddede değişir. Ok ucu ve desen ikonlarının
+  üreteçleri web'in dosyalarına yazdığı için silindi (son hâlleri `8e89a663d`'de); ikonlar tek katalogda tutulur,
+  kuraldan yeniden üretmek gerekirse üreteç kataloğa yazacak biçimde geri getirilir.
 - [ ] **BK-24** (B5) Araç listesi tek tablo.
 - [ ] **BK-25** (G1) Aşama 8'e taşındı: BK-82 (komut kataloğu) ve BK-83 (TypeScript yalnız Bulut için).
 
@@ -366,9 +369,15 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   yol tek yol. Bağımlılık bekçisi ortak kitaplıkları yalnız ana makine hedefinde denetler (85 crate × 108 hedef →
   76 × 76); tarayıcı bağımlılıklarının yasağı duruyor. Kanıt: çalışma alanının tamamı bütün hedefleriyle derlendi;
   dokunulan crate'lerin sınamaları yeşil.
-- [ ] **BK-85 — `apps/web` silinir.** 5 535 izlenen dosya. pnpm çalışma alanı ve kilit dosyası, `.gitignore`,
-  yalnız web'e yazan ya da web'in düzeneğini kullanan betikler (`scripts/ui/arrow_icons.py`, `hatch_icons.py`,
-  `scripts/wgsl/browser-check.mjs`). Bekçi: `apps/web` ve `crates/wasm` geri gelemez (`make guard`).
+- [x] **BK-85 — `apps/web` silindi.** Kalan 5 472 izlenen dosya ve klasördeki derleme çıktıları (151 MB). Portalın
+  ekran resmi betiklerinin kullandığı tarayıcı sürücüsü (`cdp.mjs`) portala taşındı. Yalnız web'e hizmet eden dört
+  betik silindi: `scripts/ui/arrow_icons.py`, `hatch_icons.py` (web'in TypeScript dosyalarına yazıyordu),
+  `scripts/wgsl/browser-check.mjs` (ortak WGSL'yi tarayıcıda derliyordu), `scripts/usage/compare.py` (iki platformun
+  resimlerini yan yana koyuyordu). pnpm çalışma alanında tek paket portal; kilit dosyasından yalnız web'in bölümü
+  çıktı. Yeni bekçi `scripts/dev/removed_paths.py` (`make guard`): iki klasör geri gelemez; kaynakta onları anan
+  satırların sayısı (`apps/web` 484, `wasm` 319) yalnız azalır. Kanıt: çalışma alanı bütün hedefleriyle derlendi;
+  masaüstü çekirdeğinin ve dört modül paketinin bütün sınamaları koşuldu (çekirdekte bu daldan önce kırmızı olan iki
+  sınama dışında yeşil); portalın tür denetimi, sınamaları ve paketi değişmedi; SDK ve manifest denetimleri yeşil.
 - [ ] **BK-86 — Katalogda `web` konağı.** 24 komutun konağı `web` ve `desktop`. Konak listesinden `web` çıkar;
   katalog ve SDK yeniden üretilir. Sunucunun tarayıcı istemcisi (`x-kentos-client: web`, `Client::Web`) kalır: o
   portaldır.

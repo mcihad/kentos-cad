@@ -8,7 +8,8 @@
 # sırayla çalışır: iki terminalden aynı anda başlatılırsa ikincisi bekler, makine
 # kilitlenmez (CLAUDE.md §2). Kilitsiz çalıştırmak için: make test-rust HEAVY=
 #
-# Web uygulaması donduruldu (ADR 0228, F3): apps/web kodu durur, hedefleri (dev, build, e2e, envanter…) yoktur.
+# Web uygulaması ve WASM bağlayıcıları 28 Kasım 2026'da kaldırıldı (ADR 9402); tarayıcıda çalışan tek program bulut
+# portalıdır (apps/portal).
 #
 # Değiştirilebilir değerler (örnek: make dev-api API_PORT=8788):
 #   PORTAL_PORT   bulut portalı geliştirme sunucusu (5173; pnpm portal)
@@ -214,9 +215,10 @@ GUARDS := "node scripts/arch/deps.mjs" \
 	"python3 scripts/dev/source_size.py" \
 	"python3 scripts/dev/module_deps.py --check" \
 	"python3 scripts/cad/manifest.py --check" \
+	"python3 scripts/dev/removed_paths.py" \
 	"cargo fmt --all -- --check -l"
 
-guard: ## Derleme istemeyen bütün bekçiler: bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, biçim (ADR 9400)
+guard: ## Derleme istemeyen bütün bekçiler: bağımlılık yönü, kaynak boyu, modül bağları, CAD manifesti, kaldırılanlar, biçim (ADR 9400, 9402)
 	@fail=0; \
 	for step in $(GUARDS); do \
 	  echo "• $$step"; $$step || fail=1; \

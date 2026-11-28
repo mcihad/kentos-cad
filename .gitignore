@@ -23,10 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# e2e screenshots
-apps/web/scripts/e2e/out
-apps/web/scripts/showcase/out/
-
 # GUI evidence stays local; manifests and model fixtures remain versioned.
 # New captures belong under .run/gui-evidence/ (already ignored below).
 /docs/baseline/**/*.png
@@ -37,15 +33,6 @@ apps/web/scripts/showcase/out/
 
 # Rust
 /target
-# WASM build output (pnpm rust:wasm, rust:wasm:formats, rust:wasm:dxf, rust:wasm:ncz, rust:wasm:svg)
-apps/web/src/wasm/pkg/
-apps/web/src/io/pkg/
-apps/web/src/io/dxf/pkg/
-apps/web/src/io/ncz/pkg/
-apps/web/src/style/svg/pkg/
-apps/web/src/product/sheet/pkg/
-apps/web/src/io/services/pkg/
-apps/web/src/io/raster/pkg/
 
 # Local server credentials (kentosd db-setup writes them; never committed)
 .env.local

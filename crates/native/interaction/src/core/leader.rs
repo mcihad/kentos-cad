@@ -48,8 +48,7 @@ const LEAST_BOX_PX: f64 = 8.0;
 /// The arrowheads in Ok's menu (docs/adr/0146 §7, 0205 §7): the value
 /// (none: the filled triangle, the field's absence), its name as the prompt
 /// writes and the user types it (its label typed is read too), its menu
-/// label and its icon (drawn from its shape, scripts/ui/arrow_icons.py). The
-/// web's `LEADER_ARROW_ROWS`.
+/// label and its icon (drawn from its shape).
 pub const ARROWS: [(Option<LeaderArrow>, &str, &str, &str); 14] = [
     (None, "dolu", "Dolu üçgen", "leaderArrowFilled"),
     (

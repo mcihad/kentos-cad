@@ -11,7 +11,7 @@
 // .run/gui-evidence/kullanim-9194/ (never in Git). Chrome: $CHROME_BIN, else the one in /Applications.
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { launch, sleep } from '../../web/scripts/e2e/cdp.mjs';
+import { launch, sleep } from './cdp.mjs';
 
 const ROOT = join(new URL('.', import.meta.url).pathname, '../../..');
 const PORTAL = process.env.PORTAL_URL ?? 'http://127.0.0.1:5180/';

@@ -4,9 +4,7 @@
 //! (fixtures/interaction/v1, its README): the steps a user takes, with
 //! `{"shot": "ad"}` steps where a picture is wanted. The trace's
 //! expectations are checked on the way and said, so using the app and
-//! testing it are one run; one that does not hold ends it with status 1, as
-//! on the web, which plays the same file (`apps/web/scripts/e2e/use.mjs`);
-//! `scripts/usage/compare.py` puts the two platforms' pictures side by side.
+//! testing it are one run; one that does not hold ends it with status 1.
 //!
 //! Each size and theme plays the scenario from its start in a new app. The
 //! pictures are `masaustu-<iz>-<nn>-<ad>-<G>x<Y>[-acik].png`, `nn` the

@@ -3,9 +3,8 @@
 //! twins of the contract: the frame uniform, one vertex or instance struct per
 //! pipeline, their attribute lists and the pipelines themselves. Tests hold
 //! them to the JSON and to the WGSL as naga lays it out
-//! (`tests/wgsl_contract.rs`); a browser builds the same pipelines from the
-//! JSON (`scripts/wgsl/browser-check.mjs`). Changing a field here means
-//! changing all three and raising the version.
+//! (`tests/wgsl_contract.rs`). Changing a field here means changing the JSON
+//! and the WGSL with it and raising the version.
 
 use bytemuck::{Pod, Zeroable};
 
