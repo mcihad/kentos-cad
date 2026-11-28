@@ -79,7 +79,7 @@ cargo test -p kentos-desktop ribbon_keys::screens -- --ignored --nocapture   # �
 KENTOS_SNAPSHOT_BACKEND=wgpu cargo test -p kentos-desktop icons::screens -- --ignored --nocapture   # küçük ikonların kenarları (14, 16, 20 px, iki tema), .run/shots/ikon-kenarlari.png (ADR 0054'ün 12 Ekim eki)
 cargo test -p kentos-desktop icon_tour -- --ignored --nocapture   # ikon turu: şeridin açılır listeleri, katmanın, proje türünün ve paftanın menüleri, .run/shots/ikon-turu (KENTOS_SHOTS_ONLY=daire,kose)
 KENTOS_SNAPSHOT_BACKEND=wgpu KENTOS_SHOTS_ONLY=olc,izle cargo test -p kentos-desktop style::svgedit::screens -- --ignored --nocapture   # SVG düzenleyicisi resimleri, .run/shots/svge-* (değişken yoksa bütün durumlar; altlık ve izleme wgpu ister; ADR 0095)
-KENTOS_WRITE_SETTINGS=1 cargo test -p kentos-contracts settings   # ayar şeması değişince settingsSchema.json'u yeniden yaz (ADR 0023)
+KENTOS_WRITE_SETTINGS=1 cargo test -p kentos-contracts settings   # ayar şeması değişince catalog/v1/settings-schema.json'u yeniden yaz (ADR 0023)
 cargo run -q -p kentos-kcad --bin kcad -- inspect|validate|sniff DOSYA   # KCAD v2 dosyasını incele (ADR 0025)
 python3 tools/kcad/kcad.py validate DOSYA   # bağımsız Python okuyucusu
 python3 scripts/fixtures/kcad_v2_reference.py --check   # örnek dosyaları bağımsız yazıcıyla denetle

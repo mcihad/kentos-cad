@@ -45,7 +45,7 @@ ROOT = Path(__file__).resolve().parents[2]
 # The catalog's queries: commands that write nothing (docs/adr/0741 §1).
 QUERIES = {
     c["id"]
-    for c in json.loads((ROOT / "apps/web/src/contracts/generated/commandCatalog.json").read_text("utf-8"))["commands"]
+    for c in json.loads((ROOT / "catalog/v1/commands.json").read_text("utf-8"))["commands"]
     if c.get("effect") == "query"
 }
 # Read the actual persisted metadata, independently of the command being tested.

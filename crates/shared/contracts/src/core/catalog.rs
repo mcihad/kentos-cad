@@ -20,7 +20,7 @@ pub const CATALOG_FORMAT: &str = "kentos.commands";
 /// schema whole by itself (an MCP tool's, a Python command's).
 pub const CATALOG_VERSION: u32 = 1;
 /// The schemas' definitions are the catalog's, once each, in its top-level `$defs` (docs/adr/0731): the file
-/// `commandCatalog.json`. A schema's `#/$defs/Name` names one there, as JSON Schema reads a reference in a schema
+/// `catalog/v1/commands.json`. A schema's `#/$defs/Name` names one there, as JSON Schema reads a reference in a schema
 /// embedded in a document without an `$id` of its own.
 pub const CATALOG_SHARED_VERSION: u32 = 2;
 
@@ -104,7 +104,7 @@ fn reached<'a>(
 
 impl CommandCatalog {
     /// The catalog with its schemas' definitions hoisted into its own `$defs`, each once (version 2,
-    /// docs/adr/0731): what `commandCatalog.json` holds. Err names a definition two schemas give different
+    /// docs/adr/0731): what `catalog/v1/commands.json` holds. Err names a definition two schemas give different
     /// bodies under one name (two types of one name: the file could not say both).
     pub fn shared(&self) -> Result<CommandCatalog, String> {
         let mut out = self.clone();

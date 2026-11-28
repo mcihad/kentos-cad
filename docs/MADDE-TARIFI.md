@@ -380,7 +380,7 @@ Birden çok ajan aynı makinede çalışırken:
     - `tools/kcad/kcad.py`, `scripts/fixtures/kcad_v2_reference.py`.
   - Birleştirildikten sonra yeniden üretilir, elle birleştirilmez:
     - `docs/inventory/web.{json,md}` (`pnpm inventory`),
-    - `apps/web/src/contracts/generated/commandCatalog.json` ve TS türleri (`cargo test -p kentos-contracts`, `KENTOS_WRITE_CATALOG=1`),
+    - `catalog/v1/commands.json` (`KENTOS_WRITE_CATALOG=1 cargo test -p kentos-commands catalog`),
     - `apps/desktop/ported.json` (`KENTOS_WRITE_PORTED=1 … ported`),
     - `fixtures/kcad/v2/expected.json` ve örnek dosyalar (`kcad_v2_reference.py`),
     - Python SDK'nın üretilen dosyaları (`scripts/python/sdk.py`),

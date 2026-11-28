@@ -1,11 +1,10 @@
 //! Typed settings (TODOS.md §7 `SET-01..05`, docs/adr/0023): one schema for
 //! every host. Each setting has a stable key, a type and domain, a default, a
 //! unit, the scope it lives in, the hosts that use it, a version, Turkish
-//! texts, a sensitive flag and how a change takes effect. The web app (in
-//! TypeScript, from the generated `settingsSchema.json`) and the desktop app
-//! (natively, from [`settings_schema`]) validate, resolve and store settings
-//! by the same rules and report the same error codes; both run the shared
-//! cases in `fixtures/settings/v1`.
+//! texts, a sensitive flag and how a change takes effect. Every host
+//! validates, resolves and stores settings by the same rules and reports the
+//! same error codes, from [`settings_schema`]; the shared cases are
+//! `fixtures/settings/v1`.
 //!
 //! What is here and what is not:
 //! - the schema ([`settings_schema`]), validation ([`SettingDescriptor::validate`],
@@ -16,8 +15,8 @@
 //!   sample counts) are the host's (docs/adr/0023).
 //!
 //! `cargo test -p kentos-contracts` compares the schema with
-//! `apps/web/src/contracts/generated/settingsSchema.json` (and the settings
-//! file's JSON Schema with `settingsFile.schema.json`); after a deliberate
+//! `catalog/v1/settings-schema.json` (and the settings
+//! file's JSON Schema with `catalog/v1/settings-file.schema.json`); after a deliberate
 //! change, `KENTOS_WRITE_SETTINGS=1 cargo test -p kentos-contracts settings`
 //! rewrites them (read the diff before committing).
 
@@ -40,7 +39,7 @@ pub use schema::settings_schema;
 /// entry, the desktop's file and the export are all this.
 pub const SETTINGS_FORMAT: &str = "kentos.settings";
 pub const SETTINGS_VERSION: u32 = 1;
-/// The schema document (`settingsSchema.json`).
+/// The schema document (`catalog/v1/settings-schema.json`).
 pub const SETTINGS_SCHEMA_FORMAT: &str = "kentos.settings-schema";
 pub const SETTINGS_SCHEMA_VERSION: u32 = 1;
 

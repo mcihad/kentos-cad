@@ -2,7 +2,7 @@
 //! `kentos_contracts::catalog`'s.
 //!
 //! `cargo test -p kentos-commands` compares the catalog with
-//! `apps/web/src/contracts/generated/commandCatalog.json` and fails on a
+//! `catalog/v1/commands.json` and fails on a
 //! difference; after a deliberate change, `KENTOS_WRITE_CATALOG=1` rewrites
 //! the file (read the diff before committing). The file holds the catalog's
 //! shared form (`CommandCatalog::shared`, docs/adr/0731): each definition once,
@@ -2166,8 +2166,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn catalog_file() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../../apps/web/src/contracts/generated/commandCatalog.json")
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../catalog/v1/commands.json")
     }
 
     #[test]

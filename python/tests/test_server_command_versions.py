@@ -90,7 +90,7 @@ class ServerVersions(unittest.TestCase):
         sys.modules[spec.name] = module
         try:
             spec.loader.exec_module(module)
-            catalog = json.loads((ROOT / "apps/web/src/contracts/generated/commandCatalog.json").read_text())
+            catalog = json.loads((ROOT / "catalog/v1/commands.json").read_text())
             v1 = copy.deepcopy(next(c for c in catalog["commands"] if c["id"] == "project.changes" and c["version"] == 1))
             v2 = copy.deepcopy(v1)
             v2["version"] = 2

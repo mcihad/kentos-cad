@@ -1,6 +1,6 @@
 //! The settings of this version, in the order the settings windows show
-//! them. The single source: the web reads the generated
-//! `settingsSchema.json`, the desktop this function.
+//! them. The single source is this function; `catalog/v1/settings-schema.json`
+//! is its written form, held to it by a test.
 //!
 //! Scopes follow the web's stores as they were (docs/adr/0023): what the web
 //! kept in `kentos.prefs.v1` is `user`, its status bar toggles are `session`,

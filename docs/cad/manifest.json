@@ -6,7 +6,7 @@
   "additions": "catalog/v1/additions.json",
   "ribbon": "catalog/v1/ribbon.json",
   "operations": "catalog/v1/operations.json",
-  "catalog": "apps/web/src/contracts/generated/commandCatalog.json",
+  "catalog": "catalog/v1/commands.json",
   "equivalents": "apps/desktop/equivalents.json"
  },
  "levels": {

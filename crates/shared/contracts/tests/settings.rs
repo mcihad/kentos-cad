@@ -492,12 +492,12 @@ fn every_code_and_reason_has_its_message() {
 
 fn generated(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../apps/web/src/contracts/generated")
+        .join("../../../catalog/v1")
         .join(name)
 }
 
-/// The web reads the schema from `settingsSchema.json`; external tools can
-/// check a settings file with `settingsFile.schema.json`.
+/// The schema as a file is `catalog/v1/settings-schema.json`; external tools can
+/// check a settings file with `catalog/v1/settings-file.schema.json`.
 #[test]
 fn generated_settings_files_are_current() {
     let schema_text = format!(
@@ -511,8 +511,8 @@ fn generated_settings_files_are_current() {
     );
     let write = std::env::var("KENTOS_WRITE_SETTINGS").as_deref() == Ok("1");
     for (name, text) in [
-        ("settingsSchema.json", schema_text),
-        ("settingsFile.schema.json", file_schema),
+        ("settings-schema.json", schema_text),
+        ("settings-file.schema.json", file_schema),
     ] {
         let path = generated(name);
         if write {

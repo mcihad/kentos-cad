@@ -9,7 +9,7 @@ use serde_json::Value;
 /// The longest input text before it is cut with “…”.
 const INPUT_WIDTH: usize = 240;
 
-/// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
+/// The product commands' Turkish titles, the catalog's (`catalog/v1/commands.json`;
 /// a test holds them to it).
 pub(crate) const TITLES: [(&str, &str); 505] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
@@ -1107,7 +1107,7 @@ mod tests {
     #[test]
     fn the_titles_are_the_catalog_s() {
         let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../web/src/contracts/generated/commandCatalog.json");
+            .join("../../catalog/v1/commands.json");
         let text = std::fs::read_to_string(path).expect("the catalog");
         let catalog: Value = serde_json::from_str(&text).expect("the catalog reads");
         let local: Vec<(String, String)> = catalog["commands"]

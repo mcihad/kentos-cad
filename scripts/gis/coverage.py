@@ -2,8 +2,8 @@
 """The coverage matrix of commands and processing tools (docs/adr/0548; plan/gis.md CBS-41): not command names alone but
 operation + option + data type + host, each cell with the shared cases that exercise it.
 
-Product commands (apps/web/src/contracts/generated/commandCatalog.json: the Rust catalog kentos-commands writes and its
-tests hold, KENTOS_WRITE_CATALOG=1; only its folder is the frozen web app's):
+Product commands (catalog/v1/commands.json: the Rust catalog kentos-commands writes and its tests hold,
+KENTOS_WRITE_CATALOG=1):
 - hosts: masaüstü (the catalog's `desktop` host), başsız (`headless`), Python (every command is a `kentos.cad` call,
   scripts/python/sdk.py), MCP (every command with a desktop host is a tool, crates/native/mcp/src/tools.rs), sunucu;
 - options: the input schema's choice points: a tagged union's variant (`kind: "distance"`), a string enum's value, a
@@ -36,7 +36,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-CATALOG = ROOT / "apps/web/src/contracts/generated/commandCatalog.json"
+CATALOG = ROOT / "catalog/v1/commands.json"
 CASES = [ROOT / "fixtures/commands/v1", ROOT / "fixtures/commands/v1/desktop"]
 PROCESSING = ROOT / "fixtures/processing/v1"
 EQUIVALENCE = ROOT / "crates/native/processing/tests/cases/equivalence.rs"
