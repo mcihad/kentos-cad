@@ -11,20 +11,25 @@
 //! latitude first), `EPSG:n` is east first. Coordinates come out east and
 //! north.
 
+use std::cell::Cell;
+
 use roxmltree::Node;
 use serde_json::{Map, Value as Json, json};
 
 use crate::caps::{attr, text_of, xml};
 use crate::crs::{Axis, axis_order, crs_name};
 
-/// How a geometry's numbers are read: its dimension and whether its axes swap.
+/// How a geometry's numbers are read: its dimension and whether its axes swap; and whether one of its coordinates
+/// did not read (`bad`: not a number, or a list that ends in the middle of a position). Such a geometry is not given:
+/// reading on would place every later coordinate one along (docs/adr/9401 §3).
 #[derive(Clone, Copy)]
-struct Reading {
+struct Reading<'a> {
     dim: usize,
     swap: bool,
+    bad: &'a Cell<bool>,
 }
 
-fn reading_of(n: Node<'_, '_>, parent: Reading) -> Reading {
+fn reading_of<'a>(n: Node<'_, '_>, parent: Reading<'a>) -> Reading<'a> {
     let mut r = parent;
     if let Some(name) = attr(n, "srsName") {
         let upper = name.to_ascii_uppercase();
@@ -40,14 +45,21 @@ fn reading_of(n: Node<'_, '_>, parent: Reading) -> Reading {
     r
 }
 
-fn numbers(text: &str) -> Vec<f64> {
+/// The numbers of a list; one that is not a finite number marks the reading bad.
+fn numbers(text: &str, bad: &Cell<bool>) -> Vec<f64> {
     text.split(|c: char| c.is_whitespace() || c == ',')
         .filter(|s| !s.is_empty())
-        .filter_map(|s| s.parse::<f64>().ok())
+        .filter_map(|s| {
+            let v = s.parse::<f64>().ok().filter(|v| v.is_finite());
+            if v.is_none() {
+                bad.set(true);
+            }
+            v
+        })
         .collect()
 }
 
-fn position(nums: &[f64], r: Reading) -> Json {
+fn position(nums: &[f64], r: Reading<'_>) -> Json {
     let (a, b) = (nums[0], nums[1]);
     let (x, y) = if r.swap { (b, a) } else { (a, b) };
     match nums.get(2).filter(|_| r.dim == 3) {
@@ -57,20 +69,26 @@ fn position(nums: &[f64], r: Reading) -> Json {
 }
 
 /// A list of positions under `n` (`posList`, `pos`s, `coordinates`, `coord`s).
-fn positions(n: Node<'_, '_>, r: Reading) -> Vec<Json> {
+fn positions(n: Node<'_, '_>, r: Reading<'_>) -> Vec<Json> {
     let r = reading_of(n, r);
     let mut out = Vec::new();
     for c in n.children().filter(Node::is_element) {
         let cr = reading_of(c, r);
         match c.tag_name().name() {
             "posList" => {
-                let nums = numbers(&text_of(c).unwrap_or_default());
+                let nums = numbers(&text_of(c).unwrap_or_default(), cr.bad);
+                if nums.len() % cr.dim != 0 {
+                    cr.bad.set(true);
+                }
                 for p in nums.chunks_exact(cr.dim) {
                     out.push(position(p, cr));
                 }
             }
             "pos" => {
-                let nums = numbers(&text_of(c).unwrap_or_default());
+                let nums = numbers(&text_of(c).unwrap_or_default(), cr.bad);
+                if nums.len() < 2 {
+                    cr.bad.set(true);
+                }
                 if nums.len() >= 2 {
                     out.push(position(
                         &nums,
@@ -92,14 +110,24 @@ fn positions(n: Node<'_, '_>, r: Reading) -> Vec<Json> {
                 {
                     let nums: Vec<f64> = tuple
                         .split(cs)
-                        .filter_map(|s| s.trim().parse().ok())
+                        .filter_map(|s| {
+                            let v = s.trim().parse::<f64>().ok().filter(|v| v.is_finite());
+                            if v.is_none() {
+                                cr.bad.set(true);
+                            }
+                            v
+                        })
                         .collect();
+                    if nums.len() < 2 {
+                        cr.bad.set(true);
+                    }
                     if nums.len() >= 2 {
                         out.push(position(
                             &nums,
                             Reading {
                                 dim: nums.len().min(3),
                                 swap: false,
+                                bad: cr.bad,
                             },
                         ));
                     }
@@ -112,6 +140,8 @@ fn positions(n: Node<'_, '_>, r: Reading) -> Vec<Json> {
                         Some(z) => json!([x, y, z]),
                         None => json!([x, y]),
                     });
+                } else {
+                    cr.bad.set(true);
                 }
             }
             "Point" => out.extend(positions(c, cr)),
@@ -122,7 +152,7 @@ fn positions(n: Node<'_, '_>, r: Reading) -> Vec<Json> {
 }
 
 /// A ring element's positions (LinearRing, or a Ring of curve members).
-fn ring(n: Node<'_, '_>, r: Reading) -> Vec<Json> {
+fn ring(n: Node<'_, '_>, r: Reading<'_>) -> Vec<Json> {
     let r = reading_of(n, r);
     let mut out = positions(n, r);
     if out.is_empty() {
@@ -139,7 +169,7 @@ fn ring(n: Node<'_, '_>, r: Reading) -> Vec<Json> {
     out
 }
 
-fn polygon(n: Node<'_, '_>, r: Reading) -> Option<Vec<Vec<Json>>> {
+fn polygon(n: Node<'_, '_>, r: Reading<'_>) -> Option<Vec<Vec<Json>>> {
     let r = reading_of(n, r);
     let mut rings = Vec::new();
     for c in n.children().filter(Node::is_element) {
@@ -168,7 +198,7 @@ fn polygon(n: Node<'_, '_>, r: Reading) -> Option<Vec<Vec<Json>>> {
 }
 
 /// A GML geometry element as GeoJSON's geometry.
-fn geometry(n: Node<'_, '_>, parent: Reading) -> Option<Json> {
+fn geometry(n: Node<'_, '_>, parent: Reading<'_>) -> Option<Json> {
     let r = reading_of(n, parent);
     let members = |names: &[&str]| -> Vec<Node<'_, '_>> {
         n.descendants()
@@ -250,8 +280,9 @@ const GEOMETRIES: [&str; 14] = [
     "PolygonPatch",
 ];
 
-/// A feature element: its first geometry and its simple properties.
-fn feature(f: Node<'_, '_>) -> Json {
+/// A feature element: its first geometry and its simple properties. A geometry with a coordinate that did not read
+/// is null, and counted in `unreadable`.
+fn feature(f: Node<'_, '_>, unreadable: &mut u32) -> Json {
     let mut props = Map::new();
     let mut geom = Json::Null;
     for c in f.children().filter(Node::is_element) {
@@ -267,14 +298,20 @@ fn feature(f: Node<'_, '_>) -> Json {
         match inner {
             Some(g) if GEOMETRIES.contains(&g.tag_name().name()) => {
                 if geom.is_null() {
+                    let bad = Cell::new(false);
                     geom = geometry(
                         g,
                         Reading {
                             dim: 2,
                             swap: false,
+                            bad: &bad,
                         },
                     )
                     .unwrap_or(Json::Null);
+                    if bad.get() {
+                        geom = Json::Null;
+                        *unreadable += 1;
+                    }
                 }
             }
             Some(_) => {}
@@ -291,15 +328,16 @@ fn feature(f: Node<'_, '_>) -> Json {
     json!({"type": "Feature", "geometry": geom, "properties": props})
 }
 
-/// A GML feature collection (a WFS's GetFeature answer) as GeoJSON text;
-/// the number of features the server says it matched, when it says.
-pub fn to_geojson(text: &str) -> Result<(String, Option<u64>), String> {
+/// A GML feature collection (a WFS's GetFeature answer) as GeoJSON text; the number of features the server says it
+/// matched, when it says; and how many features came without their shape because a coordinate did not read.
+pub fn to_geojson(text: &str) -> Result<(String, Option<u64>, u32), String> {
     let doc = xml(text)?;
     let root = doc.root_element();
     let matched = attr(root, "numberMatched")
         .or_else(|| attr(root, "numberOfFeatures"))
         .and_then(|n| n.parse::<u64>().ok());
     let mut features = Vec::new();
+    let mut unreadable = 0;
     for m in root.descendants().filter(|n| {
         n.is_element()
             && matches!(
@@ -312,11 +350,11 @@ pub fn to_geojson(text: &str) -> Result<(String, Option<u64>), String> {
             if f.tag_name().name() == "FeatureCollection" {
                 continue;
             }
-            features.push(feature(f));
+            features.push(feature(f, &mut unreadable));
         }
     }
     let out = json!({"type": "FeatureCollection", "features": features});
-    Ok((out.to_string(), matched))
+    Ok((out.to_string(), matched, unreadable))
 }
 
 #[cfg(test)]
@@ -335,7 +373,7 @@ mod tests {
  </k:parsel></wfs:member>
  <wfs:member><k:nokta><k:geom><gml:Point srsName="EPSG:5254"><gml:pos>500001 4400001</gml:pos></gml:Point></k:geom><k:ad xsi:nil="true" xmlns:xsi="x"/></k:nokta></wfs:member>
 </wfs:FeatureCollection>"#;
-        let (text, matched) = to_geojson(gml).unwrap();
+        let (text, matched, _) = to_geojson(gml).unwrap();
         assert_eq!(matched, Some(2));
         let v: Json = serde_json::from_str(&text).unwrap();
         let f = &v["features"][0];
@@ -359,7 +397,8 @@ mod tests {
    <gml:LineStringSegment><gml:posList>0 0 1 1</gml:posList></gml:LineStringSegment>
    <gml:LineStringSegment><gml:posList>1 1 2 0</gml:posList></gml:LineStringSegment></gml:segments></gml:Curve></k:geom></k:dere></gml:featureMember>
 </wfs:FeatureCollection>"#;
-        let (text, _) = to_geojson(gml).unwrap();
+        let (text, _, unreadable) = to_geojson(gml).unwrap();
+        assert_eq!(unreadable, 0);
         let v: Json = serde_json::from_str(&text).unwrap();
         assert_eq!(
             v["features"][0]["geometry"]["coordinates"],
@@ -368,6 +407,28 @@ mod tests {
         assert_eq!(
             v["features"][1]["geometry"]["coordinates"],
             json!([[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]])
+        );
+    }
+
+    /// A coordinate that is not a number, or a list that ends in the middle of a position, leaves its feature
+    /// without a shape: the rest of the list is not read a place along (docs/adr/9401 §3).
+    #[test]
+    fn a_coordinate_that_does_not_read_leaves_no_shape() {
+        let gml = r#"<wfs:FeatureCollection xmlns:wfs="w" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:k="k">
+ <wfs:member><k:yol><k:geom><gml:LineString><gml:posList>0 0 x 1 1 2 2</gml:posList></gml:LineString></k:geom></k:yol></wfs:member>
+ <wfs:member><k:yol><k:geom><gml:LineString><gml:posList>0 0 1 1 2</gml:posList></gml:LineString></k:geom></k:yol></wfs:member>
+ <wfs:member><k:yol><k:geom><gml:LineString><gml:coordinates>1,2 3,y</gml:coordinates></gml:LineString></k:geom></k:yol></wfs:member>
+ <wfs:member><k:yol><k:geom><gml:LineString><gml:posList>0 0 1 1</gml:posList></gml:LineString></k:geom></k:yol></wfs:member>
+</wfs:FeatureCollection>"#;
+        let (text, _, unreadable) = to_geojson(gml).unwrap();
+        assert_eq!(unreadable, 3);
+        let v: Json = serde_json::from_str(&text).unwrap();
+        for k in 0..3 {
+            assert_eq!(v["features"][k]["geometry"], Json::Null, "feature {k}");
+        }
+        assert_eq!(
+            v["features"][3]["geometry"]["coordinates"],
+            json!([[0.0, 0.0], [1.0, 1.0]])
         );
     }
 }

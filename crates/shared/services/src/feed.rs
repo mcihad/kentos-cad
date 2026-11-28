@@ -33,6 +33,35 @@ pub fn layer_colors(layers: usize) -> (&'static str, &'static str) {
     PALETTE[layers % PALETTE.len()]
 }
 
+/// What the report calls an object whose coordinates did not read.
+pub const UNREADABLE_COORDINATES: &str = "Koordinatı okunamayan nesne";
+
+/// A GML answer's features whose coordinates did not read came on without their shape (gml.rs): they are told apart
+/// from the ones the service itself sent empty, whose words say something else (docs/adr/9401 §3).
+fn unreadable_told_apart(report: &mut kentos_contracts::ImportReport, unreadable: u32) {
+    if unreadable == 0 {
+        return;
+    }
+    let null = kentos_formats::geojson::NULL_GEOMETRY;
+    if let Some(at) = report.skipped.iter().position(|i| i.what == null) {
+        let left = report.skipped[at].count.saturating_sub(unreadable);
+        if left == 0 {
+            report.skipped.remove(at);
+        } else {
+            report.skipped[at].count = left;
+        }
+    }
+    report.skipped.push(ReportItem {
+        severity: None,
+        details: Vec::new(),
+        what: UNREADABLE_COORDINATES.to_owned(),
+        count: unreadable,
+        reason: "koordinatlarında sayı olmayan bir değer ya da yarım kalan bir konum var; kaymış bir şekil alınmadı"
+            .to_owned(),
+        lines: Vec::new(),
+    });
+}
+
 /// What a take brought, as both apps say it once the objects are written:
 /// how many, what the service said it matched, what the readers left out
 /// (a feature whose geometry came null is told apart: a service that cannot
@@ -740,7 +769,7 @@ impl Taking {
         let cap = u32::try_from(left).unwrap_or(u32::MAX);
         let (mut result, count, more) = match self.feed.kind {
             FeedKind::Wfs => {
-                let (text, matched) = if self.geojson {
+                let (text, matched, unreadable) = if self.geojson {
                     let matched = serde_json::from_str::<serde_json::Value>(body)
                         .ok()
                         .and_then(|v| {
@@ -748,7 +777,7 @@ impl Taking {
                                 .as_u64()
                                 .or_else(|| v["totalFeatures"].as_u64())
                         });
-                    (body.to_owned(), matched)
+                    (body.to_owned(), matched, 0)
                 } else {
                     crate::gml::to_geojson(body)?
                 };
@@ -756,7 +785,8 @@ impl Taking {
                     self.matched = matched;
                 }
                 let n = features::feature_count(&text) as u64;
-                let r = features::read_geojson(&text, layer, cap)?;
+                let mut r = features::read_geojson(&text, layer, cap)?;
+                unreadable_told_apart(&mut r.report, unreadable);
                 // A service may give fewer than asked (its own page limit): with the number it matched the pages go on
                 // to it; without it, WFS 2.0 (which pages) is asked until an empty page, WFS 1.x (which does not)
                 // stops at a short page.
@@ -899,6 +929,46 @@ mod tests {
             ..FeedChoice::default()
         };
         assert_eq!(c.feed(&choice, 5255).expect("a feed").srid, None);
+    }
+
+    /// A GML answer's features whose coordinates did not read are not said to have come empty from the service.
+    #[test]
+    fn features_whose_coordinates_did_not_read_are_told_apart_from_empty_ones() {
+        let null = kentos_formats::geojson::NULL_GEOMETRY;
+        let item = |count| ReportItem {
+            severity: None,
+            details: Vec::new(),
+            what: null.to_owned(),
+            count,
+            reason: String::new(),
+            lines: Vec::new(),
+        };
+        let said = |report: &kentos_contracts::ImportReport| {
+            report
+                .skipped
+                .iter()
+                .map(|i| (i.what.clone(), i.count))
+                .collect::<Vec<_>>()
+        };
+        let mut report = kentos_contracts::ImportReport {
+            skipped: vec![item(3)],
+            ..Default::default()
+        };
+        unreadable_told_apart(&mut report, 2);
+        assert_eq!(
+            said(&report),
+            [(null.to_owned(), 1), (UNREADABLE_COORDINATES.to_owned(), 2)]
+        );
+        // All of them: nothing came empty from the service.
+        let mut report = kentos_contracts::ImportReport {
+            skipped: vec![item(2)],
+            ..Default::default()
+        };
+        unreadable_told_apart(&mut report, 2);
+        assert_eq!(said(&report), [(UNREADABLE_COORDINATES.to_owned(), 2)]);
+        // None: the report is as it was.
+        unreadable_told_apart(&mut report, 0);
+        assert_eq!(report.skipped.len(), 1);
     }
 
     #[test]
