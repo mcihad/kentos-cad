@@ -838,12 +838,7 @@ impl Writer {
             .filter(|r| r.len() >= 3)
             .collect();
         let turned = |r: &[[f64; 2]], ccw: bool| -> Vec<[f64; 2]> {
-            let twice: f64 = (0..r.len())
-                .map(|i| {
-                    let (a, b) = (r[i], r[(i + 1) % r.len()]);
-                    a[0] * b[1] - b[0] * a[1]
-                })
-                .sum();
+            let twice: f64 = 2.0 * kentos_geometry_core::geometry::ring_area(r);
             if (twice > 0.0) == ccw {
                 r.to_vec()
             } else {

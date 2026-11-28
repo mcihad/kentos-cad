@@ -227,15 +227,7 @@ impl RoofPartTool {
             }
             let pts = &r.roof.pts;
             let n = pts.len();
-            let ccw = pts
-                .iter()
-                .enumerate()
-                .map(|(i, a)| {
-                    let b = pts[(i + 1) % n];
-                    a.x * b.y - b.x * a.y
-                })
-                .sum::<f64>()
-                >= 0.0;
+            let ccw = kentos_geometry_core::geometry::ring_area(pts) >= 0.0;
             for i in (0..n).filter(|i| r.roof.slopes.get(*i).is_some_and(Option::is_some)) {
                 let (a, b) = (pts[i], pts[(i + 1) % n]);
                 let (dx, dy) = (b.x - a.x, b.y - a.y);

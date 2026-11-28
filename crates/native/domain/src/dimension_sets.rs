@@ -569,12 +569,7 @@ impl Document {
         };
         let n = w.wall.pts.len();
         let bulges = w.wall.bulges.clone().unwrap_or_else(|| vec![0.0; n]);
-        let area: f64 = (0..n)
-            .map(|i| {
-                let (a, b) = (w.wall.pts[i], w.wall.pts[(i + 1) % n]);
-                a.x * b.y - b.x * a.y
-            })
-            .sum();
+        let area: f64 = 2.0 * kentos_geometry_core::geometry::ring_area(&w.wall.pts);
         Some(WallEdges {
             straight: core::straight_edges(n, &bulges, w.wall.closed)
                 .into_iter()

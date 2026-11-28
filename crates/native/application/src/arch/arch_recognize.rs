@@ -460,12 +460,7 @@ fn l_column(
     made: &dyn Fn(V, ColumnShape, f64, Option<f64>, f64) -> ColumnFields,
 ) -> Option<ColumnFields> {
     let n = corners.len();
-    let area: f64 = (0..n)
-        .map(|i| {
-            let (p, q) = (corners[i], corners[(i + 1) % n]);
-            p.x * q.y - q.x * p.y
-        })
-        .sum();
+    let area: f64 = 2.0 * kentos_geometry_core::geometry::ring_area(corners);
     let mut pts = corners.to_vec();
     if area < 0.0 {
         pts.reverse();

@@ -255,9 +255,9 @@ düzenlenir.
   çekirdekte tek (`ray_crosses`, `point_in_ring`, `point_in_rings`; iki nokta türü için) ve 23 kopya ona bağlı;
   bağımsız başvuru `point_in_rings_cases.py` (239 durum). Ölçüm: çizim ölçeğinde ortak kenardaki orta noktaların
   %4,3'ü yuvarlanmış yazımda iki alana ya da hiçbirine düşüyordu.
-  - Alan: çekirdekte `ring_area`; çizimin alanını bildiren on kopya ona bağlı (TM koordinatında 10 m'lik kare
-    99,99976 çıkıyordu). Kalan: ham koordinatla toplayan öbür 29 yer tek tek okunmadı (çoğu yalnız yön ya da yerel
-    koordinat).
+  - Alan (§9.3): çekirdekte `ring_area`; ham koordinatla toplayan 39 yerin 36'sı ona bağlı (TM koordinatında
+    10 m'lik kare 99,99976 çıkıyordu; 12 mm'lik halkanın yönü ters okunuyordu; çatının yüz eşikleri yuvarlamanın
+    altında kalıyordu). Kalan üçü yerel koordinatlı, gerekçesi ADR'de.
   - Ağırlık merkezi (§9.4): ham koordinatla toplayan sekiz kopya bulundu ve çekirdeğin `ring_centroid`'ine
     bağlandı. TM koordinatında 10 m'lik karenin merkezi 3,6 m, küçük bir kolonunki 1,4 km kayıyordu. Yol'un koridor
     denetimi ve yüzey kapsamı çizimi, Mimari denetimin mahal noktası, gölge, çıkma izdüşümü, net genişlik, işlem

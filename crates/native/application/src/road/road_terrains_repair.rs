@@ -192,13 +192,8 @@ fn zero_area(after: &[Triangle], before: &[Triangle]) -> f64 {
     let mut flat = 0.0;
     ground.overlay(after, |with| {
         if with.iter().all(|(_, d)| *d == 0.0) {
-            let n = with.len();
-            let mut a = 0.0;
-            for i in 0..n {
-                let (p, q) = (with[i].0, with[(i + 1) % n].0);
-                a += p[0] * q[1] - q[0] * p[1];
-            }
-            flat += a / 2.0;
+            let ring: Vec<[f64; 2]> = with.iter().map(|(p, _)| [p[0], p[1]]).collect();
+            flat += kentos_geometry_core::geometry::ring_area(&ring);
         }
     });
     flat

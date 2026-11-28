@@ -45,13 +45,7 @@ pub struct Network {
 
 /// Twice the ring's signed area (counter-clockwise positive).
 pub fn signed2(r: &[Pt]) -> f64 {
-    let n = r.len();
-    (0..n)
-        .map(|k| {
-            let (a, b) = (r[k], r[(k + 1) % n]);
-            a[0] * b[1] - b[0] * a[1]
-        })
-        .sum()
+    2.0 * crate::geometry::ring_area(r)
 }
 
 /// The area centroid of a simple ring.

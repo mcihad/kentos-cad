@@ -273,13 +273,7 @@ fn area_rings(s: &Shape) -> Vec<Vec<Vec2>> {
 
 /// A ring's area, counter-clockwise positive.
 fn signed_area(ring: &[Vec2]) -> f64 {
-    let n = ring.len();
-    let mut a = 0.0;
-    for i in 0..n {
-        let (p, q) = (ring[i], ring[(i + 1) % n]);
-        a += p.x * q.y - q.x * p.y;
-    }
-    a / 2.0
+    crate::geometry::signed_area(ring)
 }
 
 /// The stretches of a path inside `rect` along it: `(from, to)` lengths.

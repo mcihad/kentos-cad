@@ -181,12 +181,7 @@ fn masses(doc: &Document) -> Option<Input> {
                     continue;
                 }
                 // The outer ring counter-clockwise, a courtyard clockwise: every side faces out of the solid.
-                let twice: f64 = (0..ring.len())
-                    .map(|i| {
-                        let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
-                        a.x * b.y - b.x * a.y
-                    })
-                    .sum();
+                let twice: f64 = 2.0 * kentos_geometry_core::geometry::ring_area(&ring);
                 if (twice > 0.0) != (k == 0) {
                     ring.reverse();
                 }

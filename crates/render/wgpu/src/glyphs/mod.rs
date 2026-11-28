@@ -207,12 +207,7 @@ impl GlyphPlace {
 /// A ring's outline `edge` wide laid just inside the part it bounds (inside it, or outside it for a hole).
 fn outline(points: &[[f64; 2]], edge: f64, color: Rgba8, hole: bool) -> Vec<GlyphQuad> {
     // Inside is left of each edge on a counter-clockwise ring (y up), right on a clockwise one.
-    let twice_area: f64 = (0..points.len())
-        .map(|i| {
-            let (a, b) = (points[i], points[(i + 1) % points.len()]);
-            a[0] * b[1] - b[0] * a[1]
-        })
-        .sum();
+    let twice_area: f64 = 2.0 * kentos_geometry_core::geometry::ring_area(points);
     let side = if (twice_area >= 0.0) != hole {
         1.0
     } else {

@@ -434,10 +434,25 @@ koordinatlarının çarpımı parsel alanının dördüncü ondalığını yitir
 ona bağlandı: Ölç kutusu, parselin alanı (imar hesabının girdisi), kaçış yolu, kapı denetimi, kesit, kolon birleşimi,
 atlas, Yol'un korunan alan, tesviye ve yüzey analizi hesapları.
 
-**Kalan.** Öbür 29 yer tek tek okunmadı. Çoğu yalnız yönü (toplamın işaretini) kullanır ya da yerel koordinatlıdır
-(merdiven basamağı, yazı tipi çerçevesi, SVG yolu); alan bildirenleri varsa BK-17'nin kalanıdır.
+**Öbür 29 yer** tek tek okundu:
 
-**Sınama.** Üç kopyanın sınaması düzeltmeden önce kırmızıydı (10 m'lik kare 99,999 756 çıkıyordu); çekirdeğin altın
+- **Alan bildiren ya da eşikle karşılaştıran yerler:** merdiven ve rampanın plan alanı (`stair_measure`,
+  `ramp_measure`), yüzey onarımının “farkın sıfır olduğu alan”ı, çatının yüz eşikleri (`area2 / 2 > EPS`: ham
+  toplamın yuvarlaması eşikten büyük olduğundan alansız yüz kalıyor ya da küçük yüz düşüyordu), kesitin kapak eşiği,
+  blok kırpma sınırının “alanı yok” denetimi.
+- **Yalnız yönü kullanan yerler:** halkanın hangi yöne döndüğünü toplamın işaretinden okurlar (duvar, döşeme, çatı,
+  korkuluk, kolon tanıma, parsel, kütle, GeoParquet ve IFC halkaları, çizim motorunun alan kenarı…). Ham toplamın
+  yuvarlaması küçük halkanın alanından büyük olabilir. Ölçüm: TM koordinatında 2–5 cm'lik 20 000 halkanın 10'unda
+  işaret ters çıktı; 20–50 cm'liklerde hiç. Örnek: (486 280,859; 4 420 207,667)'deki 12 mm'lik, saat yönünün tersine
+  çizilmiş karenin ham toplamı −0,000488, kesin değeri +0,000288.
+- **Dokunulmayan üç yer** yerel koordinatlıdır: SVG çekirdeğinin iki toplamı (belge pikseli) ve hacim hesabında
+  önceden kaydırılmış koordinatlarla çalışan moment toplamı.
+
+Yirmi altısı çekirdeğin `ring_area`'sına bağlandı. Sözleşmeler crate'i çekirdeği bilmediği için kırpma sınırının
+denetimi aynı kaydırmayla yerinde yazıldı.
+
+**Sınama.** Üç kopyanın sınaması düzeltmeden önce kırmızıydı (10 m'lik kare 99,999 756 çıkıyordu). Yön için bir
+sınama eklendi (`tests/all/ring_direction.rs`): 12 mm'lik karenin yönü; düzeltmeden önce kırmızıydı. Çekirdeğin altın
 dosyaları ve dokunulan crate'lerin bütün sınamaları değişmeden geçti.
 
 #### 9.4 Bir halkanın ağırlık merkezi: aynı kayıp, metrelerle

@@ -43,15 +43,7 @@ pub fn outline(pts: &[Vec2], spec: &RailingSpec) -> Shape {
     };
     if spec.closed {
         // The outer face first, the inner one its hole: which side is outer, the larger ring says.
-        let area = |r: &[Vec2]| -> f64 {
-            (0..r.len())
-                .map(|i| {
-                    let (a, b) = (r[i], r[(i + 1) % r.len()]);
-                    a.x * b.y - b.x * a.y
-                })
-                .sum::<f64>()
-                .abs()
-        };
+        let area = |r: &[Vec2]| -> f64 { 2.0 * crate::geometry::ring_area(r).abs() };
         let (outer, inner) = if area(&left) >= area(&right) {
             (left, right)
         } else {

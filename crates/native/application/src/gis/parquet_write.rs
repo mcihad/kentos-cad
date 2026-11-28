@@ -113,13 +113,8 @@ fn linear(c: &Curve, chorded: &mut bool) -> Vec<Coord> {
 }
 
 fn twice_area(ring: &[Coord]) -> f64 {
-    let n = ring.len();
-    (0..n)
-        .map(|i| {
-            let (a, b) = (&ring[i], &ring[(i + 1) % n]);
-            a.x * b.y - b.x * a.y
-        })
-        .sum()
+    let plan: Vec<[f64; 2]> = ring.iter().map(|c| [c.x, c.y]).collect();
+    2.0 * kentos_geometry_core::geometry::ring_area(&plan)
 }
 
 /// A polygon's rings: the outer one counter-clockwise, the holes clockwise.

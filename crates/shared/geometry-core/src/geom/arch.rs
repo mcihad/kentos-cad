@@ -1711,13 +1711,7 @@ pub fn tread_ring(walk: &Walk, spec: &StairSpec, a: f64, b: f64) -> Vec<Vec2> {
     back.reverse();
     ring.extend(back);
     ring.push(la);
-    let n = ring.len();
-    let twice: f64 = (0..n)
-        .map(|i| {
-            let (p, q) = (ring[i], ring[(i + 1) % n]);
-            p.x * q.y - q.x * p.y
-        })
-        .sum();
+    let twice: f64 = 2.0 * crate::geometry::ring_area(&ring);
     if twice < 0.0 {
         ring.reverse();
     }
@@ -2046,13 +2040,7 @@ pub fn stair_measure(pts: &[Vec2], spec: &StairSpec) -> StairMeasure {
         }
         None => {
             let ring = band(pts, half);
-            let n = ring.len();
-            let twice: f64 = (0..n)
-                .map(|i| {
-                    let (p, q) = (ring[i], ring[(i + 1) % n]);
-                    p.x * q.y - q.x * p.y
-                })
-                .sum();
+            let twice: f64 = 2.0 * crate::geometry::ring_area(&ring);
             let railing_length = stair_railings(pts, spec)
                 .iter()
                 .map(|(line, _)| {
@@ -2270,13 +2258,7 @@ pub struct RampMeasure {
 pub fn ramp_measure(pts: &[Vec2], spec: &RampSpec) -> RampMeasure {
     let walk = Walk::of(pts);
     let ring = band(pts, spec.width / 2.0);
-    let n = ring.len();
-    let twice: f64 = (0..n)
-        .map(|i| {
-            let (a, b) = (ring[i], ring[(i + 1) % n]);
-            a.x * b.y - b.x * a.y
-        })
-        .sum();
+    let twice: f64 = 2.0 * crate::geometry::ring_area(&ring);
     let railing_length = ramp_railings(pts, spec)
         .iter()
         .map(|(line, _)| {

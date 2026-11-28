@@ -256,12 +256,7 @@ impl GpuFrame {
 
 /// Twice a ring's signed area (counter-clockwise positive, y up).
 fn twice_area(ring: &[[f64; 2]]) -> f64 {
-    (0..ring.len())
-        .map(|i| {
-            let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
-            a[0] * b[1] - b[0] * a[1]
-        })
-        .sum()
+    2.0 * kentos_geometry_core::geometry::ring_area(ring)
 }
 
 /// Whether `p` is inside `ring` (even-odd).

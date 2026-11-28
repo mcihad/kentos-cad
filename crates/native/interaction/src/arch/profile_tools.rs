@@ -104,12 +104,7 @@ fn round_axis(ring: &[Vec2]) -> Option<Vec<Vec2>> {
     if ring.len() < 3 {
         return None;
     }
-    let area: f64 = (0..ring.len())
-        .map(|i| {
-            let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
-            a.x * b.y - b.x * a.y
-        })
-        .sum();
+    let area: f64 = 2.0 * kentos_geometry_core::geometry::ring_area(&ring);
     if area < 0.0 {
         ring.reverse();
     }

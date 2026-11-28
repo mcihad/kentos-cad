@@ -313,12 +313,7 @@ fn first_hit(ring: &[V], q: V, d: V) -> Option<f64> {
 /// How far in from the eaves line `pts` (convex, either way round) the plan point `q` is: its nearest edge's line.
 fn inside(pts: &[V], q: V) -> f64 {
     let n = pts.len();
-    let area: f64 = (0..n)
-        .map(|i| {
-            let (a, b) = (pts[i], pts[(i + 1) % n]);
-            a.x * b.y - b.x * a.y
-        })
-        .sum();
+    let area: f64 = 2.0 * kentos_geometry_core::geometry::ring_area(pts);
     let turn = if area >= 0.0 { 1.0 } else { -1.0 };
     (0..n)
         .filter_map(|i| {

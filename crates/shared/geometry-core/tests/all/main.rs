@@ -65,6 +65,7 @@ mod point_text;
 mod polygonize;
 mod proximity;
 mod reshape;
+mod ring_direction;
 mod roofs;
 mod sections;
 // A record without a geometry (docs/adr/0410).

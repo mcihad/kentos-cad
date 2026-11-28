@@ -176,11 +176,7 @@ pub(crate) fn draw(
     for part in &s.space.parts {
         let r = &part.outer.pts;
         let n = r.len();
-        let mut twice = 0.0;
-        for i in 0..n {
-            let (p, q) = (r[i], r[(i + 1) % n]);
-            twice += p.x * q.y - q.x * p.y;
-        }
+        let twice = 2.0 * kentos_geometry_core::geometry::ring_area(r);
         for i in 0..n {
             let bulge = part
                 .outer

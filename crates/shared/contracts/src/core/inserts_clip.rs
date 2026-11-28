@@ -76,10 +76,13 @@ impl InsertClip {
         {
             return Some("Kırpma sınırının köşeleri sonlu sayılar olmalı.".into());
         }
+        // From the first corner: summed from raw map coordinates the products' rounding is larger than the least
+        // area asked for, and a boundary on one line would pass (docs/adr/9401 §9.3).
+        let o = self.boundary[0];
         let mut twice = 0.0;
         for i in 0..n {
             let (a, b) = (self.boundary[i], self.boundary[(i + 1) % n]);
-            twice += a.x * b.y - b.x * a.y;
+            twice += (a.x - o.x) * (b.y - o.y) - (b.x - o.x) * (a.y - o.y);
         }
         if twice.abs().partial_cmp(&1e-12) != Some(std::cmp::Ordering::Greater) {
             return Some(

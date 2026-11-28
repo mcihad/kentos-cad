@@ -252,12 +252,7 @@ fn wall_of<'a>(w: WallIn<'a>, frame: &Frame, reference: Reference) -> Result<Wal
 
 /// Whether `p` is in the convex quad (on its sides too, within `SAME`).
 fn in_quad(p: Vec2, q: &[Vec2; 4]) -> bool {
-    let area = (0..4)
-        .map(|i| {
-            let (a, b) = (q[i], q[(i + 1) % 4]);
-            a.x * b.y - b.x * a.y
-        })
-        .sum::<f64>();
+    let area = 2.0 * crate::geometry::ring_area(q);
     let sign = if area >= 0.0 { 1.0 } else { -1.0 };
     (0..4).all(|i| {
         let (a, b) = (q[i], q[(i + 1) % 4]);
@@ -787,13 +782,7 @@ fn space_rows(
                     return false;
                 };
                 let n = pts.len();
-                let ccw = (0..n)
-                    .map(|i| {
-                        let (p, q) = (pts[i], pts[(i + 1) % n]);
-                        p.x * q.y - q.x * p.y
-                    })
-                    .sum::<f64>()
-                    > 0.0;
+                let ccw = 2.0 * crate::geometry::ring_area(pts) > 0.0;
                 (0..n).any(|k| {
                     let (u, v) = (pts[k], pts[(k + 1) % n]);
                     if classify(u, v, 0.0, frame) != Edge::Parallel {

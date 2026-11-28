@@ -89,13 +89,7 @@ pub fn room(walls: &[WallIn<'_>], seed: Vec2) -> Option<Area> {
 }
 
 fn signed(r: &[Vec2]) -> f64 {
-    let n = r.len();
-    let mut s = 0.0;
-    for i in 0..n {
-        let (a, b) = (r[i], r[(i + 1) % n]);
-        s += a.x * b.y - b.x * a.y;
-    }
-    s / 2.0
+    crate::geometry::signed_area(r)
 }
 
 /// The ring's outline, its arcs as chords (what the crossing tests read).

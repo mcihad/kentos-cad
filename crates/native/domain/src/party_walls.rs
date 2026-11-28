@@ -59,12 +59,7 @@ impl Document {
         levels.dedup();
         // The parcel's corners as it was drawn: its inside is on the left when they run anticlockwise.
         let ring = &report.parcel;
-        let twice: f64 = (0..ring.len())
-            .map(|k| {
-                let (p, q) = (ring[k], ring[(k + 1) % ring.len()]);
-                p.x * q.y - q.x * p.y
-            })
-            .sum();
+        let twice: f64 = 2.0 * kentos_geometry_core::geometry::ring_area(ring);
         let left = if twice >= 0.0 { 1.0 } else { -1.0 };
         let mut out = Vec::new();
         for (i, e) in report.edges.iter().enumerate() {

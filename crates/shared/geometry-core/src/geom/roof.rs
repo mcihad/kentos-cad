@@ -272,13 +272,7 @@ pub enum Problem {
 }
 
 fn area2(pts: &[Vec2]) -> f64 {
-    let n = pts.len();
-    (0..n)
-        .map(|i| {
-            let (p, q) = (pts[i], pts[(i + 1) % n]);
-            p.x * q.y - q.x * p.y
-        })
-        .sum()
+    2.0 * crate::geometry::ring_area(pts)
 }
 
 /// The eaves counter-clockwise, each edge with its slope and its index as given.

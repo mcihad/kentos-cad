@@ -252,13 +252,7 @@ fn space_at(p: Vec2, cx: &Context<'_>) -> Option<Uuid> {
                 inside(&part.outer.pts) && !part.holes.iter().any(|h| inside(&h.pts))
             })?;
             let ring = &part.outer.pts;
-            let area = (0..ring.len())
-                .map(|i| {
-                    let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
-                    a.x * b.y - b.x * a.y
-                })
-                .sum::<f64>()
-                .abs();
+            let area = 2.0 * kentos_geometry_core::geometry::ring_area(ring).abs();
             Some((uid, area))
         })
         .min_by(|a, b| a.1.total_cmp(&b.1))

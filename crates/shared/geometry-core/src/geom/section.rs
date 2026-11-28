@@ -475,13 +475,7 @@ impl Cover {
         if n < 3 {
             return None;
         }
-        let area: f64 = (0..n)
-            .map(|i| {
-                let (p, q) = (ring[i], ring[(i + 1) % n]);
-                p.x * q.y - q.x * p.y
-            })
-            .sum::<f64>()
-            / 2.0;
+        let area = crate::geometry::ring_area(&ring);
         if area.abs() <= 1e-12 {
             return None;
         }
@@ -933,13 +927,7 @@ pub fn seen_at(frame: &Frame, solids: &[Solid], at: Vec2) -> Option<(usize, f64)
 /// repeated points and points it runs straight through.
 fn canonical(ring: Vec<Vec2>) -> Vec<Vec2> {
     let mut r = clean(&ring);
-    let n = r.len();
-    let area: f64 = (0..n)
-        .map(|i| {
-            let (p, q) = (r[i], r[(i + 1) % n]);
-            p.x * q.y - q.x * p.y
-        })
-        .sum();
+    let area: f64 = 2.0 * crate::geometry::ring_area(&r);
     if area < 0.0 {
         r.reverse();
     }
