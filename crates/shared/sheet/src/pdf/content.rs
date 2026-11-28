@@ -284,15 +284,15 @@ impl<'a> Page<'a> {
         let (rx, ry) = (f64::from(a.radius[0]), f64::from(a.radius[1]));
         let c = f(a.center);
         let rot = rad(a.rotation);
-        let (sr, cr) = (libm::sin(rot), libm::cos(rot));
+        let (sr, cr) = (kentos_num::sin(rot), kentos_num::cos(rot));
         // A point and the derivative of the ellipse at angle t (clockwise on the paper).
         let at = |t: f64| {
-            let (s, k) = (libm::sin(t), libm::cos(t));
+            let (s, k) = (kentos_num::sin(t), kentos_num::cos(t));
             let (x, y) = (rx * k, ry * s);
             [c[0] + x * cr - y * sr, c[1] + x * sr + y * cr]
         };
         let d = |t: f64| {
-            let (s, k) = (libm::sin(t), libm::cos(t));
+            let (s, k) = (kentos_num::sin(t), kentos_num::cos(t));
             let (x, y) = (-rx * s, ry * k);
             [x * cr - y * sr, x * sr + y * cr]
         };
@@ -309,7 +309,7 @@ impl<'a> Page<'a> {
         }
         let n = libm::ceil(sweep.abs() / (core::f64::consts::FRAC_PI_2 + 1e-9)).max(1.0) as usize;
         let step = sweep / n as f64;
-        let k = 4.0 / 3.0 * libm::tan(step / 4.0);
+        let k = 4.0 / 3.0 * kentos_num::tan(step / 4.0);
         for i in 0..n {
             let t0 = start + step * i as f64;
             let t1 = t0 + step;
@@ -337,7 +337,7 @@ impl<'a> Page<'a> {
         let c = r.center();
         let (w2, h2) = (f64::from(r.width) / 2.0, f64::from(r.height) / 2.0);
         let rot = rad(rotation);
-        let (s, k) = (libm::sin(rot), libm::cos(rot));
+        let (s, k) = (kentos_num::sin(rot), kentos_num::cos(rot));
         let turn = |x: f64, y: f64| [c[0] + x * k - y * s, c[1] + x * s + y * k];
         // Corner arcs as quarter circles, clockwise from the top edge.
         let q = 4.0 / 3.0 * (core::f64::consts::SQRT_2 - 1.0) * radius;
@@ -568,7 +568,7 @@ impl<'a> Page<'a> {
         }
         self.audit.texts += 1;
         let (x, y) = self.xy(at);
-        let (s, k) = (libm::sin(turn) as f32, libm::cos(turn) as f32);
+        let (s, k) = (kentos_num::sin(turn) as f32, kentos_num::cos(turn) as f32);
         // Clockwise on the paper is clockwise on the page: the baseline (cos, −sin), the letters' up (sin, cos);
         // widened along the baseline, leaning forward by the slant.
         let (w, lean) = (shape.0 as f32, shape.1 as f32);
@@ -614,7 +614,7 @@ impl<'a> Page<'a> {
         turn: f64,
         style: Option<&crate::plot_profile::PlotStyle>,
     ) {
-        let (s, c) = (libm::sin(turn), libm::cos(turn));
+        let (s, c) = (kentos_num::sin(turn), kentos_num::cos(turn));
         let point = |[x, y]: [f64; 2]| {
             [
                 at[0] + 1000. * (c * x + s * y),

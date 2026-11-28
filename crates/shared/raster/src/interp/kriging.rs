@@ -20,8 +20,8 @@ impl Model {
         match self {
             Model::Spherical if u < 1.0 => 1.5 * u - 0.5 * u * u * u,
             Model::Spherical => 1.0,
-            Model::Exponential => 1.0 - libm::exp(-3.0 * u),
-            Model::Gaussian => 1.0 - libm::exp(-3.0 * u * u),
+            Model::Exponential => 1.0 - kentos_num::exp(-3.0 * u),
+            Model::Gaussian => 1.0 - kentos_num::exp(-3.0 * u * u),
         }
     }
 
@@ -183,8 +183,8 @@ pub fn fit(xy: &[Vec2], v: &[f64], model: Model, lags: usize) -> Result<Variogra
     let diag = (bw * bw + bh * bh).sqrt();
     let most = diag / 2.0;
     let w = most / lags.max(1) as f64;
-    let (lo, hi) = (libm::log(w / 2.0), libm::log(2.0 * most));
-    let candidate = |m: usize| libm::exp(lo + (hi - lo) * m as f64 / 199.0);
+    let (lo, hi) = (kentos_num::ln(w / 2.0), kentos_num::ln(2.0 * most));
+    let candidate = |m: usize| kentos_num::exp(lo + (hi - lo) * m as f64 / 199.0);
     let mut best = (0usize, f64::INFINITY);
     for m in 0..200 {
         let e = best_at(&b, model, candidate(m)).2;

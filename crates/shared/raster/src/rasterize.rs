@@ -185,7 +185,9 @@ pub(crate) fn chord_paths(s: &Shape, out: &mut Vec<Vec<Vec2>>) {
                 match e {
                     Edge::Seg { a, b } => out.push(vec![a, b]),
                     Edge::Arc { c, r, a0, sweep } => {
-                        let at = |t: f64| Vec2::new(c.x + r * libm::cos(t), c.y + r * libm::sin(t));
+                        let at = |t: f64| {
+                            Vec2::new(c.x + r * kentos_num::cos(t), c.y + r * kentos_num::sin(t))
+                        };
                         let mut p = vec![at(a0)];
                         p.extend(arc_inner_points(c, r, a0, sweep));
                         p.push(at(a0 + sweep));

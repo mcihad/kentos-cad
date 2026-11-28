@@ -566,8 +566,8 @@ pub(crate) fn to_geocentric((a, inv_f): (f64, f64), lat: f64, lon: f64, height: 
     let f = 1.0 / inv_f;
     let e2 = f * (2.0 - f);
     let rad = PI / 180.0;
-    let (sp, cp) = (libm::sin(lat * rad), libm::cos(lat * rad));
-    let (sl, cl) = (libm::sin(lon * rad), libm::cos(lon * rad));
+    let (sp, cp) = (kentos_num::sin(lat * rad), kentos_num::cos(lat * rad));
+    let (sl, cl) = (kentos_num::sin(lon * rad), kentos_num::cos(lon * rad));
     let n = a / libm::sqrt(1.0 - e2 * sp * sp);
     [
         (n + height) * cp * cl,
@@ -583,19 +583,19 @@ pub(crate) fn from_geocentric((a, inv_f): (f64, f64), x: [f64; 3]) -> (f64, f64,
     let f = 1.0 / inv_f;
     let e2 = f * (2.0 - f);
     let p = kentos_num::hypot(x[0], x[1]);
-    let lon = libm::atan2(x[1], x[0]);
-    let mut lat = libm::atan2(x[2], p * (1.0 - e2));
+    let lon = kentos_num::atan2(x[1], x[0]);
+    let mut lat = kentos_num::atan2(x[2], p * (1.0 - e2));
     for _ in 0..10 {
-        let s = libm::sin(lat);
+        let s = kentos_num::sin(lat);
         let n = a / libm::sqrt(1.0 - e2 * s * s);
-        let next = libm::atan2(x[2] + e2 * n * s, p);
+        let next = kentos_num::atan2(x[2] + e2 * n * s, p);
         let done = (next - lat).abs() < 1e-15;
         lat = next;
         if done {
             break;
         }
     }
-    let (s, c) = (libm::sin(lat), libm::cos(lat));
+    let (s, c) = (kentos_num::sin(lat), kentos_num::cos(lat));
     let n = a / libm::sqrt(1.0 - e2 * s * s);
     // Away from the poles by the radius, near them by the height along the axis.
     let height = if c.abs() > 0.1 {

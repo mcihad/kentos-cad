@@ -353,8 +353,8 @@ fn move_geographic(
     );
     let x = to_geocentric(ellipsoid, lat, lon, height);
     let rad = PI / 180.0;
-    let (sp, cp) = (libm::sin(lat * rad), libm::cos(lat * rad));
-    let (sl, cl) = (libm::sin(lon * rad), libm::cos(lon * rad));
+    let (sp, cp) = (kentos_num::sin(lat * rad), kentos_num::cos(lat * rad));
+    let (sl, cl) = (kentos_num::sin(lon * rad), kentos_num::cos(lon * rad));
     let moved = [
         x[0] - sl * e - sp * cl * n + cp * cl * u,
         x[1] + cl * e - sp * sl * n + cp * sl * u,
@@ -448,7 +448,8 @@ mod tests {
         bytes.extend_from_slice(&(cols as i32).to_be_bytes());
         for j in 0..rows {
             for i in 0..cols {
-                let v = 20.0 * libm::sin(i as f64 * 0.001) + 10.0 * libm::cos(j as f64 * 0.002);
+                let v = 20.0 * kentos_num::sin(i as f64 * 0.001)
+                    + 10.0 * kentos_num::cos(j as f64 * 0.002);
                 bytes.extend_from_slice(&(v as f32).to_be_bytes());
             }
         }

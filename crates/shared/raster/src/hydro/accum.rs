@@ -12,7 +12,8 @@
 
 use std::sync::atomic::{AtomicU8, Ordering};
 
-use libm::{atan2, exp, log, sqrt};
+use kentos_num::{atan2, exp, ln as log};
+use libm::sqrt;
 
 use super::surface::{NOFLOW, Surface, back};
 use crate::par;

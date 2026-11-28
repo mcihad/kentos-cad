@@ -317,7 +317,7 @@ fn text(
         return;
     };
     // The baseline's direction on the paper (y down: clockwise from the paper's x axis).
-    let turn = libm::atan2(p1[1] - p0[1], p1[0] - p0[0]);
+    let turn = kentos_num::atan2(p1[1] - p0[1], p1[0] - p0[0]);
     if let Some(glyphs) = &t.glyphs {
         page.glyph_text(glyphs, &t.text, p0, turn, style);
         return;
@@ -340,7 +340,7 @@ fn text(
         }
         _ => 0.0,
     };
-    let (s, c) = (libm::sin(turn), libm::cos(turn));
+    let (s, c) = (kentos_num::sin(turn), kentos_num::cos(turn));
     let start = [p0[0] + along * c - down * s, p0[1] + along * s + down * c];
     let ink = style.map_or(std::borrow::Cow::Borrowed(t.color.as_str()), |s| {
         std::borrow::Cow::Owned(crate::plot_profile::apply::color(&t.color, s))

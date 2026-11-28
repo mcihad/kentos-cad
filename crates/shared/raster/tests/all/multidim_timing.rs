@@ -157,10 +157,9 @@ fn mesh_file(a: usize, b: usize, steps: usize) -> Vec<u8> {
             mask: None,
             is_mask: false,
             slab: Box::new(move |s, out: &mut Vec<f64>| {
-                out.extend(
-                    xs.iter()
-                        .map(|&v| libm::sin((v - 500_000.0) * 0.001 + s as f64 * 0.1).abs() * 3.0),
-                );
+                out.extend(xs.iter().map(|&v| {
+                    kentos_num::sin((v - 500_000.0) * 0.001 + s as f64 * 0.1).abs() * 3.0
+                }));
                 Ok(())
             }),
         }],

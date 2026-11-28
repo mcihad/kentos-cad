@@ -28,7 +28,8 @@ use kentos_formats::raster::samples::Samples;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::tools::point_calc::reading;
 use kentos_geometry_core::vec2::Vec2;
-use libm::{log, sqrt};
+use kentos_num::ln as log;
+use libm::sqrt;
 
 use crate::frame::Gradient;
 use crate::inputs::{Raw, point_of};

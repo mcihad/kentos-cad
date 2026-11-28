@@ -10,7 +10,8 @@ publish.workspace = true
 # pure like the formats core it stands on (the shared SLD filters, labels and expressions of kentos-formats).
 
 [dependencies]
+# The numeric base (docs/adr/9403): correctly rounded functions, the same on every platform.
+kentos-num = { path = "../num" }
 kentos-formats = { path = "../formats" }
-libm = { workspace = true }
 roxmltree = { workspace = true }
 serde_json = { workspace = true }

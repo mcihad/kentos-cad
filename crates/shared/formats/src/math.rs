@@ -1,6 +1,6 @@
-//! Transcendental functions from libm, so the browser (WASM) and the server
-//! (native) read a file to the same bits (CLAUDE.md §23.4; the std methods
-//! call the platform's C library natively and are forbidden by clippy.toml).
+//! Transcendental functions from the numeric base (kentos-num, docs/adr/9403), so every
+//! platform reads a file to the same bits (CLAUDE.md §23.4; the std methods
+//! call the platform's C library and are forbidden by clippy.toml).
 //! Angles that are whole multiples of 90° get exact sines and cosines: a
 //! block inserted at 90° must not move its points by 10⁻¹⁶ of their size.
 
@@ -9,23 +9,23 @@ pub use std::f64::consts::PI;
 pub const TAU: f64 = 2.0 * PI;
 
 pub fn sin(x: f64) -> f64 {
-    libm::sin(x)
+    kentos_num::sin(x)
 }
 
 pub fn cos(x: f64) -> f64 {
-    libm::cos(x)
+    kentos_num::cos(x)
 }
 
 pub fn atan2(y: f64, x: f64) -> f64 {
-    libm::atan2(y, x)
+    kentos_num::atan2(y, x)
 }
 
 pub fn atan(x: f64) -> f64 {
-    libm::atan(x)
+    kentos_num::atan(x)
 }
 
 pub fn tan(x: f64) -> f64 {
-    libm::tan(x)
+    kentos_num::tan(x)
 }
 
 /// The numeric base's: the nearest double (docs/adr/9403).

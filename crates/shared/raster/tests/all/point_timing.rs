@@ -35,7 +35,8 @@ fn points(n: usize) -> Vec<Source> {
     (0..n)
         .map(|_| {
             let (x, y) = (g.next() * 2048.0, g.next() * 2048.0);
-            let z = 400.0 + 60.0 * libm::sin(x / 230.0) * libm::cos(y / 310.0) + 0.05 * x;
+            let z =
+                400.0 + 60.0 * kentos_num::sin(x / 230.0) * kentos_num::cos(y / 310.0) + 0.05 * x;
             Source::Point {
                 p: Place {
                     x: 500_000.0 + x,

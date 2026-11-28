@@ -2154,7 +2154,7 @@ fn read_gradient(
     takes.push(("fillColor", "gradientFill", k1, false));
     takes.push(("color2", "gradientFill", k2, false));
     if shape != "spherical" {
-        let along = libm::atan2(-(p2.1 - p1.1), p2.0 - p1.0).to_degrees();
+        let along = kentos_num::atan2(-(p2.1 - p1.1), p2.0 - p1.0).to_degrees();
         let angle = (prop_num(m, "angle").unwrap_or(0.0) + along).rem_euclid(360.0);
         let angle = round3(angle);
         if angle != 0.0 {

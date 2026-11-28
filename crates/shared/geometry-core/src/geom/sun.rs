@@ -3,7 +3,7 @@
 //! the equation of time and the declination, the hour angle from the true solar time); good to a tenth of a degree,
 //! with no refraction. And its direction in a plan whose north is turned from true north.
 
-use libm::{asin, atan2, cos, sin};
+use kentos_num::{asin, atan2, cos, sin};
 
 const RAD: f64 = core::f64::consts::PI / 180.0;
 

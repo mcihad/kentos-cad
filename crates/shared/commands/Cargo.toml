@@ -17,7 +17,6 @@ linker_messages = "allow"
 kentos-contracts = { path = "../contracts", default-features = false }
 serde = { workspace = true }
 serde_json = { workspace = true }
-libm = { workspace = true }
 schemars = { workspace = true, optional = true }
 kentos-sheet = { path = "../sheet", default-features = false, optional = true }
 

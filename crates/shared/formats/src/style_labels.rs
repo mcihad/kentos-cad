@@ -252,8 +252,8 @@ pub fn ppm(denominator: f64) -> f64 {
     if !v.is_finite() || v <= 0.0 {
         return v;
     }
-    let digits = 4 - libm::floor(libm::log10(v)) as i32;
-    let f = libm::pow(10.0, f64::from(digits));
+    let digits = 4 - libm::floor(kentos_num::log10(v)) as i32;
+    let f = kentos_num::pow(10.0, f64::from(digits));
     libm::round(v * f) / f
 }
 

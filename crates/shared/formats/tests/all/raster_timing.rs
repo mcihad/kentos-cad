@@ -42,8 +42,9 @@ fn dem(w: u32, h: u32) -> Samples {
     for j in 0..h {
         for i in 0..w {
             let (x, y) = (f64::from(i) / 97.0, f64::from(j) / 131.0);
-            let z =
-                800.0 + 120.0 * (libm::sin(x) * libm::cos(y)) + 35.0 * libm::sin(x * 2.3 + y * 1.7);
+            let z = 800.0
+                + 120.0 * (kentos_num::sin(x) * kentos_num::cos(y))
+                + 35.0 * kentos_num::sin(x * 2.3 + y * 1.7);
             s.set((j * w + i) as usize, z);
         }
     }

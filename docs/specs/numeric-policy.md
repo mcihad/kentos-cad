@@ -48,8 +48,10 @@ başvuruyla (aynı tanım) toleranssız, bit bit karşılaştırılır.
 - **Uzunluk** (`kentos_num::hypot`; çekirdekte `js_hypot` ona bağlıdır): her girdide doğru yuvarlanır. Taşıdığı
   JavaScript biçimi (ölçekli, telafili toplam) uzunlukların üçte birinde bir son basamak uzaktaydı. Hesap
   crate'lerinde platformun `hypot`'u çağrılmaz.
-- **Aşkın işlevler** (`sin`, `cos`, `atan2`, `exp`…): bugün `libm`'dendir; her platformda aynıdır ama sonuçların
-  %3–18'i en yakın sayı değildir (1 ulp). Geçişleri ADR 9403 §5'tedir.
+- **Aşkın işlevler** (`kentos_num::sin`, `cos`, `tan`, `atan2`, `exp`, `ln`, `pow`… yirmi bir işlev): her girdide
+  doğru yuvarlanır; özel değerler (sıfırın işareti, sonsuz, NaN, tanım dışı) IEEE 754'ün kurallarıdır. Başvuruları
+  `fixtures/numeric/v1/elementary.json`'dadır (8 176 durum; `scripts/fixtures/numeric_elementary.py`). Hesap
+  crate'lerinde platformun yöntemleriyle yapılan çağrılar (`x.sin()`…) sayılır ve azalır.
 - Platformun matematik kitaplığı hesapta kullanılmaz (sonucu sistemden sisteme değişir); birleşik çarp-topla yalnız
   yuvarlamayı değiştirmediği yerde (hatasız çarpımın hata terimi) kullanılır. Kalan çağrılar sayılır ve yalnız azalır
   (`scripts/dev/platform_math.py`, `make guard`).

@@ -307,7 +307,7 @@ mod tests {
                 s.z[k] = if x.is_multiple_of(97) {
                     f64::NAN
                 } else {
-                    50.0 + 0.05 * f64::from(i) + 8.0 * libm::sin(f64::from(j) / 9.0) + noise
+                    50.0 + 0.05 * f64::from(i) + 8.0 * kentos_num::sin(f64::from(j) / 9.0) + noise
                 };
             }
         }

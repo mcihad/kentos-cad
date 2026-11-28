@@ -206,7 +206,7 @@ pub(super) fn rows(
                 b1.sub(b0)
             };
             // `db` turned back by the value: the residual is the angle left between `da` and it, in (−π, π].
-            let (c, sn) = (libm::cos(value), libm::sin(value));
+            let (c, sn) = (kentos_num::cos(value), kentos_num::sin(value));
             let e = P {
                 x: db.x * c + db.y * sn,
                 y: db.y * c - db.x * sn,

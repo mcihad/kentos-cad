@@ -198,7 +198,9 @@ fn curve(rep: &mut Report, what: &str, ring: Ring, w: &Words) -> Option<Geometry
 /// step when the format sets none, or when that step is already within it.
 fn arc_step(w: &Words, r: f64) -> f64 {
     match w.chord {
-        Some(t) if r.is_finite() && r > t => (2.0 * libm::acos(1.0 - t / r)).min(DEFAULT_STEP),
+        Some(t) if r.is_finite() && r > t => {
+            (2.0 * kentos_num::acos(1.0 - t / r)).min(DEFAULT_STEP)
+        }
         _ => DEFAULT_STEP,
     }
 }

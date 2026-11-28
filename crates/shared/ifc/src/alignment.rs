@@ -278,9 +278,10 @@ fn polynomial_length(b: f64, c: f64, l: f64) -> f64 {
     let f = |x: f64| {
         let v1 = (qb + 2.0 * qa * x) / (4.0 * qa);
         let v2 = (qa * x * x + qb * x + qc).sqrt();
-        let v3 = (4.0 * qa * qc - qb * qb) / (8.0 * libm::pow(qa, 1.5));
-        let v4 =
-            libm::log((2.0 * qa * x + qb + 2.0 * (qa * (qa * x * x + qb * x + qc)).sqrt()).abs());
+        let v3 = (4.0 * qa * qc - qb * qb) / (8.0 * kentos_num::pow(qa, 1.5));
+        let v4 = kentos_num::ln(
+            (2.0 * qa * x + qb + 2.0 * (qa * (qa * x * x + qb * x + qc)).sqrt()).abs(),
+        );
         v1 * v2 + v3 * v4
     };
     f(l) - f(0.0)

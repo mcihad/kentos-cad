@@ -6,7 +6,7 @@
 //! only adds up its surface normal's dot products with them, the sun's
 //! rays below the surface left out (no terrain shadow).
 
-use libm::{cos, pow, sin};
+use kentos_num::{cos, pow, sin};
 
 /// The solar constant, W/m².
 pub const SOLAR_CONSTANT: f64 = 1367.0;
@@ -91,7 +91,7 @@ pub fn suns(phi: f64, days: &[(u32, f64)], hour_step: f64, tau: f64, out: &mut V
             }
             let east = -cd * sw;
             let north = sd * cp - cd * sp * cw;
-            let h = libm::asin(up) / rad;
+            let h = kentos_num::asin(up) / rad;
             let m = 1.0 / (up + 0.50572 * pow(h + 6.07995, -1.6364));
             let k_sun = SOLAR_CONSTANT * e0 * pow(tau, m) * hour_step * weight / 1000.0;
             out.push([east, north, up, k_sun]);

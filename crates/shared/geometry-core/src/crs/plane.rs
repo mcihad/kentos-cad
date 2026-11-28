@@ -45,7 +45,7 @@ impl Plane {
                 scale,
             } => {
                 let th = rotation * (PI / 180.0);
-                let (c, s) = (libm::cos(th), libm::sin(th));
+                let (c, s) = (kentos_num::cos(th), kentos_num::sin(th));
                 [scale * c, -scale * s, east, scale * s, scale * c, north]
             }
             Plane::Affine { a, b, c, d, e, f } => [a, b, c, d, e, f],

@@ -110,7 +110,7 @@ pub fn nice_cell(s: f64) -> f64 {
     // Ten to the |k|-th by products (exact up to 10²²).
     let ten = |k: i32| (0..k.unsigned_abs()).fold(1.0f64, |p, _| p * 10.0);
     let value = |m: f64, k: i32| if k >= 0 { m * ten(k) } else { m / ten(k) };
-    let k = libm::floor(libm::log10(s)) as i32;
+    let k = libm::floor(kentos_num::log10(s)) as i32;
     for kk in [k + 1, k, k - 1] {
         for m in [5.0, 2.5, 2.0, 1.0] {
             let c = value(m, kk);

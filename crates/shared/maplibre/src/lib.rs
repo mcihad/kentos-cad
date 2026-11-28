@@ -18,6 +18,7 @@
 
 use std::fmt::Write as _;
 
+use kentos_num::pow;
 use serde_json::{Map, Value, json};
 
 pub use kentos_formats::sld::Kinds;
@@ -29,18 +30,14 @@ mod colour;
 mod heat;
 mod icons;
 mod labels;
+mod zoom;
 
 use colour::css_in;
 pub use icons::SpriteIcon;
+use zoom::{METRES_PER_PX_Z0, TOP_ZOOM, scale_of_zoom, zoom_of_scale};
 
 /// CSS pixels in a millimetre at 96 dpi.
 pub const PX_PER_MM: f64 = 96.0 / 25.4;
-/// The metres one CSS pixel covers at zoom 0 on the equator (Web Mercator, 512-pixel tiles).
-const METRES_PER_PX_Z0: f64 = 78_271.516_964_020_48;
-/// The scale denominator at zoom 0 at the OGC standard rendering pixel (0.28 mm).
-const SCALE_Z0: f64 = 279_541_132.014_358_9;
-/// The highest zoom a metre width is interpolated to.
-const TOP_ZOOM: f64 = 24.0;
 
 /// What the writer made: the style, what it could not say, the classes and rules written and the style layers.
 #[derive(Clone, Debug, PartialEq)]
@@ -278,7 +275,7 @@ impl Len {
                     0,
                     w0,
                     TOP_ZOOM as i64,
-                    w0 * libm::pow(2.0, TOP_ZOOM)
+                    w0 * pow(2.0, TOP_ZOOM)
                 ])
             }
         }
@@ -344,7 +341,7 @@ fn curve_at(a: &[Value], z: f64) -> Option<Value> {
     let t = if (base - 1.0).abs() < 1e-12 {
         (z - z0) / (z1 - z0)
     } else {
-        (libm::pow(base, z - z0) - 1.0) / (libm::pow(base, z1 - z0) - 1.0)
+        (pow(base, z - z0) - 1.0) / (pow(base, z1 - z0) - 1.0)
     };
     Some(blend(v0, v1, t))
 }
@@ -369,10 +366,6 @@ pub fn renderer_of_at(layers: &[&StyleLayer], denominator: f64) -> Result<Read, 
     let read = renderer_of(layers);
     REFERENCE_ZOOM.with(|r| r.set(before));
     read
-}
-
-fn zoom_of_scale(denominator: f64) -> f64 {
-    libm::log2(SCALE_Z0 / denominator)
 }
 
 fn round8(v: f64) -> f64 {
@@ -2373,9 +2366,9 @@ fn prop_of(v: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<P
             });
             if base2 && stops.len() >= 2 && stops.len() * 2 == a.len() - 3 {
                 let (z0, v0) = stops[0];
-                let w0 = v0 / libm::pow(2.0, z0);
+                let w0 = v0 / pow(2.0, z0);
                 if stops.iter().all(|(z, v)| {
-                    (v - w0 * libm::pow(2.0, *z)).abs() <= 1e-6 * v.abs().max(w0.abs()).max(1e-300)
+                    (v - w0 * pow(2.0, *z)).abs() <= 1e-6 * v.abs().max(w0.abs()).max(1e-300)
                 }) {
                     return Some(Prop::Metres(w0 * METRES_PER_PX_Z0));
                 }
@@ -2533,10 +2526,6 @@ impl Raw<'_> {
             None => v.as_f64().map(Len::Px),
         }
     }
-}
-
-fn scale_of_zoom(z: f64) -> f64 {
-    (SCALE_Z0 / libm::pow(2.0, z)).round()
 }
 
 const READ_KEYS: [&str; 22] = [

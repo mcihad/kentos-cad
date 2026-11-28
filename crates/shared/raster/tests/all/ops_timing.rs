@@ -29,7 +29,9 @@ fn field(n: u32, affine: [f64; 6], seed: f64) -> Vec<u8> {
     let values = (0..n * n)
         .map(|k| {
             let (x, y) = (f64::from(k % n), f64::from(k / n));
-            400.0 + 120.0 * libm::sin(x / 230.0 + seed) * libm::cos(y / 310.0) + 0.05 * x
+            400.0
+                + 120.0 * kentos_num::sin(x / 230.0 + seed) * kentos_num::cos(y / 310.0)
+                + 0.05 * x
         })
         .collect();
     tiff(&Raster {

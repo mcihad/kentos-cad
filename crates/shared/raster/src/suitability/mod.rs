@@ -114,23 +114,23 @@ impl Membership {
     pub fn of(&self, x: f64) -> f64 {
         match *self {
             Membership::Linear { a, b } => linear(a, b, x),
-            Membership::Power { a, b, e } => libm::pow(linear(a, b, x), e),
+            Membership::Power { a, b, e } => kentos_num::pow(linear(a, b, x), e),
             Membership::Gaussian { m, s } => {
                 let d = x - m;
-                libm::exp(-(s * (d * d)))
+                kentos_num::exp(-(s * (d * d)))
             }
             Membership::Large { m, s } => {
                 if x <= 0.0 {
                     0.0
                 } else {
-                    1.0 / (1.0 + libm::pow(x / m, -s))
+                    1.0 / (1.0 + kentos_num::pow(x / m, -s))
                 }
             }
             Membership::Small { m, s } => {
                 if x <= 0.0 {
                     1.0
                 } else {
-                    1.0 / (1.0 + libm::pow(x / m, s))
+                    1.0 / (1.0 + kentos_num::pow(x / m, s))
                 }
             }
             Membership::Near { m, s } => {
@@ -205,7 +205,7 @@ impl FuzzyOp {
             FuzzyOp::Gamma(g) => {
                 let p = mu.iter().fold(1.0, |p, v| p * v);
                 let q = mu.iter().fold(1.0, |q, v| q * (1.0 - v));
-                libm::pow(1.0 - q, g) * libm::pow(p, 1.0 - g)
+                kentos_num::pow(1.0 - q, g) * kentos_num::pow(p, 1.0 - g)
             }
         }
     }

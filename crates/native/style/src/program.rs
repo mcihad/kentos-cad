@@ -47,7 +47,7 @@ pub fn symbol_scale_of(screen: bool, plot_scale: f64, px_per_m: f64) -> f64 {
         return plot_scale;
     }
     let denominator = 1.0 / (px_per_m * METRES_PER_PX);
-    libm::exp2(js_round(libm::log2(js_max(denominator, 1.0)) * 4.0) / 4.0)
+    kentos_num::exp2(js_round(kentos_num::log2(js_max(denominator, 1.0)) * 4.0) / 4.0)
 }
 
 /// What a layer build needs besides the layer.

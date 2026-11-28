@@ -144,9 +144,10 @@ Davranışı değişen her aile için: çağıran yerlerin sınıflandırması A
 
 ### 3. Sahibin onayına bağlı olan
 
-`pxfm`'in doğrudan bağımlılık olması. Gerekçe (CLAUDE.md §3): bakım (etkin; son sürüm 6 Temmuz 2026, ilk sürüm
+**Sahibin kararı (28 Kasım 2026): `pxfm`.** Karar verilen: `pxfm`'in doğrudan bağımlılık olması. Gerekçe (CLAUDE.md §3): bakım (etkin; son sürüm 6 Temmuz 2026, ilk sürüm
 Haziran 2025), lisans (BSD-3 ya da Apache-2.0), platform (saf Rust, kendi bağımlılığı yok), ölçüm (yukarıdaki tablo).
-Onay gelene kadar §1 ve `hypot` yürür; aşkın işlevler `libm`'de kalır.
+Bağımlılığı yalnız `kentos-num` anar; sürüm sabittir (`=0.1.30`) ve yenisi ancak §6'daki bit bit sınama geçerse
+alınır.
 
 ### 4. Denetim
 
@@ -244,6 +245,56 @@ sonucu sistemden sisteme değişir ve bu makinede uzunlukların %16'sında en ya
   anılışını (4 489) sayar; sayı yalnız azalır. Öbür işlevlerin geçişi (§5, sıra 5–6) bu sayıları sıfıra indirir.
 - Koşulanlar: paylaşılan ve yerel crate'lerin tamamı (22 682 ortak durum), masaüstü çekirdeği (2 616), dört modül
   paketi, birleşik program, başsız konak, MCP (313), Python kanalının tamamı (yalnız önceden var olan 40 sorun).
+
+**Aşkın işlevler: `libm` → doğru yuvarlanmış (28 Kasım 2026).** `kentos-num` yirmi bir işlevi verir: `sin`, `cos`,
+`sin_cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `exp`, `exp2`, `ln`, `log2`, `log10`, `pow`, `cbrt`, `sinh`, `cosh`,
+`tanh`, `asinh`, `atanh`, `erfc`, `lgamma`. Aritmetik `pxfm`'indir; aritmetik gerektirmeyen her şey temelin kendi
+kodudur.
+
+- **Ek ölçüm** (ilk on üçe ek; işlev başına 20 000 girdi, mpmath 300 bit):
+
+  | İşlev | `libm` yanlış (en çok) | `pxfm` yanlış |
+  |---|---|---|
+  | sinh, cosh, tanh | %24, %15, %12 (2 ulp) | 0 |
+  | asinh, atanh | %15, %18 | 0 |
+  | exp2 | %0,06 | 0 |
+  | erfc, lgamma | %31, %32 (2 ulp) | 0 |
+  | `sin_cos` çifti | — | iki tek işlevle aynı (20 000 girdi) |
+  | subnormal sonuç ve argüman (exp, exp2, pow, atan2, tek işlevler, kök ve logaritmalar; 56 000 girdi) | 261 | 0 |
+
+  `lgamma` için yazarlarının belgesi 0,52 son basamak der (doğru yuvarlama sözü vermez); ölçülen her girdide ve
+  başvurunun her durumunda en yakın sayıyı verdi.
+- **Kitaplığın standarttan saptığı yerler** bulundu ve temelde düzeltildi (IEEE 754-2019 §9.2.1):
+  - `pow`: eksi sıfırın ve eksi sonsuzun tek olmayan üsse kuvvetinde işaret (`pow(−0, π)` = −0, olması gereken +0);
+    `pow(1, NaN)` ve `pow(NaN, 0)` (NaN, olması gereken 1); eksi tabanda subnormal eşitlik (`pow(−2, −1075)`).
+    Temel, özel değerleri kendisi karara bağlar; eksi tabanı artı tabanın kuvvetine işaret koyarak hesaplar.
+  - `pow`: **tam iki sayının ortasına düşen kuvvetler** ((k²)^1,5 = k³, 3³⁴: 54 bitlik tek sayı) çift olana
+    yuvarlanmıyordu (30 durumun 15'i). Kuvvet, bir tam sayı çarpı ikinin kuvveti olduğunda (üs n/2ᵏ, k ≤ 5; taban
+    s^(2ᵏ)·2ᵉ) temel onu o tam sayının kendisinden yuvarlar (128 bite kadar).
+  - `atan2`: bölümün en küçük sayının altına indiği yerde sıfırın işareti (y eksiyken +0).
+- **Bağımsız başvuru:** `scripts/fixtures/numeric_elementary.py` → `fixtures/numeric/v1/elementary.json`, 8 176 durum.
+  Değer mpmath ile 320 ve 640 bitte hesaplanır ve ikisi aynı sayıya yuvarlanmalıdır; tam değerler kesirden
+  yuvarlanır; özel değerler standardın kural tablosundan yazılır. Girdiler: ondalık derece ve gradın radyanı, çok
+  turlu semtler, π/2'nin katlarının komşuları, 2⁻¹⁰⁷⁴…2¹⁰⁰⁰; çizim ve milimetre koordinat farkları; subnormal ve en
+  büyüğe yakın sonuçlar; tam üsler, eksi taban, tam orta noktalar. Sınama bit bitdir
+  (`crates/shared/num/tests/all/elementary.rs`).
+- **Çağıranlar:** `jsmath`'in dışa aktardıkları ve 66 dosyadaki doğrudan `libm` çağrıları temele bağlandı (`log` adı
+  temelde `ln`'dir). `libm`'de kalanlar kesin IEEE işlemleridir (`sqrt`, `floor`, `ceil`, `round`, `fabs`, `fmax`,
+  `fmin`, `remquo`); yedi crate'in artık kullanmadığı bağımlılık kaldırıldı. GeographicLib'in taşınan kodu (üretilen
+  kopya) kendi `libm` çağrılarıyla kaldı.
+- **Oynayan saklı çıktılar** (farkı okunarak yazıldı; sayı dışında hiçbir şey değişmedi):
+
+  | Dosya | Değişen | En uzak | Not |
+  |---|---|---|---|
+  | `ground-answers.json` | 460 sayıdan 37 | uzunlukta 6·10⁻⁹ m, alanda 5·10⁻⁷ m² (1000 m²'de) | enlem ve boylam derece olarak tutulur; çift duyarlıklı derecenin adımı bu enlemde yerde 0,8 nm'dir, köşe başına o kadar oynar |
+  | `svg/v1/cases.json` | 73 | 32 ulp (5,7·10⁻¹⁴) | |
+  | `style/v1/cases.json` | 51 | 198 ulp (7,1·10⁻¹⁴) | |
+  | `dxf-write/curved.dxf` | 402 sayıdan 30 | 32 ulp | bağımsız DXF denetimi (`dxf_write_reference.py`) yeşil |
+  | saklanan iki IFC dosyası | birer sayı | 5·10⁻¹² | gerçek kuzeyin sinüsü (ızgara yakınsaması, 5,6·10⁻⁸ rad); bağımsız IFC okuyucuları yeşil |
+
+  Ortak durumların (22 682) ve bağımsız başvurulara karşı sınamaların hiçbiri oynamadı.
+- Araç metin dosyalarını da okur (`ulp_diff.py --text`: IFC, DXF; sayılar arasındaki her şey aynı olmalıdır).
+- Koşulanlar: önceki adımlarla aynı takımlar; hepsi yeşil (önceden var olan kırmızılar aynı).
 
 ### 7. Geçişin ortaya çıkardıkları
 

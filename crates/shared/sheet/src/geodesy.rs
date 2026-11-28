@@ -61,21 +61,21 @@ pub fn tm_inverse(p: &TmParams, east: f64, north: f64) -> Option<Geographic> {
     let (mut xi_p, mut eta_p, mut sigma_p, mut tau_p) = (xi, eta, 1.0, 0.0);
     for (j, b) in beta.iter().enumerate() {
         let k = 2.0 * (j as f64 + 1.0);
-        let (s, c) = (libm::sin(k * xi), libm::cos(k * xi));
-        let (sh, ch) = (libm::sinh(k * eta), libm::cosh(k * eta));
+        let (s, c) = (kentos_num::sin(k * xi), kentos_num::cos(k * xi));
+        let (sh, ch) = (kentos_num::sinh(k * eta), kentos_num::cosh(k * eta));
         xi_p -= b * s * ch;
         eta_p -= b * c * sh;
         sigma_p -= k * b * c * ch;
         tau_p += k * b * s * sh;
     }
-    let chi = libm::asin(libm::sin(xi_p) / libm::cosh(eta_p));
+    let chi = kentos_num::asin(kentos_num::sin(xi_p) / kentos_num::cosh(eta_p));
     let mut phi = chi;
     for (j, d) in delta.iter().enumerate() {
-        phi += d * libm::sin(2.0 * (j as f64 + 1.0) * chi);
+        phi += d * kentos_num::sin(2.0 * (j as f64 + 1.0) * chi);
     }
-    let lambda = libm::atan2(libm::sinh(eta_p), libm::cos(xi_p));
-    let tt = libm::tan(xi_p) * libm::tanh(eta_p);
-    let gamma = libm::atan2(tau_p + sigma_p * tt, sigma_p - tau_p * tt);
+    let lambda = kentos_num::atan2(kentos_num::sinh(eta_p), kentos_num::cos(xi_p));
+    let tt = kentos_num::tan(xi_p) * kentos_num::tanh(eta_p);
+    let gamma = kentos_num::atan2(tau_p + sigma_p * tt, sigma_p - tau_p * tt);
     let deg = 180.0 / core::f64::consts::PI;
     Some(Geographic {
         lat: phi * deg,

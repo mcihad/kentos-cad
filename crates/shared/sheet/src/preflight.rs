@@ -186,8 +186,8 @@ fn styles(it: &Item) -> Vec<&TextStyle> {
 /// The nearest standard scale (a tie goes to the larger scale).
 fn nearest_standard(scale: u32) -> Option<u32> {
     paper::standard_scales().iter().copied().min_by(|a, b| {
-        let da = libm::fabs(libm::log(f64::from(*a) / f64::from(scale.max(1))));
-        let db = libm::fabs(libm::log(f64::from(*b) / f64::from(scale.max(1))));
+        let da = libm::fabs(kentos_num::ln(f64::from(*a) / f64::from(scale.max(1))));
+        let db = libm::fabs(kentos_num::ln(f64::from(*b) / f64::from(scale.max(1))));
         da.total_cmp(&db).then(a.cmp(b))
     })
 }

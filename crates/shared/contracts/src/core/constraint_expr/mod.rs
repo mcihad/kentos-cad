@@ -462,7 +462,7 @@ pub fn eval_param_expr(
             }
             eval_param_expr(a, units, value)? / d
         }
-        ParamExpr::Pow(a, b) => libm::pow(
+        ParamExpr::Pow(a, b) => kentos_num::pow(
             eval_param_expr(a, units, value)?,
             eval_param_expr(b, units, value)?,
         ),
@@ -476,12 +476,12 @@ pub fn eval_param_expr(
                 }
             };
             match *f {
-                "sin" => libm::sin(to_rad(x)),
-                "cos" => libm::cos(to_rad(x)),
-                "tan" => libm::tan(to_rad(x)),
-                "asin" => inverse(libm::asin(x), "asin")?,
-                "acos" => inverse(libm::acos(x), "acos")?,
-                "atan" => from_rad(libm::atan(x)),
+                "sin" => kentos_num::sin(to_rad(x)),
+                "cos" => kentos_num::cos(to_rad(x)),
+                "tan" => kentos_num::tan(to_rad(x)),
+                "asin" => inverse(kentos_num::asin(x), "asin")?,
+                "acos" => inverse(kentos_num::acos(x), "acos")?,
+                "atan" => from_rad(kentos_num::atan(x)),
                 "sqrt" if x < 0.0 => return Err("“sqrt” eksi sayı almaz".into()),
                 "sqrt" => libm::sqrt(x),
                 "abs" => x.abs(),

@@ -287,8 +287,8 @@ fn an_arc_end_joins_a_line() {
         panic!()
     };
     let start = Vec2::new(
-        centre.x + radius * libm::cos(a0),
-        centre.y + radius * libm::sin(a0),
+        centre.x + radius * kentos_num::cos(a0),
+        centre.y + radius * kentos_num::sin(a0),
     );
     assert!(len(sub(start, Vec2::new(4.0, 0.0))) < 1e-9 && (centre.y - radius).abs() < 1e-9);
 }

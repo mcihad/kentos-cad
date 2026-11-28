@@ -177,7 +177,7 @@ pub fn srgb_icc() -> Vec<u8> {
             let linear = if v <= 0.04045 {
                 v / 12.92
             } else {
-                libm::pow((v + 0.055) / 1.055, 2.4)
+                kentos_num::pow((v + 0.055) / 1.055, 2.4)
             };
             t.extend((libm::round(linear * 65535.0) as u16).to_be_bytes());
         }

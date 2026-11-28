@@ -222,6 +222,11 @@ serde_json = { version = "=1.0.154", features = ["float_roundtrip"] }
 # platform gives the same bits (CLAUDE.md §23.4, docs/adr/0008). What takes its place is
 # decided in docs/adr/9402 §7 (BK-88).
 libm = "=0.2.16"
+# Correctly rounded elementary functions for the numeric base (docs/adr/9403 §3; the owner's approval, 28 November
+# 2026): pure Rust, no dependency of its own, already locked through the desktop's image decoders. Only kentos-num
+# names it: every function taken from it is held bit for bit to an independent reference there, and a new version is
+# taken only when that test passes.
+pxfm = "=0.1.30"
 # Regular expressions of the expression language (docs/adr/0214 §2.4, the owner's approval of
 # 10 Oct): rust-lang's small engine, no dependencies of its own, Unicode tables left out.
 regex-lite = { version = "=0.1.9", default-features = false, features = ["std", "string"] }

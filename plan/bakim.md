@@ -434,7 +434,11 @@ sonunda derleme, ilgili sınamalar, portalın tür denetimi ve `make guard`.
   - [ ] Davranışı değişmeyen adlar (`minimum`, `maximum`, `sign`, sıralama).
   - [ ] Yuvarlama: 159 `js_round` yerinin sınıflandırması ve geçişi.
   - [ ] Metin: tek `trim`, tek katı sayı okuyucu, sayı yazımı (BK-50 ile).
-  - [ ] Aşkın işlevler: `pxfm` doğrudan bağımlılık olacaksa **sahibin onayı** (ADR 9403 §3).
+  - [x] Aşkın işlevler (sahibin kararı 28 Kasım 2026: `pxfm`): `kentos-num` 21 işlevi doğru yuvarlanmış verir;
+    `pow` ve `atan2`'nin özel değerleri ve tam orta noktaya düşen kuvvetler temelin kendi kodudur (kitaplık
+    standarttan sapıyordu); başvuru `fixtures/numeric/v1/elementary.json` (8 176 durum, bit bit). `jsmath`'in dışa
+    aktardıkları ve doğrudan `libm` çağrıları temele bağlandı; saklanan beş çıktı farkı okunarak yazıldı.
+  - [ ] Platformun yöntemleriyle yapılan çağrılar (`x.sin()`, `x.atan2(y)`, `powi`…; bekçide ~900) sayısal temele.
   - [ ] Platform kitaplığı yasağının bütün hesap crate'lerine yayılması; `jsmath`'in silinmesi.
 
 ## Doğrulama

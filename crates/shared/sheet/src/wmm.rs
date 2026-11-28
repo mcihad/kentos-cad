@@ -164,8 +164,8 @@ pub fn field(lat: f64, lon: f64, height_km: f64, year: f64) -> Option<MagneticFi
     }
     let dt = year - t.epoch;
     let (rlat, rlon) = (lat.to_radians(), lon.to_radians());
-    let (srlon, crlon) = (libm::sin(rlon), libm::cos(rlon));
-    let (srlat, crlat) = (libm::sin(rlat), libm::cos(rlat));
+    let (srlon, crlon) = (kentos_num::sin(rlon), kentos_num::cos(rlon));
+    let (srlat, crlat) = (kentos_num::sin(rlat), kentos_num::cos(rlat));
     let (srlat2, crlat2) = (srlat * srlat, crlat * crlat);
     let mut sp = [0.0_f64; 13];
     let mut cp = [0.0_f64; 13];
@@ -250,8 +250,8 @@ pub fn field(lat: f64, lon: f64, height_km: f64, year: f64) -> Option<MagneticFi
     let h = libm::sqrt(x * x + y * y);
     let f = libm::sqrt(h * h + z * z);
     Some(MagneticField {
-        declination: libm::atan2(y, x).to_degrees(),
-        inclination: libm::atan2(z, h).to_degrees(),
+        declination: kentos_num::atan2(y, x).to_degrees(),
+        inclination: kentos_num::atan2(z, h).to_degrees(),
         x,
         y,
         z,

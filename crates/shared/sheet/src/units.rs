@@ -214,7 +214,7 @@ pub fn sin_cos(a: Mdeg) -> (f64, f64) {
         270_000 => (-1.0, 0.0),
         n => {
             let r = f64::from(n) / 1000.0 * core::f64::consts::PI / 180.0;
-            (libm::sin(r), libm::cos(r))
+            (kentos_num::sin(r), kentos_num::cos(r))
         }
     }
 }

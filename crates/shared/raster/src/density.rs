@@ -65,7 +65,8 @@ pub fn silverman(p: &Weighted) -> Option<f64> {
             break;
         }
     }
-    let r = 0.9 * sd.min((1.0 / std::f64::consts::LN_2).sqrt() * median) * libm::pow(total, -0.2);
+    let r =
+        0.9 * sd.min((1.0 / std::f64::consts::LN_2).sqrt() * median) * kentos_num::pow(total, -0.2);
     (r > 0.0 && r.is_finite()).then_some(r)
 }
 
@@ -201,8 +202,8 @@ pub fn inside(e: &Edge, q: Vec2, r: f64) -> f64 {
             }
             // The arc's circle inside the disc: cos(θ − φ) ≥ (ra² + dc² − r²) / (2 ra dc).
             let kappa = ((ra * ra + dc * dc - r * r) / (2.0 * ra * dc)).clamp(-1.0, 1.0);
-            let alpha = libm::acos(kappa);
-            let phi = libm::atan2(dy, dx);
+            let alpha = kentos_num::acos(kappa);
+            let phi = kentos_num::atan2(dy, dx);
             let start = if sweep >= 0.0 { a0 } else { a0 + sweep };
             let tau = std::f64::consts::TAU;
             // The arc [start, start + span] against [φ − α, φ + α] turned by whole turns.
@@ -251,7 +252,7 @@ mod tests {
         // |(3 + 2cosθ, 2sinθ)| ≤ 5 ⟺ 13 + 12cosθ ≤ 25: every θ. Inside whole.
         assert!((inside(&circle, q, 5.0) - 4.0 * pi).abs() < 1e-12);
         // Against a disc of 3: 13 + 12 cos θ ≤ 9 ⟺ cos θ ≤ −1/3.
-        let want = 2.0 * (pi - libm::acos(-1.0 / 3.0)) * 2.0;
+        let want = 2.0 * (pi - kentos_num::acos(-1.0 / 3.0)) * 2.0;
         assert!(
             (inside(&circle, q, 3.0) - want).abs() < 1e-12,
             "{}",

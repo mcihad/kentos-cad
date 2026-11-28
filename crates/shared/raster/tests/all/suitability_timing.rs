@@ -81,7 +81,8 @@ fn raster(n: u32, value: &dyn Fn(u32, u32) -> f64) -> Vec<u8> {
 /// About 2 % of the cells without a value.
 fn hole(i: u32, j: u32) -> bool {
     let (x, y) = (f64::from(i), f64::from(j));
-    libm::sin(x / 97.0) * libm::cos(y / 131.0) + 0.3 * libm::sin((x + y) / 41.0) > 1.15
+    kentos_num::sin(x / 97.0) * kentos_num::cos(y / 131.0) + 0.3 * kentos_num::sin((x + y) / 41.0)
+        > 1.15
 }
 
 fn slope(i: u32, j: u32) -> f64 {
@@ -89,7 +90,7 @@ fn slope(i: u32, j: u32) -> f64 {
         return f64::NAN;
     }
     let (x, y) = (f64::from(i), f64::from(j));
-    (40.0 * (libm::sin(x / 230.0) * libm::cos(y / 310.0)).abs()
+    (40.0 * (kentos_num::sin(x / 230.0) * kentos_num::cos(y / 310.0)).abs()
         + f64::from(hash(i, j) % 100) / 20.0)
         .max(0.0)
 }

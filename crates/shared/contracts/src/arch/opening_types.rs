@@ -917,7 +917,7 @@ pub struct OpeningPocket {
 /// (`l·cos θ`, none past 90°) and its thickness (`t·sin θ`).
 fn leaf_takes(l: f64, t: f64, angle: f64) -> f64 {
     let r = angle.to_radians();
-    (l * libm::cos(r)).max(0.0) + t * libm::sin(r).max(0.0)
+    (l * kentos_num::cos(r)).max(0.0) + t * kentos_num::sin(r).max(0.0)
 }
 
 /// A three- or four-leaf sliding door's or window's leaves (docs/adr/0792 §1), worked out from its leaves `n`, its
@@ -1119,7 +1119,10 @@ pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
             // The throat between the drum's walls: the chord of its opening, 180° − 360°/n (docs/adr/0777 §1).
             (OpeningOperation::Revolving, ws) => {
                 let n = ws.len().max(1) as f64;
-                (drum.map(|d| d * libm::cos(core::f64::consts::PI / n)), None)
+                (
+                    drum.map(|d| d * kentos_num::cos(core::f64::consts::PI / n)),
+                    None,
+                )
             }
             // Each leaf leaves its lip out of its pocket.
             (OpeningOperation::Pocket, ws) => (Some(leaf - lip * ws.len() as f64), None),

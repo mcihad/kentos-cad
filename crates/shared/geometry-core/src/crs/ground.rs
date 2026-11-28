@@ -139,7 +139,7 @@ fn ellipsoid(system: &System) -> (f64, f64) {
 /// and across it (N).
 fn radii(a: f64, f: f64, lat: f64) -> (f64, f64) {
     let e2 = f * (2.0 - f);
-    let s = libm::sin(lat * (PI / 180.0));
+    let s = kentos_num::sin(lat * (PI / 180.0));
     let w2 = 1.0 - e2 * s * s;
     (a * (1.0 - e2) / (w2 * libm::sqrt(w2)), a / libm::sqrt(w2))
 }
@@ -149,7 +149,7 @@ fn radii(a: f64, f: f64, lat: f64) -> (f64, f64) {
 fn euler_radius(a: f64, f: f64, lat: f64, azimuth: f64) -> f64 {
     let (m, n) = radii(a, f, lat);
     let t = azimuth * (PI / 180.0);
-    let (c, s) = (libm::cos(t), libm::sin(t));
+    let (c, s) = (kentos_num::cos(t), kentos_num::sin(t));
     m * n / (n * c * c + m * s * s)
 }
 

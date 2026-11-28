@@ -269,7 +269,7 @@ fn arc_steps(
 ) -> Result<()> {
     let radius = kentos_num::hypot(major[0], major[1]);
     // Conservative sixth-order bound for the standard tangent-matched cubic arc. The retained model is analytic.
-    let max_angle = libm::pow(0.025 * 50000. / (radius * gain).max(1.), 1. / 6.)
+    let max_angle = kentos_num::pow(0.025 * 50000. / (radius * gain).max(1.), 1. / 6.)
         .min(core::f64::consts::FRAC_PI_4);
     let n = libm::ceil(sweep.abs() / max_angle).max(1.) as usize;
     if n > BUDGET || out.len() + n > BUDGET {
@@ -278,14 +278,14 @@ fn arc_steps(
     let start = start.rem_euclid(core::f64::consts::TAU);
     let dt = sweep / n as f64;
     let at = |t: f64| {
-        let (s, c) = (libm::sin(t), libm::cos(t));
+        let (s, c) = (kentos_num::sin(t), kentos_num::cos(t));
         [
             center[0] + major[0] * c - major[1] * ratio * s,
             center[1] + major[1] * c + major[0] * ratio * s,
         ]
     };
     let d = |t: f64| {
-        let (s, c) = (libm::sin(t), libm::cos(t));
+        let (s, c) = (kentos_num::sin(t), kentos_num::cos(t));
         [
             -major[0] * s - major[1] * ratio * c,
             -major[1] * s + major[0] * ratio * c,
@@ -294,7 +294,7 @@ fn arc_steps(
     if !connect {
         out.push(Step::Move(at(start)));
     }
-    let k = 4. / 3. * libm::tan(dt / 4.);
+    let k = 4. / 3. * kentos_num::tan(dt / 4.);
     for i in 0..n {
         let a = start + i as f64 * dt;
         let b = a + dt;
@@ -418,7 +418,7 @@ pub fn paths(cad: &CadShape, frame: &RectUm) -> Result<Vec<Path>> {
                         + p.bulges
                             .iter()
                             .map(|b| {
-                                (720. * libm::atan(*b).abs() / core::f64::consts::TAU).ceil()
+                                (720. * kentos_num::atan(*b).abs() / core::f64::consts::TAU).ceil()
                                     as usize
                             })
                             .sum::<usize>();

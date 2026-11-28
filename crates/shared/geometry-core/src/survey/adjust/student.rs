@@ -57,9 +57,11 @@ pub fn incomplete_beta(a: f64, b: f64, x: f64) -> f64 {
     if !(x < 1.0) {
         return 1.0;
     }
-    let front = exp(libm::lgamma(a + b) - libm::lgamma(a) - libm::lgamma(b)
-        + a * log(x)
-        + b * log(1.0 - x));
+    let front = exp(
+        kentos_num::lgamma(a + b) - kentos_num::lgamma(a) - kentos_num::lgamma(b)
+            + a * log(x)
+            + b * log(1.0 - x),
+    );
     if x < (a + 1.0) / (a + b + 2.0) {
         front * fraction(a, b, x) / a
     } else {

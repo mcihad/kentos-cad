@@ -71,13 +71,13 @@ fn sphere(p: &Tm, e: f64, lat: f64, lon: f64) -> Sphere {
     let rad = PI / 180.0;
     let phi = lat * rad;
     let lambda = (lon - p.central_meridian) * rad;
-    let s = libm::sin(phi);
-    let t = libm::sinh(libm::atanh(s) - e * libm::atanh(e * s));
-    let c = libm::cos(lambda);
+    let s = kentos_num::sin(phi);
+    let t = kentos_num::sinh(kentos_num::atanh(s) - e * kentos_num::atanh(e * s));
+    let c = kentos_num::cos(lambda);
     Sphere {
         t,
-        xi_p: libm::atan2(t, c),
-        eta_p: libm::atanh(libm::sin(lambda) / libm::sqrt(1.0 + t * t)),
+        xi_p: kentos_num::atan2(t, c),
+        eta_p: kentos_num::atanh(kentos_num::sin(lambda) / libm::sqrt(1.0 + t * t)),
         sin_phi: s,
         cos_lambda: c,
     }
@@ -105,8 +105,8 @@ pub fn tm_forward(p: &Tm, lat: f64, lon: f64) -> Option<Vec2> {
     let (mut xi, mut eta) = (xi_p, eta_p);
     for (j, a) in alpha.iter().enumerate() {
         let k = 2.0 * (j as f64 + 1.0);
-        xi += a * libm::sin(k * xi_p) * libm::cosh(k * eta_p);
-        eta += a * libm::cos(k * xi_p) * libm::sinh(k * eta_p);
+        xi += a * kentos_num::sin(k * xi_p) * kentos_num::cosh(k * eta_p);
+        eta += a * kentos_num::cos(k * xi_p) * kentos_num::sinh(k * eta_p);
     }
     let k0a = p.scale_factor * a_big;
     let east = p.false_easting + k0a * eta;
@@ -143,10 +143,10 @@ pub fn tm_scale(p: &Tm, lat: f64, lon: f64) -> Option<f64> {
     let (mut re, mut im) = (1.0, 0.0);
     for (j, a) in alpha.iter().enumerate() {
         let k = 2.0 * (j as f64 + 1.0);
-        re += k * a * libm::cos(k * xi_p) * libm::cosh(k * eta_p);
-        im -= k * a * libm::sin(k * xi_p) * libm::sinh(k * eta_p);
+        re += k * a * kentos_num::cos(k * xi_p) * kentos_num::cosh(k * eta_p);
+        im -= k * a * kentos_num::sin(k * xi_p) * kentos_num::sinh(k * eta_p);
     }
-    let cos_phi = libm::cos(lat * (PI / 180.0));
+    let cos_phi = kentos_num::cos(lat * (PI / 180.0));
     let on_sphere =
         libm::sqrt(1.0 - e2 * sin_phi * sin_phi) / cos_phi / kentos_num::hypot(t, cos_lambda);
     let k = p.scale_factor * (a_big / p.semi_major) * kentos_num::hypot(re, im) * on_sphere;
@@ -190,19 +190,19 @@ pub fn tm_inverse(p: &Tm, east: f64, north: f64) -> Option<(f64, f64)> {
     let (mut xi_p, mut eta_p) = (xi, eta);
     for (j, b) in beta.iter().enumerate() {
         let k = 2.0 * (j as f64 + 1.0);
-        xi_p -= b * libm::sin(k * xi) * libm::cosh(k * eta);
-        eta_p -= b * libm::cos(k * xi) * libm::sinh(k * eta);
+        xi_p -= b * kentos_num::sin(k * xi) * kentos_num::cosh(k * eta);
+        eta_p -= b * kentos_num::cos(k * xi) * kentos_num::sinh(k * eta);
     }
-    let sh = libm::sinh(eta_p);
-    let c = libm::cos(xi_p);
+    let sh = kentos_num::sinh(eta_p);
+    let c = kentos_num::cos(xi_p);
     let r = libm::sqrt(sh * sh + c * c);
-    let tau_p = libm::sin(xi_p) / r;
-    let lambda = libm::atan2(sh, c);
+    let tau_p = kentos_num::sin(xi_p) / r;
+    let lambda = kentos_num::atan2(sh, c);
     // τ from τ′ (Karney eqs. 19–21): Newton from τ′ itself; a few steps reach the double's last bit.
     let mut tau = tau_p;
     for _ in 0..8 {
         let tau1 = libm::sqrt(1.0 + tau * tau);
-        let sigma = libm::sinh(e * libm::atanh(e * tau / tau1));
+        let sigma = kentos_num::sinh(e * kentos_num::atanh(e * tau / tau1));
         let tau_i = tau * libm::sqrt(1.0 + sigma * sigma) - sigma * tau1;
         let d = (tau_p - tau_i) / libm::sqrt(1.0 + tau_i * tau_i) * (1.0 + (1.0 - e2) * tau * tau)
             / ((1.0 - e2) * tau1);
@@ -212,7 +212,7 @@ pub fn tm_inverse(p: &Tm, east: f64, north: f64) -> Option<(f64, f64)> {
         }
     }
     let deg = 180.0 / PI;
-    let lat = libm::atan(tau) * deg;
+    let lat = kentos_num::atan(tau) * deg;
     let lon = p.central_meridian + lambda * deg;
     (lat.is_finite() && lon.is_finite()).then_some((lat, lon))
 }

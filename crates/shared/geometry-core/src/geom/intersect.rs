@@ -535,9 +535,9 @@ mod tests {
             let b = Vec2::new(a.x + l1 * cos(th), a.y + l1 * sin(th));
             // A turn of 1e-10 … 1e-6 and a crossing within 1e-7 of an end.
             let sign = if g.next() < 0.5 { -1.0 } else { 1.0 };
-            let delta = sign * libm::pow(10.0, -6.0 - 4.0 * g.next());
+            let delta = sign * kentos_num::pow(10.0, -6.0 - 4.0 * g.next());
             let near = if n % 2 == 0 { 0.0 } else { 1.0 };
-            let t0 = near + (g.next() - 0.5) * 2.0 * libm::pow(10.0, -7.0 - 6.0 * g.next());
+            let t0 = near + (g.next() - 0.5) * 2.0 * kentos_num::pow(10.0, -7.0 - 6.0 * g.next());
             let x = Vec2::new(a.x + t0 * (b.x - a.x), a.y + t0 * (b.y - a.y));
             let (l2, s0, phi) = (20.0 + g.next() * 180.0, 0.2 + 0.6 * g.next(), th + delta);
             let c = Vec2::new(x.x - s0 * l2 * cos(phi), x.y - s0 * l2 * sin(phi));

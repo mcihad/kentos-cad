@@ -2,13 +2,13 @@
 //! (docs/adr/0008): `Math.round` rounds halves up, and `Math.sign`/`min`/`max`
 //! keep NaN and signed zeros their own way. The numeric base takes their place
 //! family by family (`kentos-num`, docs/adr/9403); a length is its already.
-//! Transcendental functions come from `libm` on every platform (never the
-//! platform's own), so every system gives the same bits (CLAUDE.md §23.4);
-//! `clippy.toml` forbids the std methods.
+//! Transcendental functions are the numeric base's too: correctly rounded, so
+//! every system gives the same bits (CLAUDE.md §23.4); `clippy.toml` forbids
+//! the std methods, which call the platform's library.
 
 use std::cmp::Ordering;
 
-pub use libm::{acos, asin, atan, atan2, cos, exp, log, log2, log10, pow, sin, tan};
+pub use kentos_num::{acos, asin, atan, atan2, cos, exp, ln as log, log2, log10, pow, sin, tan};
 
 pub const PI: f64 = std::f64::consts::PI;
 pub const TAU: f64 = PI * 2.0;

@@ -97,7 +97,7 @@ fn similarity(affine: &[f64; 6]) -> Option<(f64, f64)> {
 /// whose chords stay within the tolerance; the ends left to the caller.
 pub(crate) fn arc_inner_points(c: Vec2, r: f64, a0: f64, sweep: f64) -> Vec<Vec2> {
     let step = if r > CHORD_TOLERANCE {
-        2.0 * libm::acos(1.0 - CHORD_TOLERANCE / r)
+        2.0 * kentos_num::acos(1.0 - CHORD_TOLERANCE / r)
     } else {
         std::f64::consts::PI
     };
@@ -105,7 +105,7 @@ pub(crate) fn arc_inner_points(c: Vec2, r: f64, a0: f64, sweep: f64) -> Vec<Vec2
     (1..n)
         .map(|k| {
             let t = a0 + sweep * k as f64 / n as f64;
-            Vec2::new(c.x + r * libm::cos(t), c.y + r * libm::sin(t))
+            Vec2::new(c.x + r * kentos_num::cos(t), c.y + r * kentos_num::sin(t))
         })
         .collect()
 }
@@ -123,8 +123,8 @@ fn arc_pieces(a: Vec2, b: Vec2, bulge: f64, out: &mut Vec<Piece>) {
     let r = (dx * dx + dy * dy).sqrt() * (1.0 + bulge * bulge) / (4.0 * bulge.abs());
     // Counter-clockwise from s to e.
     let (s, e) = if bulge > 0.0 { (a, b) } else { (b, a) };
-    let sweep = 4.0 * libm::atan(bulge.abs());
-    let a_s = libm::atan2(s.y - c.y, s.x - c.x);
+    let sweep = 4.0 * kentos_num::atan(bulge.abs());
+    let a_s = kentos_num::atan2(s.y - c.y, s.x - c.x);
     circle_pieces(c, r, Some((s, a_s, sweep, e)), out);
 }
 
@@ -178,7 +178,7 @@ fn circle_pieces(c: Vec2, r: f64, arc: Option<(Vec2, f64, f64, Vec2)>, out: &mut
         if p0.y == p1.y {
             continue;
         }
-        let right = libm::cos((t0 + t1) / 2.0) > 0.0;
+        let right = kentos_num::cos((t0 + t1) / 2.0) > 0.0;
         let (lo, hi) = if p0.y < p1.y { (p0, p1) } else { (p1, p0) };
         out.push(Piece::Arc {
             c,
@@ -284,7 +284,10 @@ impl Areas {
                             Edge::Seg { a, b } => seg_piece(cell(a), cell(b), &mut buf),
                             Edge::Arc { c, r, a0, sweep } => {
                                 let at = |t: f64| {
-                                    Vec2::new(c.x + r * libm::cos(t), c.y + r * libm::sin(t))
+                                    Vec2::new(
+                                        c.x + r * kentos_num::cos(t),
+                                        c.y + r * kentos_num::sin(t),
+                                    )
                                 };
                                 let mut prev = cell(at(a0));
                                 for p in arc_inner_points(c, r, a0, sweep) {

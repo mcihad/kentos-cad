@@ -22,7 +22,6 @@ kentos-contracts = { path = "../contracts", default-features = false }
 kentos-formats = { path = "../formats" }
 kentos-geometry-core = { path = "../geometry-core" }
 kentos-style-core = { path = "../style-core" }
-libm = { workspace = true }
 # Gzipped vector tiles (docs/adr/0208 §9): inflate only; already the formats core's.
 miniz_oxide = { workspace = true }
 # Capabilities and GML are XML (WMS, WMTS, WFS); the formats core reads XML with it too.

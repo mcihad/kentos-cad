@@ -830,7 +830,7 @@ pub fn eval(e: &Expr, cx: &Ctx<'_>) -> Val {
             let t = match kind {
                 Interp::Linear => p,
                 Interp::Exponential(base) => {
-                    (libm::pow(*base, x - z0) - 1.0) / (libm::pow(*base, span) - 1.0)
+                    (kentos_num::pow(*base, x - z0) - 1.0) / (kentos_num::pow(*base, span) - 1.0)
                 }
                 Interp::Bezier(b) => bezier(*b, p),
             };
@@ -896,7 +896,7 @@ pub fn eval(e: &Expr, cx: &Ctx<'_>) -> Val {
                 MathOp::Sub => n[0] - n[1],
                 MathOp::Div => n[0] / n.get(1).copied().unwrap_or(1.0),
                 MathOp::Rem => n[0] % n.get(1).copied().unwrap_or(1.0),
-                MathOp::Pow => libm::pow(n[0], n.get(1).copied().unwrap_or(1.0)),
+                MathOp::Pow => kentos_num::pow(n[0], n.get(1).copied().unwrap_or(1.0)),
                 MathOp::Min => n.iter().copied().fold(f64::INFINITY, f64::min),
                 MathOp::Max => n.iter().copied().fold(f64::NEG_INFINITY, f64::max),
                 MathOp::Abs => n[0].abs(),
@@ -904,15 +904,15 @@ pub fn eval(e: &Expr, cx: &Ctx<'_>) -> Val {
                 MathOp::Ceil => n[0].ceil(),
                 MathOp::Round => n[0].round(),
                 MathOp::Sqrt => n[0].sqrt(),
-                MathOp::Sin => libm::sin(n[0]),
-                MathOp::Cos => libm::cos(n[0]),
-                MathOp::Tan => libm::tan(n[0]),
-                MathOp::Asin => libm::asin(n[0]),
-                MathOp::Acos => libm::acos(n[0]),
-                MathOp::Atan => libm::atan(n[0]),
-                MathOp::Ln => libm::log(n[0]),
-                MathOp::Log10 => libm::log10(n[0]),
-                MathOp::Log2 => libm::log2(n[0]),
+                MathOp::Sin => kentos_num::sin(n[0]),
+                MathOp::Cos => kentos_num::cos(n[0]),
+                MathOp::Tan => kentos_num::tan(n[0]),
+                MathOp::Asin => kentos_num::asin(n[0]),
+                MathOp::Acos => kentos_num::acos(n[0]),
+                MathOp::Atan => kentos_num::atan(n[0]),
+                MathOp::Ln => kentos_num::ln(n[0]),
+                MathOp::Log10 => kentos_num::log10(n[0]),
+                MathOp::Log2 => kentos_num::log2(n[0]),
             })
         }
         Expr::Assert(kind, list) => list

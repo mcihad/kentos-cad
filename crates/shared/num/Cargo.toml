@@ -7,8 +7,10 @@ rust-version.workspace = true
 publish.workspace = true
 
 # Its own crate, under every other (docs/adr/9403 §4): the contracts do not know the geometry core, and both compute.
-# No dependency: what is here is IEEE 754 arithmetic and integers. serde_json reads the shared cases in the tests.
+# `hypot` is IEEE 754 arithmetic and integers of its own; the elementary functions are pxfm's (docs/adr/9403 §3),
+# their special values this crate's. serde_json reads the shared cases in the tests.
 [dependencies]
+pxfm = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }

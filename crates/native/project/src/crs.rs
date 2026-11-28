@@ -387,7 +387,7 @@ pub fn project_lat_lon(crs: &System, lat: f64, lon: f64) -> Option<Vec2> {
     if crs.projection.as_deref() == Some("Pseudo-Mercator") {
         let r = 6_378_137.0;
         let x = r * (lon * PI / 180.0);
-        let y = r * libm::log(libm::tan(PI / 4.0 + lat * PI / 360.0));
+        let y = r * kentos_num::ln(kentos_num::tan(PI / 4.0 + lat * PI / 360.0));
         return (x.is_finite() && y.is_finite()).then_some(Vec2 { x, y });
     }
     let p = tm_forward(&crs.tm()?, lat, lon)?;

@@ -461,8 +461,8 @@ pub fn default_cell(mesh: &Mesh) -> f64 {
 
 /// The largest of 1, 2, 5 × 10ⁿ not above `v`.
 pub fn nice_below(v: f64) -> f64 {
-    let e = libm::floor(libm::log10(v));
-    let base = libm::pow(10.0, e);
+    let e = libm::floor(kentos_num::log10(v));
+    let base = kentos_num::pow(10.0, e);
     let m = v / base;
     let k = if m >= 5.0 {
         5.0
@@ -476,8 +476,8 @@ pub fn nice_below(v: f64) -> f64 {
 
 /// The smallest of 1, 2, 5 × 10ⁿ not below `v`.
 fn nice_above(v: f64) -> f64 {
-    let e = libm::floor(libm::log10(v));
-    let base = libm::pow(10.0, e);
+    let e = libm::floor(kentos_num::log10(v));
+    let base = kentos_num::pow(10.0, e);
     let m = v / base;
     let k = if m <= 1.0 {
         1.0

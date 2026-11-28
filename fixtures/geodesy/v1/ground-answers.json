@@ -91,7 +91,7 @@
       "op": "crsPointScale"
     },
     {
-      "answer": 0.9996017690424988,
+      "answer": 0.999601769042499,
       "args": [
         {
           "centralMeridian": 33,
@@ -232,7 +232,7 @@
       "op": "crsPointScale"
     },
     {
-      "answer": 0.9999882942583133,
+      "answer": 0.9999882942583135,
       "args": [
         {
           "base": {
@@ -260,7 +260,7 @@
       "op": "crsPointScale"
     },
     {
-      "answer": 1.0003894174011674,
+      "answer": 1.0003894174011672,
       "args": [
         {
           "base": {
@@ -349,7 +349,7 @@
       "answer": {
         "ellipsoidLength": 999.3124714926419,
         "heightFactor": 1,
-        "scale": 1.0000000000000002
+        "scale": 1
       },
       "args": [
         {
@@ -428,7 +428,7 @@
     },
     {
       "answer": {
-        "ellipsoidLength": 3082.345666940911,
+        "ellipsoidLength": 3082.345666941617,
         "heightFactor": 0.9998666598618613,
         "scale": 0.9996031664881556
       },
@@ -520,7 +520,7 @@
     {
       "answer": {
         "ellipsoidLength": 3403.6077983089463,
-        "scale": 1.0000937825000158
+        "scale": 1.0000937825000156
       },
       "args": [
         {
@@ -711,11 +711,11 @@
     },
     {
       "answer": {
-        "ellipsoidLength": 73.09741731032292,
-        "groundLength": 73.10715879059681,
+        "ellipsoidLength": 73.09741731151533,
+        "groundLength": 73.10715879178937,
         "heightFactor": 0.9998667506652558,
         "planeLength": 73.10405480877574,
-        "scale": 1.0000908034606015
+        "scale": 1.0000908034442877
       },
       "args": [
         {
@@ -755,14 +755,14 @@
     },
     {
       "answer": {
-        "ellipsoidArea": 999.8183721879032,
-        "ellipsoidLength": 129.9881936350758,
-        "groundArea": 999.8183721879032,
-        "groundLength": 129.9881936350758,
+        "ellipsoidArea": 999.8183724815026,
+        "ellipsoidLength": 129.98819363648897,
+        "groundArea": 999.8183724815026,
+        "groundLength": 129.98819363648897,
         "heightFactor": 1,
         "planeArea": 1000,
         "planeLength": 130,
-        "scale": 1.0000908262786694
+        "scale": 1.0000908261318298
       },
       "args": [
         {
@@ -803,14 +803,14 @@
     },
     {
       "answer": {
-        "ellipsoidArea": 999.8183721879032,
-        "ellipsoidLength": 129.9881936350758,
-        "groundArea": 1000.1320596028341,
-        "groundLength": 130.00857456050957,
+        "ellipsoidArea": 999.8183724815026,
+        "ellipsoidLength": 129.98819363648897,
+        "groundArea": 1000.1320598965257,
+        "groundLength": 130.00857456192298,
         "heightFactor": 0.9998431647038623,
         "planeArea": 1000,
         "planeLength": 130,
-        "scale": 1.0000908262786694
+        "scale": 1.0000908261318298
       },
       "args": [
         {
@@ -852,9 +852,9 @@
     {
       "answer": {
         "ellipsoidArea": 9509.315316922852,
-        "ellipsoidLength": 483.39648261755804,
+        "ellipsoidLength": 483.39648262359503,
         "groundArea": 9512.00077504598,
-        "groundLength": 483.464708761554,
+        "groundLength": 483.4647087675918,
         "heightFactor": 0.9998588284549612,
         "planeArea": 9526.182289684437,
         "planeLength": 483.82501667599274,
@@ -925,14 +925,14 @@
     },
     {
       "answer": {
-        "ellipsoidArea": 999619.7070954293,
-        "ellipsoidLength": 3999.239333672461,
-        "groundArea": 1000090.2178875209,
-        "groundLength": 4000.180423510782,
+        "ellipsoidArea": 999619.7070953399,
+        "ellipsoidLength": 3999.239333672109,
+        "groundArea": 1000090.2178874315,
+        "groundLength": 4000.18042351043,
         "heightFactor": 0.9997647381522159,
         "planeArea": 1000000,
         "planeLength": 4000,
-        "scale": 1.0001902007029881
+        "scale": 1.000190200703033
       },
       "args": [
         {
@@ -1021,11 +1021,11 @@
     },
     {
       "answer": {
-        "ellipsoidLength": 648.8407066954181,
-        "groundLength": 648.837655068199,
-        "heightFactor": 1.0000047032215151,
+        "ellipsoidLength": 648.8407066945349,
+        "groundLength": 648.8376550673158,
+        "heightFactor": 1.000004703221515,
         "planeLength": 649.4149601475976,
-        "scale": 1.0008850453528173
+        "scale": 1.0008850453541798
       },
       "args": [
         {
@@ -1463,9 +1463,9 @@
     {
       "answer": {
         "ellipsoidArea": 1254.4113199940452,
-        "ellipsoidLength": 125.5523697486604,
+        "ellipsoidLength": 125.55236975205575,
         "groundArea": 1254.8049335220392,
-        "groundLength": 125.57206633235486,
+        "groundLength": 125.5720663357508,
         "heightFactor": 0.9998431451813791,
         "planeArea": 1256.6370614359173,
         "planeLength": 125.66370614359172,
@@ -1505,14 +1505,14 @@
     },
     {
       "answer": {
-        "ellipsoidArea": 99959169.01931381,
-        "ellipsoidLength": 39991.82477416582,
-        "groundArea": 99959169.01931381,
-        "groundLength": 39991.82477416582,
+        "ellipsoidArea": 99959169.01931429,
+        "ellipsoidLength": 39991.824774165776,
+        "groundArea": 99959169.01931429,
+        "groundLength": 39991.824774165776,
         "heightFactor": 1,
         "planeArea": 100000000,
         "planeLength": 40000,
-        "scale": 1.000204217443548
+        "scale": 1.0002042174435457
       },
       "args": [
         {

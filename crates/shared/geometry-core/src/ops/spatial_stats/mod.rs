@@ -143,7 +143,7 @@ pub fn number_of(text: Option<&str>) -> Option<f64> {
 
 /// Two-sided p of a standard normal z: erfc(|z| / √2).
 pub fn p_value(z: f64) -> f64 {
-    libm::erfc(z.abs() / std::f64::consts::SQRT_2)
+    kentos_num::erfc(z.abs() / std::f64::consts::SQRT_2)
 }
 
 /// What a test's z says (§2): clustered, dispersed or random at p < 0.05;

@@ -4,7 +4,8 @@
 //! row's latitude (GRS80). The terrain's kernels take a row's pixel axes in
 //! metres from here.
 
-use libm::{cos, sin, sqrt};
+use kentos_num::{cos, sin};
+use libm::sqrt;
 
 /// GRS80's semi-major axis (m) and flattening.
 pub const GRS80_A: f64 = 6_378_137.0;

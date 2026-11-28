@@ -226,7 +226,7 @@ fn exact(a: f64, b: f64) -> f64 {
 }
 
 /// `m · 2ᵉ` as a double for m ≤ 2⁵³ whose value is a double or past the largest one (then infinite).
-fn scaled(m: u64, e: i32) -> f64 {
+pub(crate) fn scaled(m: u64, e: i32) -> f64 {
     if m == 0 {
         return 0.0;
     }

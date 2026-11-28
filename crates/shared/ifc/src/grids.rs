@@ -255,7 +255,7 @@ mod tests {
             .map(|(i, &d)| axis(uids[i], tags[i], at(2.5, d), at(9.5, d), 0.0))
             .collect();
         // A 140° arc's bulge: tan(140°/4); clockwise when drawn from its end back.
-        let bulge = libm::tan(140f64.to_radians() / 4.0);
+        let bulge = kentos_num::tan(140f64.to_radians() / 4.0);
         for (uid, tag, r) in [("aF", "F", 8.0), ("aE", "E", 4.0)] {
             let (s, e) = (at(r, -70.0), at(r, 70.0));
             out.push(if ccw {

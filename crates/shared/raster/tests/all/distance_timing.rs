@@ -81,20 +81,21 @@ fn height(i: u32, j: u32) -> f64 {
     let (x, y) = (f64::from(i), f64::from(j));
     let noise = f64::from(hash(i, j) % 1000) / 1000.0;
     400.0
-        + 120.0 * libm::sin(x / 230.0) * libm::cos(y / 310.0)
+        + 120.0 * kentos_num::sin(x / 230.0) * kentos_num::cos(y / 310.0)
         + 0.05 * x
-        + 3.0 * libm::sin(x / 7.0) * libm::cos(y / 9.0)
+        + 3.0 * kentos_num::sin(x / 7.0) * kentos_num::cos(y / 9.0)
         + 0.8 * noise
 }
 
 /// The cost: dearer up the hills, lakes (about 4 %) without a value.
 fn cost(i: u32, j: u32) -> f64 {
     let (x, y) = (f64::from(i), f64::from(j));
-    let lake = libm::sin(x / 97.0) * libm::cos(y / 131.0) + 0.3 * libm::sin((x + y) / 41.0);
+    let lake = kentos_num::sin(x / 97.0) * kentos_num::cos(y / 131.0)
+        + 0.3 * kentos_num::sin((x + y) / 41.0);
     if lake > 1.05 {
         return f64::NAN;
     }
-    1.0 + 4.0 * (libm::sin(x / 230.0) * libm::cos(y / 310.0)).abs()
+    1.0 + 4.0 * (kentos_num::sin(x / 230.0) * kentos_num::cos(y / 310.0)).abs()
         + f64::from(hash(i, j) % 100) / 100.0
 }
 

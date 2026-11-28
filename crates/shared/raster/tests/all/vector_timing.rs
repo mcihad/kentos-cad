@@ -243,7 +243,7 @@ fn vector_timing() {
     let lines = raster(n, 1, RasterSample::U8, None, &|i, j, out| {
         let x = f64::from(i);
         let k = f64::from(j) / 100.0;
-        let centre = (k.round() * 100.0) + 20.0 * libm::sin(x / 180.0 + k.round());
+        let centre = (k.round() * 100.0) + 20.0 * kentos_num::sin(x / 180.0 + k.round());
         out[0] = if (f64::from(j) - centre).abs() <= 1.0 {
             1.0
         } else {
@@ -261,7 +261,7 @@ fn vector_timing() {
     // Rasterden nokta: a surface, every tenth cell.
     let surface = raster(n, 1, RasterSample::F32, Some(f64::NAN), &|i, j, out| {
         let (x, y) = (f64::from(i), f64::from(j));
-        out[0] = 400.0 + 120.0 * libm::sin(x / 230.0) * libm::cos(y / 310.0) + 0.05 * x;
+        out[0] = 400.0 + 120.0 * kentos_num::sin(x / 230.0) * kentos_num::cos(y / 310.0) + 0.05 * x;
     });
     let tool = json!({ "kind": "toPoints", "band": 1, "mode": "step", "step": 10 });
     report(
@@ -281,12 +281,12 @@ fn vector_timing() {
     let sheet = raster(m, 3, RasterSample::U8, None, &|i, j, out| {
         let grid = i % 400 < 3 || j % 400 < 3;
         let contour =
-            (f64::from(j) - 4100.0 - 900.0 * libm::sin(f64::from(i) / 1300.0)).abs() <= 1.5;
+            (f64::from(j) - 4100.0 - 900.0 * kentos_num::sin(f64::from(i) / 1300.0)).abs() <= 1.5;
         let v = if grid || contour { 25.0 } else { 250.0 };
         out.copy_from_slice(&[v, v, v]);
     });
     let at = |i: f64, j: f64| (X0 + 2.0 * i + 1.0, Y1 - 2.0 * j - 1.0);
-    let (x, y) = at(3000.0, 4100.0 + 900.0 * libm::sin(3000.0 / 1300.0));
+    let (x, y) = at(3000.0, 4100.0 + 900.0 * kentos_num::sin(3000.0 / 1300.0));
     let tool = json!({ "kind": "captureLine", "x": x, "y": y, "tolerance": 60.0, "spur": 5, "simplify": 1.0 });
     report(
         "Çizgi yakala, 8192² pafta, ızgaraya bağlı ağ",
@@ -303,7 +303,7 @@ fn vector_timing() {
     let sheet2 = raster(m, 3, RasterSample::U8, None, &|i, j, out| {
         let grid = i % 400 < 3 || j % 400 < 3;
         let contour =
-            (f64::from(j) - 4100.0 - 900.0 * libm::sin(f64::from(i) / 1300.0)).abs() <= 1.5;
+            (f64::from(j) - 4100.0 - 900.0 * kentos_num::sin(f64::from(i) / 1300.0)).abs() <= 1.5;
         let v = if contour {
             [150.0, 80.0, 30.0]
         } else if grid {
@@ -336,7 +336,7 @@ fn vector_timing() {
                         let x = f64::from(q) * 50.0;
                         Vec2::new(
                             X0 + x,
-                            Y1 + base + 0.6 * libm::sin(x / 300.0 + f64::from(k) * 0.01),
+                            Y1 + base + 0.6 * kentos_num::sin(x / 300.0 + f64::from(k) * 0.01),
                         )
                     })
                     .collect(),

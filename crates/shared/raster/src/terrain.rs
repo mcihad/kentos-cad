@@ -7,7 +7,8 @@
 //! independent reference (`scripts/fixtures/terrain_cases.py`) works out the
 //! same numbers.
 
-use libm::{atan, atan2, cos, sin, sqrt};
+use kentos_num::{atan, atan2, cos, sin};
+use libm::sqrt;
 
 use crate::frame::Gradient;
 

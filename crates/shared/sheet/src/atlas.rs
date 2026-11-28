@@ -67,7 +67,10 @@ pub fn fit_view_scale(w: f64, h: f64, rotation: Mdeg, frame: &RectUm) -> Option<
         return None;
     }
     let t = f64::from(rotation) / 1000.0 * core::f64::consts::PI / 180.0;
-    let (s, c) = (libm::fabs(libm::sin(t)), libm::fabs(libm::cos(t)));
+    let (s, c) = (
+        libm::fabs(kentos_num::sin(t)),
+        libm::fabs(kentos_num::cos(t)),
+    );
     let need = needed(w * c + h * s, w * s + h * c, frame);
     Some(
         paper::standard_scales()

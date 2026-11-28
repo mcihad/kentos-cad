@@ -120,13 +120,13 @@ pub(crate) fn frame_of(item: &Item, m: &MapItem, inputs: &RenderInputs) -> Optio
 /// A grid interval for a scale: 1, 2, 2.5 or 5 times a power of ten nearest to 10 cm on the paper.
 pub fn auto_interval(scale: f64) -> f64 {
     let target = scale.max(1e-6) * 0.1;
-    let k = libm::floor(libm::log10(target)) as i32;
+    let k = libm::floor(kentos_num::log10(target)) as i32;
     let mut best = (f64::MAX, target);
     for e in (k - 1)..=(k + 1) {
         let p = pow10(e);
         for m in [1.0, 2.0, 2.5, 5.0] {
             let c = m * p;
-            let d = libm::fabs(libm::log(c / target));
+            let d = libm::fabs(kentos_num::ln(c / target));
             if d < best.0 - 1e-12 || ((d - best.0).abs() <= 1e-12 && c > best.1) {
                 best = (d, c);
             }

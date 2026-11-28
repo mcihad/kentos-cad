@@ -15,6 +15,7 @@ Two versions of a file, read:
   git show HEAD:fixtures/x.json | python3 scripts/fixtures/ulp_diff.py - fixtures/x.json --ulps 4
   python3 scripts/fixtures/ulp_diff.py old.json new.json --rel 1e-12
   python3 scripts/fixtures/ulp_diff.py old.json new.json --abs 1e-8
+  git show HEAD:fixtures/x.ifc | python3 scripts/fixtures/ulp_diff.py - fixtures/x.ifc --text   # a text file's numbers
 
 A file recorded by a program that is gone (the web's recorders), patched: its frozen test, run with
 KENTOS_WRITE_FROZEN=<folder>, writes what it computes now as a list of patches, `[{"at": [path…], "value": …}, …]`;
@@ -284,6 +285,35 @@ def same(old, new) -> bool:
     return old == new
 
 
+# A number of a text file: a decimal with a point or an exponent (a whole number is a count, an id or a code).
+_REAL = __import__("re").compile(r"(?<![\w.#])-?(?:\d+\.\d*|\.\d+)(?:[eE][-+]?\d+)?(?![\w.])|(?<![\w.#])-?\d+[eE][-+]?\d+(?![\w.])")
+
+
+def read_text(path: str) -> str:
+    # The bytes as they are: no line ending is translated on one side and not on the other.
+    data = sys.stdin.buffer.read() if path == "-" else open(path, "rb").read()
+    return data.decode("utf-8", errors="surrogateescape")
+
+
+def text_walk(old: str, new: str, r: Reading) -> None:
+    """Two versions of a text file (IFC, DXF, XML): everything between the real numbers must be the same."""
+    a_parts, b_parts = _REAL.split(old), _REAL.split(new)
+    a_nums, b_nums = _REAL.findall(old), _REAL.findall(new)
+    if len(a_nums) != len(b_nums) or a_parts != b_parts:
+        at = next((i for i, (x, y) in enumerate(zip(a_parts, b_parts)) if x != y), min(len(a_parts), len(b_parts)))
+        line = old.count("\n", 0, sum(len(p) for p in a_parts[:at]) + sum(len(n) for n in a_nums[:at])) + 1
+        r.other.append(f"satır {line} dolayında sayı olmayan bir fark ({len(a_nums)} ve {len(b_nums)} sayı)")
+        return
+    offset = 0
+    for i, (x, y) in enumerate(zip(a_nums, b_nums)):
+        offset += len(a_parts[i])
+        if x != y:
+            r.number(float(x), float(y), f"satır {old.count(chr(10), 0, offset) + 1}")
+        else:
+            r.numbers += 1
+        offset += len(x)
+
+
 def load(path: str):
     text = sys.stdin.read() if path == "-" else open(path, encoding="utf-8").read()
     return json.loads(text)
@@ -298,13 +328,17 @@ def main() -> int:
     ap.add_argument("--rel", type=float, default=0.0, help="or this relative difference, for derived values")
     ap.add_argument("--abs", type=float, default=0.0, dest="abs_", help="or this absolute difference, in the number's unit")
     ap.add_argument("--quiet", action="store_true", help="one line")
+    ap.add_argument("--text", action="store_true", help="two text files (IFC, DXF, XML): their real numbers compared")
     args = ap.parse_args()
     r = Reading(args.ulps, args.rel, args.abs_)
     if args.apply:
         return apply(args.old, args.apply, r)
     if args.new is None:
         ap.error("two files to compare, or --apply")
-    r.walk(load(args.old), load(args.new), "")
+    if args.text:
+        text_walk(read_text(args.old), read_text(args.new), r)
+    else:
+        r.walk(load(args.old), load(args.new), "")
     print(r.line(args.new))
     if not args.quiet:
         r.details()

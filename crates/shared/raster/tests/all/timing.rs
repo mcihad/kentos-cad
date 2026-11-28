@@ -49,9 +49,10 @@ fn dem(n: u32) -> Vec<u8> {
                 let (x, y) = (f64::from(i), f64::from(j));
                 v.push(
                     (400.0
-                        + 120.0 * libm::sin(x / 230.0) * libm::cos(y / 310.0)
+                        + 120.0 * kentos_num::sin(x / 230.0) * kentos_num::cos(y / 310.0)
                         + 0.05 * x
-                        + 3.0 * libm::sin(x / 7.0) * libm::cos(y / 9.0)) as f32,
+                        + 3.0 * kentos_num::sin(x / 7.0) * kentos_num::cos(y / 9.0))
+                        as f32,
                 );
             }
         }

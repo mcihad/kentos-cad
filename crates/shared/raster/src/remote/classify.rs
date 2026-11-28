@@ -168,7 +168,7 @@ impl Classifier {
                 })?;
                 let mut logdet = 0.0;
                 for j in 0..bands {
-                    logdet += libm::log(low[j * bands + j]);
+                    logdet += kentos_num::ln(low[j * bands + j]);
                 }
                 (low, 2.0 * logdet)
             } else {

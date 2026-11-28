@@ -18,7 +18,7 @@
 //! targets reach the same bits (CLAUDE.md §23.4); the tests hold PROJ's
 //! numbers.
 
-use libm::{asinh, atan2, cos, exp, hypot, sin, sinh};
+use kentos_num::{asinh, atan2, cos, exp, hypot, sin, sinh};
 
 use crate::format::Header;
 

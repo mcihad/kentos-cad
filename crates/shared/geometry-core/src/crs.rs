@@ -149,7 +149,7 @@ impl System {
             self.project(lat - STEP, lon)?,
             self.project(lat + STEP, lon)?,
         );
-        let angle = libm::atan2(a.x - b.x, b.y - a.y);
+        let angle = kentos_num::atan2(a.x - b.x, b.y - a.y);
         angle.is_finite().then_some(angle)
     }
 
@@ -172,7 +172,8 @@ impl System {
             }
             System::Mercator {} => {
                 let r = Datum::Wgs84.ellipsoid().0;
-                let lat = (2.0 * libm::atan(libm::exp(p.y / r)) - PI / 2.0) * 180.0 / PI;
+                let lat =
+                    (2.0 * kentos_num::atan(kentos_num::exp(p.y / r)) - PI / 2.0) * 180.0 / PI;
                 let lon = p.x / r * 180.0 / PI;
                 (lat.is_finite() && lon.is_finite()).then_some((lat, lon))
             }
@@ -196,7 +197,7 @@ impl System {
                 }
                 let r = Datum::Wgs84.ellipsoid().0;
                 let rad = PI / 180.0;
-                let y = r * libm::log(libm::tan(PI / 4.0 + lat * rad / 2.0));
+                let y = r * kentos_num::ln(kentos_num::tan(PI / 4.0 + lat * rad / 2.0));
                 let p = Vec2::new(r * lon * rad, y);
                 (p.x.is_finite() && p.y.is_finite()).then_some(p)
             }
@@ -379,7 +380,7 @@ pub fn format_dms(deg: f64, latitude: bool, decimals: usize) -> String {
         (false, false) => 'D',
         (false, true) => 'B',
     };
-    let scale = libm::pow(10.0, decimals as f64);
+    let scale = kentos_num::pow(10.0, decimals as f64);
     // Whole units of the last second's place, so the carry is exact.
     let units = libm::round(deg.abs() * 3600.0 * scale);
     let per_minute = 60.0 * scale;

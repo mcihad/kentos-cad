@@ -47,11 +47,11 @@ impl D {
     }
 
     pub fn sin(self) -> D {
-        self.map(libm::sin(self.v), libm::cos(self.v))
+        self.map(kentos_num::sin(self.v), kentos_num::cos(self.v))
     }
 
     pub fn cos(self) -> D {
-        self.map(libm::cos(self.v), -libm::sin(self.v))
+        self.map(kentos_num::cos(self.v), -kentos_num::sin(self.v))
     }
 
     pub fn abs(self) -> D {
@@ -60,7 +60,7 @@ impl D {
 
     /// The angle of (x, y) from east, in (−π, π]; its derivative is zero at the origin.
     pub fn atan2(y: D, x: D) -> D {
-        let v = libm::atan2(y.v, x.v);
+        let v = kentos_num::atan2(y.v, x.v);
         let r2 = x.v * x.v + y.v * y.v;
         if r2 == 0.0 {
             return D::c(v);

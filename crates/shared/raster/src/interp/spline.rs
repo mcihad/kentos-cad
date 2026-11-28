@@ -70,9 +70,9 @@ pub fn k0_tail(x: f64) -> f64 {
                 break;
             }
         }
-        -(libm::log(x / 2.0) + EULER) * i0m1 + series
+        -(kentos_num::ln(x / 2.0) + EULER) * i0m1 + series
     } else {
-        k0(x) + EULER + libm::log(x / 2.0)
+        k0(x) + EULER + kentos_num::ln(x / 2.0)
     }
 }
 
@@ -85,7 +85,7 @@ pub fn k0(x: f64) -> f64 {
         return f64::INFINITY;
     }
     if x <= 2.0 {
-        return k0_tail(x) - EULER - libm::log(x / 2.0);
+        return k0_tail(x) - EULER - kentos_num::ln(x / 2.0);
     }
     // Clenshaw's recurrence for Σ cₖ Tₖ(u).
     let u = 4.0 / x - 1.0;
@@ -96,7 +96,7 @@ pub fn k0(x: f64) -> f64 {
         b1 = b0;
     }
     let series = K0_CHEBYSHEV[0] + u * b1 - b2;
-    series * libm::exp(-x) / x.sqrt()
+    series * kentos_num::exp(-x) / x.sqrt()
 }
 
 /// Which spline.
@@ -154,17 +154,17 @@ impl Basis {
         };
         match self.kind {
             // τ = 0: the thin-plate limit (the τ terms vanish; r²·const is absorbed by T).
-            Kind::Regularized if self.p == 0.0 => r * r / 4.0 * libm::log(r) / two_pi,
+            Kind::Regularized if self.p == 0.0 => r * r / 4.0 * kentos_num::ln(r) / two_pi,
             Kind::Regularized => {
                 let tau = self.p;
                 let x = r / tau;
-                let l = libm::log(x / 2.0);
+                let l = kentos_num::ln(x / 2.0);
                 (r * r / 4.0 * (l + EULER - 1.0) + tau * tau * tail(x, l)) / two_pi
             }
             Kind::Tension => {
                 let phi = self.p;
                 let x = r * phi;
-                -tail(x, libm::log(x / 2.0)) / (two_pi * phi * phi)
+                -tail(x, kentos_num::ln(x / 2.0)) / (two_pi * phi * phi)
             }
         }
     }
@@ -253,7 +253,7 @@ mod tests {
             (100.0, 4.656_628_229_175_902e-45),
         ] {
             let got = if x <= 1.0 {
-                k0_tail(x) - EULER - libm::log(x / 2.0)
+                k0_tail(x) - EULER - kentos_num::ln(x / 2.0)
             } else {
                 k0(x)
             };

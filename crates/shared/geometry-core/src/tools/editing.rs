@@ -428,7 +428,7 @@ pub fn pulled_distance(c: &CornerGeom, cursor: Option<Vec2>, tol: f64) -> f64 {
     let cur = cursor.unwrap_or(c.at);
     let v = Vec2::new(cur.x - c.at.x, cur.y - c.at.y);
     let t = js_min(js_max(js_max(dot(v, c.u1), dot(v, c.u2)), 0.0), c.reach);
-    let step = pow(10.0, libm::log10(js_max(tol, 1e-3)).floor());
+    let step = pow(10.0, kentos_num::log10(js_max(tol, 1e-3)).floor());
     js_min(js_round(t / step) * step, c.reach)
 }
 

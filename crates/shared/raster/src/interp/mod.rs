@@ -167,7 +167,7 @@ impl Prepared {
                 let half = power / 2.0;
                 let (mut num, mut den) = (0.0, 0.0);
                 for &(d2, i) in &s.near {
-                    let w = 1.0 / libm::pow(d2, half);
+                    let w = 1.0 / kentos_num::pow(d2, half);
                     num += w * p.v[i as usize];
                     den += w;
                 }

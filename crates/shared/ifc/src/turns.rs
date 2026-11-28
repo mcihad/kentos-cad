@@ -54,7 +54,7 @@ pub fn course(pts: &[P], stops: &[((f64, f64), bool)]) -> Option<Course> {
     for k in 1..n - 1 {
         let u = (pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y);
         let v = (pts[k + 1].x - pts[k].x, pts[k + 1].y - pts[k].y);
-        let turn = libm::atan2(u.0 * v.1 - u.1 * v.0, u.0 * v.0 + u.1 * v.1);
+        let turn = kentos_num::atan2(u.0 * v.1 - u.1 * v.0, u.0 * v.0 + u.1 * v.1);
         let q = libm::round(turn / core::f64::consts::FRAC_PI_2);
         if (turn - q * core::f64::consts::FRAC_PI_2).abs() > SQUARE {
             return None;

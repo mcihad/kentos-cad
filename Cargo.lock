@@ -2958,7 +2958,6 @@ version = "0.1.0"
 dependencies = [
  "kentos-contracts",
  "kentos-sheet",
- "libm",
  "schemars",
  "serde",
  "serde_json",
@@ -3598,8 +3597,8 @@ version = "0.1.0"
 dependencies = [
  "kentos-contracts",
  "kentos-formats",
+ "kentos-num",
  "kentos-svg-core",
- "libm",
  "serde_json",
 ]
 
@@ -3716,7 +3715,7 @@ dependencies = [
  "kentos-contracts",
  "kentos-formats",
  "kentos-geometry-core",
- "libm",
+ "kentos-num",
  "serde_json",
 ]
 
@@ -3724,6 +3723,7 @@ dependencies = [
 name = "kentos-num"
 version = "0.1.0"
 dependencies = [
+ "pxfm",
  "serde_json",
 ]
 
@@ -3759,7 +3759,6 @@ dependencies = [
  "kentos-formats",
  "kentos-geometry-core",
  "laz",
- "libm",
  "serde",
  "serde_json",
 ]
@@ -3825,7 +3824,6 @@ dependencies = [
  "kentos-expression",
  "kentos-geometry-core",
  "kentos-num",
- "libm",
  "serde",
  "serde_json",
 ]
@@ -3865,7 +3863,7 @@ name = "kentos-qml"
 version = "0.1.0"
 dependencies = [
  "kentos-formats",
- "libm",
+ "kentos-num",
  "roxmltree 0.21.2",
  "serde_json",
 ]
@@ -3956,7 +3954,6 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-num",
  "kentos-style-core",
- "libm",
  "miniz_oxide 0.9.1",
  "roxmltree 0.21.2",
  "serde",
