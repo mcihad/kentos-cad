@@ -63,7 +63,7 @@ fn the_pad_tool_puts_a_pad_under_the_column_it_clicks_turned_with_it() {
     b.start("footingPad");
     assert_eq!(b.session.tool_id(), "footingPad");
     let shown = chips(&b);
-    for want in ["Tür", "Genişlik", "Boy", "Yükseklik", "Kattan yükseklik", "Açı", "Numara"] {
+    for want in ["Tür", "Genişlik", "Uzunluk", "Yükseklik", "Kattan yükseklik", "Açı", "Numara"] {
         assert!(shown.iter().any(|c| c == want), "{want}: {shown:?}");
     }
     assert!(!shown.iter().any(|c| c == "Hiza" || c == "Kot farkı"), "{shown:?}");
@@ -83,7 +83,7 @@ fn the_pad_tool_puts_a_pad_under_the_column_it_clicks_turned_with_it() {
 
     // Off any column: its middle on the click, turned by Açı; 2 × 1.2, numbered from T101.
     assert!(b.run(|s, cx| s.configure("E", "1.2", cx)));
-    assert!(b.run(|s, cx| s.configure("B", "2", cx)));
+    assert!(b.run(|s, cx| s.configure("U", "2", cx)));
     assert!(b.run(|s, cx| s.configure("D", "90", cx)));
     assert!(b.run(|s, cx| s.configure("N", "T101", cx)));
     b.click(8.0, 2.0);
@@ -111,7 +111,7 @@ fn the_strip_tool_draws_a_strip_along_its_axis_and_enter_writes_it() {
     for want in ["Tür", "Genişlik", "Yükseklik", "Hiza", "Kattan yükseklik", "Numara"] {
         assert!(shown.iter().any(|c| c == want), "{want}: {shown:?}");
     }
-    assert!(!shown.iter().any(|c| c == "Boy" || c == "Açı"), "{shown:?}");
+    assert!(!shown.iter().any(|c| c == "Uzunluk" || c == "Açı"), "{shown:?}");
 
     // An L along its axis, 1.20 m deep.
     assert!(b.run(|s, cx| s.configure("A", "-1.2", cx)));
@@ -130,7 +130,7 @@ fn the_strip_tool_draws_a_strip_along_its_axis_and_enter_writes_it() {
 
     // Tür: a pad with a pad's sizes; again: a strip with a strip's.
     assert!(b.type_text("T"));
-    assert!(chips(&b).iter().any(|c| c == "Boy"));
+    assert!(chips(&b).iter().any(|c| c == "Uzunluk"));
     b.click(10.0, 10.0);
     let k = footing(&b);
     assert_eq!((k.role, k.width, k.height), (BeamRole::PadFooting, 1.5, 0.5));

@@ -68,6 +68,7 @@ GRIDS, COLUMNS, STAIRS, RAMPS, EDIT = "cad.grids.create", "cad.columns.create", 
 BEAMS = "cad.beams.create"
 ROOFS = "cad.roofs.create"
 RAILINGS = "cad.railings.create"
+MASSES = "cad.masses.create"
 
 
 def refusal(code, message, path, status="failed"):
@@ -1971,10 +1972,67 @@ def railings_create(d, inp, conflict=False):
     return finish(inp, conflict, made, [])
 
 
+def mass_fields(n):
+    """A mass as the document keeps it (docs/adr/8178): its parts and height; its bottom only when not 0, its level
+    and name when given."""
+    f = {"parts": n["parts"], "height": n["height"]}
+    if n.get("offset") is not None and n["offset"] != 0.0:
+        f["offset"] = n["offset"]
+    if n.get("arch"):
+        f["arch"] = n["arch"]
+    if n.get("name") is not None:
+        f["name"] = n["name"]
+    return f
+
+
+def mass_problem(f, path):
+    """MassFields::problem's rule and words, in its order (a ring's: a space's, `ring_problem_of`)."""
+    if not f["parts"]:
+        return refusal("invalid_space", "Kütlenin oturumu yok: en az bir halka verin.", f"{path}.parts")
+    for i, part in enumerate(f["parts"]):
+        rings = [(part["outer"], f"{path}.parts[{i}].outer")]
+        rings += [(h, f"{path}.parts[{i}].holes[{k}]") for k, h in enumerate(part.get("holes", []))]
+        for ring, at in rings:
+            n = len(ring["pts"])
+            curved = any(b != 0.0 for b in (ring.get("bulges") or []))
+            if n < 3 and not (n == 2 and curved):
+                return refusal("invalid_space", f"Kütlenin halkası en az üç köşedir; {n} verildi.", at)
+    h, o, name = f["height"], f.get("offset", 0.0), f.get("name")
+    if not (math.isfinite(h) and 0 < h <= 300.0):
+        return refusal("invalid_space", f"Kütlenin yüksekliği sıfırdan büyük, en çok 300 m olmalı; {num(h)} verildi.", f"{path}.height")
+    if not (math.isfinite(o) and abs(o) <= 100.0):
+        return refusal("invalid_space", f"Kütlenin kata göre tabanı sonlu, en çok ±100 m olmalı; {num(o)} verildi.", f"{path}.offset")
+    if name is not None and (not name.strip() or name.strip() != name or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in name) or len(name) > 80):
+        return refusal("invalid_space", "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 80 karakter.", f"{path}.name")
+    return None
+
+
+def masses_create(d, inp, conflict=False):
+    if not inp["masses"]:
+        return refusal("no_objects", "Yazılacak kütle verilmedi. En az bir kütlenin oturumunu ve yüksekliğini verin.", "masses"), None
+    made = []
+    for i, n in enumerate(inp["masses"]):
+        at = f"masses[{i}]"
+        r = None
+        for k, part in enumerate(n["parts"]):
+            r = r or points_not_finite(part["outer"]["pts"], f"{at}.parts[{k}].outer")
+            for h, hole in enumerate(part.get("holes", [])):
+                r = r or points_not_finite(hole["pts"], f"{at}.parts[{k}].holes[{h}]")
+        r = r or finite_each([(n.get("height"), "height", "Yükseklik"), (n.get("offset"), "offset", "Kot farkı")], at)
+        if r:
+            return r, None
+        f = mass_fields(n)
+        r = mass_problem(f, at) or level_check(f.get("arch"), f"{at}.arch.level")
+        if r:
+            return r, None
+        made.append(f)
+    return finish(inp, conflict, made, [])
+
+
 CREATES = {GRIDS: ("grid", "grids", grids_create, "Aks"), COLUMNS: ("column", "columns", columns_create, "Kolon"),
            STAIRS: ("stair", "stairs", stairs_create, "Merdiven"), RAMPS: ("ramp", "ramps", ramps_create, "Rampa"),
            BEAMS: ("beam", "beams", beams_create, "Kiriş"), ROOFS: ("roof", "roofs", roofs_create, "Çatı"),
-           RAILINGS: ("railing", "railings", railings_create, "Korkuluk")}
+           RAILINGS: ("railing", "railings", railings_create, "Korkuluk"), MASSES: ("mass", "masses", masses_create, "Kütle")}
 
 
 def extra_of(inp):
@@ -2835,6 +2893,55 @@ def railing_cases():
     return c.cases
 
 
+def ring(*pts):
+    return {"pts": [P(x, y) for x, y in pts]}
+
+
+BLOCK = ring((0, 60), (20, 60), (20, 72), (0, 72))
+
+
+def mass(**kw):
+    m = {"parts": [{"outer": BLOCK}], "height": 15.0}
+    m.update(kw)
+    return {"layerId": "cizim", "masses": [m]}
+
+
+def mass_cases():
+    """docs/adr/8178: masses written with their footprint and height, their bottom only when not 0, their name and
+    level when given; a mass's rings and height refused as a space's (`invalid_space`)."""
+    c = Cases()
+    life(c, MASSES, mass(arch={"level": "zemin"}), "Zemin katta 20 × 12 m, 15 m yüksek blok")
+    court = {"outer": ring((30, 60), (50, 60), (50, 80), (30, 80)), "holes": [ring((36, 66), (44, 66), (44, 74), (36, 74))]}
+    for name, inp in [
+        ("avlulu kütle: oturumun deliği", mass(parts=[court], height=9.0)),
+        ("adı ve taban kot farkıyla", mass(name="Blok A", offset=3.06, height=30.0)),
+        ("1. katta kütle", mass(arch={"level": "kat-1"}, height=6.12)),
+        ("sıfır taban kot farkı yazılmaz", mass(offset=0.0)),
+        ("tadilatta yeni kütle", mass(arch={"level": "zemin", "phase": "new"})),
+        ("iki parçalı kütle", mass(parts=[{"outer": BLOCK}, court])),
+        ("iki kütle tek adımda", {"layerId": "cizim", "masses": [mass()["masses"][0], mass(parts=[court], name="Avlulu")["masses"][0]]}),
+        ("renkli ve kalın kütle", {**mass(), "color": "#cc3300", "lineWeight": 0.35}),
+    ]:
+        c.add(name, [create_step(Drawing(), MASSES, "execute", inp)])
+    refusals(c, MASSES, [
+        ("kütle verilmezse reddedilir", {"layerId": "cizim", "masses": []}, {}),
+        ("sonsuz yükseklik reddedilir", mass(height=15.0), {"non_finite": {"masses[0].height": "NaN"}}),
+        ("sonsuz köşe reddedilir", mass(), {"non_finite": {"masses[0].parts[0].outer.pts[1].x": "Infinity"}}),
+        ("sonsuz kot farkı reddedilir", mass(offset=1.0), {"non_finite": {"masses[0].offset": "-Infinity"}}),
+        ("oturumsuz kütle reddedilir", mass(parts=[]), {}),
+        ("iki köşeli halka reddedilir", mass(parts=[{"outer": ring((0, 60), (20, 60))}]), {}),
+        ("iki köşeli delik reddedilir", mass(parts=[{"outer": BLOCK, "holes": [ring((5, 62), (8, 62))]}]), {}),
+        ("sıfır yükseklik reddedilir", mass(height=0.0), {}),
+        ("300 m'den yüksek kütle reddedilir", mass(height=320.0), {}),
+        ("101 m taban kot farkı reddedilir", mass(offset=101.0), {}),
+        ("boş ad reddedilir", mass(name=""), {}),
+        ("kenarı boşluklu ad reddedilir", mass(name=" Blok A"), {}),
+        ("olmayan kat reddedilir", mass(arch={"level": "yok"}), {}),
+    ])
+    common_refusals(c, MASSES, mass())
+    return c.cases
+
+
 CHIMNEY = {"kind": "chimney", "at": {"x": 9.0, "y": 56.0}, "width": 0.4, "depth": 0.4}
 VENT = {"kind": "vent", "at": {"x": 3.0, "y": 52.0}, "width": 0.6, "depth": 0.6}
 WINDOW = {"kind": "window", "at": {"x": 6.0, "y": 51.5}, "width": 0.78, "depth": 1.18}
@@ -3136,7 +3243,8 @@ def stair_level_cases():
 
 
 FIELDS = [  # wire name, kinds, nullable
-    ("label", ("grid",), False), ("bubbles", ("grid",), False), ("bubbleSize", ("grid",), True), ("ends", ("grid",), True),
+    # A mass's name its label (docs/adr/8178).
+    ("label", ("grid", "mass"), False), ("bubbles", ("grid",), False), ("bubbleSize", ("grid",), True), ("ends", ("grid",), True),
     ("shape", ("column",), False), ("width", ("column", "stair", "ramp", "beam", "railing"), False), ("depth", ("column",), True),
     ("legs", ("column",), False), ("anchor", ("column",), False), ("rotation", ("column",), False), ("type", ("column",), True), ("tag", ("column", "beam"), True), ("fill", ("column",), False),
     # A column's: its storey's height again (docs/adr/8070 §8).
@@ -3151,7 +3259,8 @@ FIELDS = [  # wire name, kinds, nullable
     # A beam's (docs/adr/8041 §1); a roof's offset its eaves over its storey's top (docs/adr/8044 §1).
     # A railing's height its top over its floor, its offset its floor over its storey's (docs/adr/8045 §3).
     # A column's own height (docs/adr/8070 §8).
-    ("height", ("beam", "railing", "column"), False), ("justify", ("beam",), False), ("offset", ("beam", "roof", "railing"), False), ("role", ("beam",), False),
+    # A mass's height and bottom over its storey's floor (docs/adr/8178).
+    ("height", ("beam", "railing", "column", "mass"), False), ("justify", ("beam",), False), ("offset", ("beam", "roof", "railing", "mass"), False), ("role", ("beam",), False),
     # A column's, a beam's (docs/adr/8041 §2) or a roof's.
     ("material", ("column", "beam", "roof"), True),
     # A post's or a rail's type and name (docs/adr/8070 §8); null: the frame's column or beam again.
@@ -3163,11 +3272,11 @@ FIELDS = [  # wire name, kinds, nullable
     ("layers", ("roof",), False),
     # A railing's (docs/adr/8045 §3); null gap: PAİY 38/4's 0.10 m.
     ("infill", ("railing",), False), ("gap", ("railing",), True),
-    ("level", ("grid", "column", "stair", "ramp", "beam", "roof", "railing"), True),
-    ("phase", ("grid", "column", "stair", "ramp", "beam", "roof", "railing"), True),
+    ("level", ("grid", "column", "stair", "ramp", "beam", "roof", "railing", "mass"), True),
+    ("phase", ("grid", "column", "stair", "ramp", "beam", "roof", "railing", "mass"), True),
 ]
 KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa", "beam": "kiriş", "roof": "çatı",
-             "railing": "korkuluk"}
+             "railing": "korkuluk", "mass": "kütle"}
 DEFAULTS = {"bubbles": "both", "shape": "rect", "rotation": 0.0, "fill": False, "numbering": False, "heightFromLevel": False,
             "anchor": "center", "justify": "center", "offset": 0.0, "role": "beam", "parts": [], "infill": "balusters"}
 NUMBERS = [("bubbleSize", "Balon çapı"), ("ends", "Kesik aksın ucu"), ("width", "Genişlik"), ("depth", "Boy"),
@@ -3212,13 +3321,13 @@ def set_field(f, name, value):
 
 def problem_of(kind, f, path):
     return {"grid": grid_problem, "column": column_problem, "stair": stair_problem, "ramp": ramp_problem,
-            "beam": beam_problem, "roof": roof_problem, "railing": railing_problem}[kind](f, path)
+            "beam": beam_problem, "roof": roof_problem, "railing": railing_problem, "mass": mass_problem}[kind](f, path)
 
 
 def edit(d, inp, conflict=False):
     uids = inp["uids"]
     if not uids:
-        return refusal("no_entities", "Düzenlenecek aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"), None
+        return refusal("no_entities", "Düzenlenecek aks, kolon, kiriş, merdiven, rampa, çatı, korkuluk ya da kütle verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"), None
     for i, u in enumerate(uids):
         if not is_uid(u):
             return refusal("invalid_uid", f"“{u}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", f"uids[{i}]"), None
@@ -3233,7 +3342,7 @@ def edit(d, inp, conflict=False):
         found.append((i, oid))
     for i, oid in found:
         if d.objs[oid][0] not in KIND_NAME:
-            return refusal("not_arch_element", "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil; Mimari nesneyi düzenle yalnız bunları değiştirir.", f"uids[{i}]"), None
+            return refusal("not_arch_element", "Nesne aks, kolon, kiriş, merdiven, rampa, çatı, korkuluk ya da kütle değil; Mimari nesneyi düzenle yalnız bunları değiştirir.", f"uids[{i}]"), None
     op = inp["operation"]
     out, warnings = [], []
     if op["kind"] == "set":
@@ -3421,6 +3530,25 @@ def edit_cases():
     c.add("Değiştir: merdivenin sahanlığı, kesmesi ve numaraları", [one(d, [uid_of(8)], {"kind": "set", "landing": 1.0, "cut": 8, "numbering": True})])
     d = Drawing()
     c.add("Değiştir: rampanın eğimi uymayınca uyarı", [one(d, [uid_of(9)], {"kind": "set", "slope": 8.0})])
+
+    # A mass's name, height, bottom and storey (docs/adr/8178); its rings and height refused as a space's.
+    def with_mass(**kw):
+        d = Drawing()
+        made = create_step(d, MASSES, "execute", mass(**kw), with_command=True)
+        return d, made, d.next - 1
+
+    d, made, k = with_mass(arch={"level": "zemin"})
+    c.add("Değiştir: kütlenin adı, yüksekliği ve taban kot farkı",
+          [made, one(d, [uid_of(k)], {"kind": "set", "label": "Blok B", "height": 21.0, "offset": 0.5})])
+    d, made, k = with_mass(offset=3.0)
+    c.add("Değiştir: kütlenin katı; sıfır taban kot farkı yazılmaz",
+          [made, one(d, [uid_of(k)], {"kind": "set", "level": "kat-1", "offset": 0.0})])
+    d, made, k = with_mass()
+    c.add("Değiştir: sıfır yükseklikli kütle reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "height": 0.0})])
+    d, made, k = with_mass()
+    c.add("Değiştir: kütlede olmayan alan reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "width": 2.0})])
+    d, made, k = with_mass()
+    c.add("Değiştir: kütlenin boş adı reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "label": " "})])
 
     # A beam's fields (docs/adr/8041 §1).
     def with_beam(**kw):
@@ -3672,6 +3800,7 @@ def files():
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
         "cad.beams.create.json": document(BEAMS, "Kiriş: eksen, genişlik, yükseklik, hiza, kot farkı, numara, malzeme; doğrulama, plan, yazma, geri alma; retler (ADR 8041 §1)", beam_cases()),
         "cad.railings.create.json": document(RAILINGS, "Korkuluk: çizgi, kapalı, yükseklik (PAİY 38/1 1,10 m), küpeşte, dolgu, çubuk aralığı (PAİY 38/4 0,10 m), kot farkı; doğrulama, plan, yazma, geri alma; retler (ADR 8045 §3)", railing_cases()),
+        "cad.masses.create.json": document(MASSES, "Kütle: oturum (delikli, çok parçalı), yükseklik, taban kot farkı, ad, kat; doğrulama, plan, yazma, geri alma; retler (ADR 8178)", mass_cases()),
         "cad.roofs.create.json": document(ROOFS, "Çatı: saçak çizgisi, kenarların eğimi ya da kalkanı, kot farkı, kalınlık, saçak, kaplama; doğrulama, plan, yazma, geri alma; retler (ADR 8044 §1)", roof_cases()),
         "cad.ramps.create.design.json": document(RAMPS, "Rampa eğimden: son kol eğime göre, üst üste sahanlık bir kez, korkuluk; retler (ADR 0705)", ramp_design_cases()),
         "cad.ramps.create.levels.json": document(RAMPS, "Rampa katına bağlı: başlangıcı katın kotu artı fark, kat yükselince izler; değiştir, bağı kaldır; retler (ADR 0723 §2)", ramp_level_cases()),

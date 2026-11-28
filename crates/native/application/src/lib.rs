@@ -1408,7 +1408,7 @@ pub mod appearance_origin;
 pub mod revisions;
 #[cfg(feature = "mod-arch")]
 pub use arch_elements::{
-    beams_create, columns_create, grids_create, railings_create, ramps_create, roofs_create,
+    beams_create, columns_create, grids_create, masses_create, railings_create, ramps_create, roofs_create,
     stairs_create,
 };
 #[cfg(feature = "mod-arch")]

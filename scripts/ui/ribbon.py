@@ -561,15 +561,16 @@ CAD = [
           # the navigator: a view's area edited on the model.
           # Parsel ve bahçe mesafeleri (docs/adr/8032) beside Program: the site plan's parcel, the project's as the
           # program is. Arazi zemini and Zemin kotu (docs/adr/8174) after it: the site's grounds and their levels;
-          # Gölge (docs/adr/8177) the building's shadow on them.
+          # Gölge (docs/adr/8177) the building's shadow on them. Kütle (docs/adr/8178) beside the parcel: the design's
+          # volume weighed against it before its walls are drawn.
           # Kaçış yolları (docs/adr/8035 §2) beside them: the fire rules' walks drawn on the storey.
           # Ruhsat takımı (docs/adr/8037) shown beside Denetim: the set the audit's drawing is delivered as.
           # Model kalite kontrol formu (docs/adr/8047 §10) beside Ruhsat takımı: the digital submission's form.
           # Dijital proje kuralları (docs/adr/8062) after it: the regulation's rules the form and the set are held to.
           # Ruhsat takımı and the IFC viewer lead the ▾ (3B görünüm took Ruhsat takımı's button); the deliveries,
           # underlays, model comparison, BCF issues and the review package (B16–B20) follow the quality form.
-          overflow=["arch.permitSet", "ifc.view", "arch.program", "tool.siteParcel", "tool.siteGround", "tool.groundLevel",
-                    "tool.sunShadow", "tool.escapeRoutes", "tool.walkRoute", "arch.template", "arch.sheetSet", "arch.qualityForm",
+          overflow=["arch.permitSet", "ifc.view", "arch.program", "tool.siteParcel", "tool.mass", "tool.siteGround",
+                    "tool.groundLevel", "tool.sunShadow", "tool.escapeRoutes", "tool.walkRoute", "arch.template", "arch.sheetSet", "arch.qualityForm",
                     "arch.deliveries",
                     "arch.underlays", "arch.ifcCompare", "arch.bcfIssues", "arch.reviewPackage", "arch.digitalRules",
                     "arch.navigator", "tool.viewCrop", "arch.openingTypes", "arch.elementTypes", "arch.materials",

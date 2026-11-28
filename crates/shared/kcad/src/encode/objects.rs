@@ -568,51 +568,12 @@ impl<'d> Encoder<'d> {
                 }
                 f.push(("slab", Val::Json(serde_json::to_value(&e.slab).unwrap_or_default())));
             }
-            // A beam (docs/adr/8041 §1): its fields as one map; only the drawing's.
-            Entity::Beam(e) => {
-                if uid.is_none() {
-                    self.path.push(Seg::Name(kind));
-                    return Err(self.fail(Code::BadValue, "blok tanımında kiriş olamaz"));
-                }
-                if let Some((_, problem)) = e.beam.problem() {
-                    self.path.push(Seg::Name(kind));
-                    return Err(self.fail(Code::BadValue, &problem));
-                }
-                f.push((
-                    "beam",
-                    Val::Json(serde_json::to_value(&e.beam).unwrap_or_default()),
-                ));
-            }
-            // A roof (docs/adr/8044 §1): its fields as one map; only the drawing's.
-            Entity::Roof(e) => {
-                if uid.is_none() {
-                    self.path.push(Seg::Name(kind));
-                    return Err(self.fail(Code::BadValue, "blok tanımında çatı olamaz"));
-                }
-                if let Some((_, problem)) = e.roof.problem() {
-                    self.path.push(Seg::Name(kind));
-                    return Err(self.fail(Code::BadValue, &problem));
-                }
-                f.push((
-                    "roof",
-                    Val::Json(serde_json::to_value(&e.roof).unwrap_or_default()),
-                ));
-            }
-            // A railing (docs/adr/8045 §3): its fields as one map; only the drawing's.
-            Entity::Railing(e) => {
-                if uid.is_none() {
-                    self.path.push(Seg::Name(kind));
-                    return Err(self.fail(Code::BadValue, "blok tanımında korkuluk olamaz"));
-                }
-                if let Some((_, problem)) = e.railing.problem() {
-                    self.path.push(Seg::Name(kind));
-                    return Err(self.fail(Code::BadValue, &problem));
-                }
-                f.push((
-                    "railing",
-                    Val::Json(serde_json::to_value(&e.railing).unwrap_or_default()),
-                ));
-            }
+            // A beam (docs/adr/8041 §1), a roof (8044 §1), a railing (8045 §3) and a mass (8178): their fields as one
+            // map; the drawing's only.
+            Entity::Beam(e) => self.arch_map(uid, kind, "kiriş", e.beam.problem(), ("beam", &e.beam), f)?,
+            Entity::Roof(e) => self.arch_map(uid, kind, "çatı", e.roof.problem(), ("roof", &e.roof), f)?,
+            Entity::Railing(e) => self.arch_map(uid, kind, "korkuluk", e.railing.problem(), ("railing", &e.railing), f)?,
+            Entity::Mass(e) => self.arch_map(uid, kind, "kütle", e.mass.problem(), ("mass", &e.mass), f)?,
             // A space (docs/adr/0342 §1): its parts and the rest of its fields.
             Entity::Space(e) => {
                 let s = &e.space;

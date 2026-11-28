@@ -42,6 +42,7 @@ mod sections;
 mod site_ground;
 mod color_plan;
 mod shadows;
+mod masses;
 #[cfg(feature = "mod-arch")]
 mod arch_ifc;
 mod ifc_required;

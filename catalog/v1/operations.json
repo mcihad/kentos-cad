@@ -2569,6 +2569,13 @@
       ],
       "note": "Gölge: kesit modelinin cisimleri güneş ışınları boyunca ±0,00'daki zemine süpürülür, birleşimlerinden binanın oturduğu alan çıkarılır; tek saat düz çizgi taramalı ve çerçeveli, birden çok saat çerçevesi ve saatiyle gölge katmanına; Gölge öznitelikli eski gölge silinir (ADR 8177 §3)."
     },
+    "tool.mass": {
+      "level": "semantic",
+      "via": [
+        "cad.masses.create"
+      ],
+      "note": "Oturumun halkaları (tıklanan köşeler, iki köşenin dikdörtgeni ya da tıklanan kapalı çizginin, alanın veya dairenin halkaları; yayları ve avluları), yükseklik, kot farkı, ad ve kat komuta verilir; kütlenin prizması, kesiti, 3B'si ve gölgesi modelin (ADR 8178)."
+    },
     "arch.colorPlan.off": {
       "level": "semantic",
       "via": [

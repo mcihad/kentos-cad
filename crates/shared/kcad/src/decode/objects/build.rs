@@ -221,6 +221,13 @@ pub(super) fn build(
             }
             Entity::Roof(kentos_contracts::RoofEntity { base, roof: Box::new(roof) })
         }
+        Kind::Mass => {
+            let mass = required(r, f.mass.take(), "mass")?;
+            if let Some((_, problem)) = mass.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Mass(kentos_contracts::MassEntity { base, mass: Box::new(mass) })
+        }
         Kind::Railing => {
             let railing = required(r, f.railing.take(), "railing")?;
             if let Some((_, problem)) = railing.problem() {

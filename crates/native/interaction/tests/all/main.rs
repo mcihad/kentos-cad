@@ -16,6 +16,7 @@ mod profile_tools;
 mod ground_tool;
 mod color_legend;
 mod sun_shadow;
+mod mass_tool;
 mod covering_tool;
 mod roof_part_tool;
 mod railing_tool;

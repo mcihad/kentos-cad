@@ -4,16 +4,12 @@
 //! day-long diagram). The hour steps an hour at a time while the sun is up. A picture placed on a sheet (Paftaya koy)
 //! is lit as the window is.
 
-use iced::Element;
 use kentos_geometry_core::geom::sun;
 use kentos_interaction::shadow_tool::{DAYS, Kept};
 use kentos_native_application::shadows;
-use kentos_ui::icon::Icon;
-use kentos_ui::widget::Menu;
 
 use crate::app::{App, Message};
 use crate::scene3d_window::Event;
-use crate::style::strip;
 
 /// The sun of 3B görünüm: its day's place in Gölge's days and its hour (clock time, the place's time zone).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -102,27 +98,4 @@ impl App {
             b.viewer.sun = towards;
         }
     }
-}
-
-/// Güneş's strip items: its switch, and while it is on its day and its hour with the steps either side.
-pub(crate) fn sun_items<'a>(at: Option<SunAt>) -> Vec<Element<'a, Message>> {
-    let mut items = vec![strip::toggle(
-        Some(crate::icons::from_web(Some("sun"))),
-        "Güneş",
-        "Güneş: binayı seçilen gün ve saatin güneşiyle aydınlatır, gölgelerini düşürür. Konum projenin koordinat \
-         sisteminden, yoksa Gölge (GL) aracında yazılan enlem ve boylamdan.",
-        at.is_some(),
-        Message::Scene3d(Event::Sun(SunChange::Toggle)),
-    )];
-    let Some(at) = at else { return items };
-    items.push(strip::menu(Icon::Calendar, DAYS[at.day].1, "Tarih: güneşin günü.", move || {
-        DAYS.iter().enumerate().fold(Menu::new(), |m, (i, d)| {
-            m.radio(d.1.to_owned(), i == at.day, Message::Scene3d(Event::Sun(SunChange::Day(i))))
-        })
-    }));
-    let step = |by: i8| Some(Message::Scene3d(Event::Sun(SunChange::Hour(by))));
-    items.push(strip::icon_button(Icon::ChevronLeft, "Bir saat önce", step(-1)));
-    items.push(strip::readout(shadows::clock(at.hour), "Saat: yerel saat (Türkiye UTC+3).", 44.0));
-    items.push(strip::icon_button(Icon::ChevronRight, "Bir saat sonra", step(1)));
-    items
 }

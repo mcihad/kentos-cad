@@ -250,6 +250,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_RAILINGS_CREATE_VERSION,
     ),
     (
+        kentos_commands::CAD_MASSES_CREATE,
+        kentos_commands::CAD_MASSES_CREATE_VERSION,
+    ),
+    (
         kentos_commands::CAD_ARCH_EDIT,
         kentos_commands::CAD_ARCH_EDIT_VERSION,
     ),

@@ -13494,6 +13494,22 @@
    "tests": 15
   },
   {
+   "id": "tool.mass",
+   "kind": "command",
+   "title": "Kütle",
+   "level": "semantic",
+   "via": [
+    "cad.masses.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.masses.create",
+   "mcp": "cad.masses.create",
+   "note": "Oturumun halkaları (tıklanan köşeler, iki köşenin dikdörtgeni ya da tıklanan kapalı çizginin, alanın veya dairenin halkaları; yayları ve avluları), yükseklik, kot farkı, ad ve kat komuta verilir; kütlenin prizması, kesiti, 3B'si ve gölgesi modelin (ADR 8178).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.matchProperties",
    "kind": "tool",
    "title": "Özellik kopyala",

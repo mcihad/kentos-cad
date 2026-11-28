@@ -88,6 +88,7 @@ enum Kind {
     Beam,
     Roof,
     Railing,
+    Mass,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -128,6 +129,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("beam", Kind::Beam),
     ("roof", Kind::Roof),
     ("railing", Kind::Railing),
+    ("mass", Kind::Mass),
 ];
 
 /// Every field an object may have; each kind takes its own.
@@ -210,6 +212,8 @@ struct Fields {
     beam: Option<kentos_contracts::BeamFields>,
     roof: Option<kentos_contracts::RoofFields>,
     railing: Option<kentos_contracts::RailingFields>,
+    /// A mass's fields (docs/adr/8178).
+    mass: Option<kentos_contracts::MassFields>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,

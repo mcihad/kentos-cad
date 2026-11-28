@@ -509,6 +509,22 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             }
             s.height(&mut f.height);
         }
+        // A mass's footprint is lengths, its height and bottom heights (docs/adr/8178).
+        Entity::Mass(e) => {
+            let f = &mut e.mass;
+            for part in &mut f.parts {
+                s.points(&mut part.outer.pts);
+                for h in &mut part.holes {
+                    s.points(&mut h.pts);
+                }
+            }
+            let mut height = Some(f.height);
+            s.height(&mut height);
+            f.height = height.unwrap_or(f.height);
+            let mut offset = Some(f.offset);
+            s.height(&mut offset);
+            f.offset = offset.unwrap_or(f.offset);
+        }
         // A slab's outline and edge are lengths, its thickness and top heights (docs/adr/0722).
         Entity::Slab(e) => {
             let f = &mut e.slab;

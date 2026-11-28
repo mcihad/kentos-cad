@@ -375,6 +375,25 @@ impl Input for kentos_commands::RailingsCreate {
     }
 }
 
+impl Input for kentos_commands::MassesCreate {
+    /// `masses[0].height`, `.offset`, `.parts[0].outer.pts[k].x` and `.y`, `lineWeight` (docs/adr/8178).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("masses[")?.split_once("].")?;
+        let m = self.masses.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "height" => Some(&mut m.height),
+            "offset" => m.offset.as_mut(),
+            _ => {
+                let rest = rest.strip_prefix("parts[0].outer.")?;
+                named_point(&mut m.parts.get_mut(0)?.outer.pts, "pts", rest)
+            }
+        }
+    }
+}
+
 impl Input for kentos_commands::XrefsEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::XrefsOperation as O;

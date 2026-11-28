@@ -81,7 +81,7 @@ pub fn edge_icon(kind: Option<SlabEdgeKind>) -> Option<&'static str> {
 }
 
 /// Display rings for the preview fill.
-fn rings_of(parts: &[SpacePart]) -> Vec<Vec<Vec2>> {
+pub(crate) fn rings_of(parts: &[SpacePart]) -> Vec<Vec<Vec2>> {
     let ring = |r: &SpaceRing| {
         let pts: Vec<Vec2> = r.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
         kentos_geometry_core::entity::polygon_ring(&pts, r.bulges.as_deref())

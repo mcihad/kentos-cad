@@ -2566,6 +2566,7 @@
        "ifc.view",
        "arch.program",
        "tool.siteParcel",
+       "tool.mass",
        "tool.siteGround",
        "tool.groundLevel",
        "tool.sunShadow",

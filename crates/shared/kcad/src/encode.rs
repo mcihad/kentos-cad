@@ -14,6 +14,7 @@
 //! names in `names.rs`.
 
 mod addresses;
+mod arch_maps;
 mod arrays;
 mod blocks;
 mod compose;

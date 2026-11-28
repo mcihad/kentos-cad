@@ -75,6 +75,20 @@
     olarak kopyalar ya da bağlı bırakır. Taşınan paket kendi kopyasını okur. Devir dosyaları kaynak satırlarını taşır;
     kapsamı klasör sorulmadan söylenir. Okunamayan kaynakta paket hiçbir dosya yazmadan reddedilir.
 
+- **Kütle (28 Kasım 2026, MB-16 1. bölüm; [ADR 8178](../adr/8178-mass.md)).**
+  - `MassEntity` (`mass`): oturumun halkaları (avlu, yay), yükseklik (en çok 300 m), kata göre taban (±100 m), ad (en
+    çok 80 karakter); kurallar `MassFields::problem`. Binanın elemanı değil: IFC'ye yazılmaz, metraj ve denetim görmez,
+    birleşim kuralı içindeki duvarı ve kolonu kesmez.
+  - `cad.masses.create` v1: halka, yükseklik, kot farkı ve ad `invalid_space` ile reddedilir; kendi kodu `codes.rs`
+    bölününce. `cad.arch.edit` yüksekliği, kot farkını ve adı değiştirir.
+  - Kesit modelinde ince ve dolgusuz prizma (MM-XXXX-KUTLE); kesitler, görünüşler ve Gölge onu okur. 3B'ye IFC'den
+    gelmediği için `scene3d_building::masses` ayrıca ekler: yaylar noktalara, dış halka saat yönünün tersine, avlu saat
+    yönüne. Yalnız kütleli çizim de 3B'de açılır.
+  - Kütle aracı (KU), Proje ▾: Köşeleri çiz, Dikdörtgen, Kapalı çizgiden (alanın parçaları ve delikleri, daire,
+    kapanmış çoklu çizgi). Yükseklik 9,00 m (PAİY 23/1-d'nin 3,00 m'lik üç katı), Kot farkı, Ad. Alansız oturum
+    yazılmaz. `.kcad` Mimari verisi 45; Python okuyucusu da.
+  - Bir ad her Mimari aracında tek harf (ADR 8003): tekil temelin Boy'u (B) Uzunluk (U) oldu.
+
 - **Güneş ve gölge (28 Kasım 2026, MB-15; [ADR 8177](../adr/8177-sun-and-shadow.md)).**
   - `geom::sun::at`: güneşin azimutu ve yüksekliği enlem, boylam, saat dilimi, gün ve saatten (NOAA genel güneş konumu
     formülleri; ölçülen sapma 0,15°'nin altında, kırılma yok). Türkiye saati güneşin yarım saat önünde: Sivas'ta güneş

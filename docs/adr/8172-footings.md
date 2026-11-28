@@ -112,7 +112,9 @@ Yönetmelik değeri değildir; değiştirilir.
   - Seçenekler:
     - Tür (T)
     - Genişlik (E): eksene dik kenar
-    - Boy (B): eksen boyunca kenar
+    - Uzunluk (U): eksen boyunca kenar; duvarın ve giydirme cephenin Uzunluk'u da U. İlk sürümde Boy (B) idi: kolonun
+      Boy'u Y olduğu için bir ad iki harf taşıyordu. 28 Kasım 2026'da ADR 8178 ile düzeltildi (bir ad her Mimari
+      aracında tek harftir, ADR 8003).
     - Yükseklik (Y)
     - Kattan yükseklik (A)
     - Açı (D): kolonsuz temelin dönüşü

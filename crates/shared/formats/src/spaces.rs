@@ -100,6 +100,11 @@ pub fn core_slab(s: &kentos_contracts::SlabFields) -> Shape {
     }
 }
 
+/// A mass in the core (docs/adr/8178): its footprint as a space's, labelled by its name.
+pub fn core_mass(m: &kentos_contracts::MassFields) -> Shape {
+    Shape::Space { parts: m.parts.iter().map(area).collect(), space: Spec { name: m.name.clone(), ..Spec::default() } }
+}
+
 /// The core's runs back as the contract's.
 pub fn runs(rs: &[kentos_geometry_core::geom::slab::Run]) -> Vec<kentos_contracts::SlabRun> {
     rs.iter()

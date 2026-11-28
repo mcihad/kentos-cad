@@ -824,6 +824,7 @@ pub(super) fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Beam => key == "beam",
             Kind::Roof => key == "roof",
             Kind::Railing => key == "railing",
+            Kind::Mass => key == "mass",
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))

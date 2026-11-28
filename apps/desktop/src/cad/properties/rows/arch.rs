@@ -896,6 +896,29 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             out.extend(arch_rows(doc, slot, &x.arch, &edit));
             out.extend(performance_rows(doc, slot, e, locked));
         }
+        // A mass (docs/adr/8178): its name, height and bottom over its storey's floor, written through `cad.arch.edit`;
+        // its footprint's area, its volume, its bottom's and top's elevations, its storey.
+        Entity::Mass(m) => {
+            let x = &m.mass;
+            out.push(text("Ad", x.name.clone().unwrap_or_default(), ArchField::Label));
+            out.push(length("Yükseklik", x.height, ArchField::BeamHeight));
+            out.push(length("Kot farkı", x.offset, ArchField::BeamOffset));
+            let ring = |r: &kentos_commands::SpaceRing| {
+                let p = &r.pts;
+                let n = p.len();
+                ((0..n).map(|i| p[i].x * p[(i + 1) % n].y - p[(i + 1) % n].x * p[i].y).sum::<f64>() / 2.0).abs()
+            };
+            let footprint: f64 = x.parts.iter().map(|p| ring(&p.outer) - p.holes.iter().map(ring).sum::<f64>()).sum();
+            out.push(Row::figure("Oturum alanı", f.area_bare(footprint)).unit(f.area_unit_label()));
+            out.push(Row::figure("Hacim", format!("{:.2}", footprint * x.height).replace('.', ",")).unit("m³"));
+            let levels = doc.model.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
+            if let Some(l) = x.arch.level.as_deref().and_then(|id| levels.iter().find(|l| l.id == id)) {
+                let (bottom, top) = x.span(l.elevation);
+                out.push(Row::figure("Taban kotu", f.length_bare(bottom)).unit(f.length_unit_label()));
+                out.push(Row::figure("Üst kot", f.length_bare(top)).unit(f.length_unit_label()));
+            }
+            out.extend(arch_rows(doc, slot, &x.arch, &edit));
+        }
         // A railing (docs/adr/8045 §3): its height, infill, gap, top rail and offset, how its line runs and how long it
         // is, its storey; what PAİY 38 says of its height (38/1) and gap (38/4).
         Entity::Railing(r) => {

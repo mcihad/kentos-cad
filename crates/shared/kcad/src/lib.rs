@@ -76,7 +76,7 @@ pub use schemas::*;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_COLOR_PLAN),
+    ("arch", "mimari", ARCH_WITH_MASSES),
     ("gis", "CBS", GIS_WITH_LAYER_ORIGINS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -459,6 +459,19 @@ pub const ARCH_WITH_GROUND: u16 = 43;
 /// versions 1–43's data too.
 pub const ARCH_WITH_COLOR_PLAN: u16 = 44;
 
+/// Architecture data version 45 (docs/adr/8178): a mass (`mass`), a massing study's prism, in the drawing. Version 45
+/// holds versions 1–44's data too.
+pub const ARCH_WITH_MASSES: u16 = 45;
+
+/// Whether `doc` holds architecture data 45 ([`ARCH_WITH_MASSES`]): a mass.
+pub fn uses_masses(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    uses_masses_in(doc.entities.iter())
+}
+
+fn uses_masses_in<'a>(mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>) -> bool {
+    objects.any(|e| matches!(e, kentos_contracts::Entity::Mass(_)))
+}
+
 /// Whether `doc` holds architecture data 44 ([`ARCH_WITH_COLOR_PLAN`]): a colour plan.
 pub fn uses_color_plan(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.settings.arch.as_ref().is_some_and(|a| a.color_plan.is_some())
@@ -682,7 +695,9 @@ fn arch_version_of<'a>(
     doc: &kentos_contracts::DocumentSnapshotV2,
     objects: impl Iterator<Item = &'a kentos_contracts::Entity> + Clone,
 ) -> u16 {
-    if uses_color_plan(doc) {
+    if uses_masses_in(objects.clone()) {
+        ARCH_WITH_MASSES
+    } else if uses_color_plan(doc) {
         ARCH_WITH_COLOR_PLAN
     } else if uses_ground(doc) {
         ARCH_WITH_GROUND

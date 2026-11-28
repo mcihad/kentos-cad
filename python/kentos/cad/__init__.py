@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, areas, arrays, asbuilt, assets, attachments, bcf, beams, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, delivery, dimensions, dimensionsets, domains, donut, drawing, elementtypes, elevations, entities, extract, field, fields, file, fonts, form, forms, gis, grids, hatches, hatchpatterns, ifc, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, map, materials, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, options, orthophoto, parameters, parcels, pipes, plotstyles, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, railings, ramps, rasters, readjustment, records, rectangle, relations, revcloud, review, revisions, road, roads, roofs, scenarios, schedules, schema, sections, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, underlay, units, viewmarks, views, walls, xrefs, zoning  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, areas, arrays, asbuilt, assets, attachments, bcf, beams, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, delivery, dimensions, dimensionsets, domains, donut, drawing, elementtypes, elevations, entities, extract, field, fields, file, fonts, form, forms, gis, grids, hatches, hatchpatterns, ifc, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, map, masses, materials, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, options, orthophoto, parameters, parcels, pipes, plotstyles, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, railings, ramps, rasters, readjustment, records, rectangle, relations, revcloud, review, revisions, road, roads, roofs, scenarios, schedules, schema, sections, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, underlay, units, viewmarks, views, walls, xrefs, zoning  # noqa: E402  isort: skip
 
 __all__ = [
     "AcceptMapSurveyOperation",
@@ -2201,6 +2201,10 @@ __all__ = [
     "MappingField",
     "MappingNames",
     "MarkReference",
+    "MassEntity",
+    "MassesCreate",
+    "MassesCreated",
+    "MassesPlan",
     "MatchProperty",
     "MatchPropertyName",
     "MatchSizePaperOp",
@@ -2391,6 +2395,7 @@ __all__ = [
     "NewColumn",
     "NewConstraint",
     "NewGrid",
+    "NewMass",
     "NewObject",
     "NewOpening",
     "NewRailing",
@@ -4863,6 +4868,7 @@ __all__ = [
     "linearref",
     "linetypes",
     "map",
+    "masses",
     "materials",
     "meshes",
     "modules",

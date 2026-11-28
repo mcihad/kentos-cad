@@ -1986,3 +1986,7 @@ pub fn arch_of(e: &Entity) -> Option<&ArchInfo> {
         _ => None,
     }
 }
+
+#[path = "masses.rs"]
+mod masses;
+pub use masses::{MASS_STEP, masses_create};

@@ -71,6 +71,8 @@ pub enum Kind {
     Schedule,
     /// The building's shadow on the ground (docs/adr/8177): EK-2 Tablo 2.3 has none, GENL.
     Shadow,
+    /// A massing study's volume (docs/adr/8178): EK-2 Tablo 2.3 has none either, MM-XXXX-KUTLE.
+    Mass,
 }
 
 impl Kind {
@@ -113,7 +115,8 @@ impl Kind {
             | Kind::Symbol
             | Kind::Legend
             | Kind::Schedule
-            | Kind::Shadow => EK4_GENERAL,
+            | Kind::Shadow
+            | Kind::Mass => EK4_GENERAL,
         }
     }
 
@@ -135,6 +138,7 @@ impl Kind {
             Kind::Legend => word("LEJANT"),
             Kind::Schedule => word("CIZELGE"),
             Kind::Shadow => word("GOLGE"),
+            Kind::Mass => word("KUTLE"),
             Kind::Beam(kentos_commands::BeamRole::Beam) => word("KIRIS"),
             Kind::Beam(kentos_commands::BeamRole::PadFooting) => word("TEKIL"),
             Kind::Beam(kentos_commands::BeamRole::StripFooting) => word("SUREKLI"),
@@ -215,6 +219,7 @@ impl Kind {
             Kind::Legend => "Lejant",
             Kind::Schedule => "Çizelge",
             Kind::Shadow => "Gölge",
+            Kind::Mass => "Kütle",
         }
     }
 
@@ -257,6 +262,7 @@ impl Kind {
             Kind::Legend => "lejant",
             Kind::Schedule => "çizelge",
             Kind::Shadow => "gölge",
+            Kind::Mass => "kütle",
         }
     }
 
@@ -291,7 +297,7 @@ impl Kind {
             Kind::Casework | Kind::Furniture(_) => look("fg-dim", 0.18),
             Kind::Dimension => look("#56B6C2", 0.18),
             Kind::Space | Kind::Tag | Kind::Legend | Kind::Schedule | Kind::Shadow => look("fg", 0.18),
-            Kind::Symbol => look("fg", 0.25),
+            Kind::Symbol | Kind::Mass => look("fg", 0.25),
         }
     }
 }
@@ -489,7 +495,6 @@ mod tests {
             Kind::Symbol,
             Kind::Legend,
             Kind::Schedule,
-            Kind::Shadow,
             Kind::Beam(kentos_commands::BeamRole::Beam),
             Kind::Beam(kentos_commands::BeamRole::Lintel),
             Kind::Beam(kentos_commands::BeamRole::BondBeam),
@@ -509,6 +514,9 @@ mod tests {
             Kind::Raft,
             Kind::Moulding,
             Kind::Coping(Some("Taş".into())),
+            // The shadow (docs/adr/8177) and a mass (docs/adr/8178): EK-2 has neither, GENL.
+            Kind::Shadow,
+            Kind::Mass,
         ];
         let names: Vec<String> = kinds.iter().map(Kind::layer_name).collect();
         for n in &names {
@@ -537,7 +545,7 @@ mod tests {
         );
         // A railing (docs/adr/8045 §3): EK-2's Korkuluk, by its infill; an elevator's block (§5) its Asansör; a curtain
         // wall (docs/adr/8070 §7) its Giydirme Cephe; a post and a rail (§8) Diğer; the foundations (docs/adr/8172)
-        // Temel.
+        // Temel; the shadow and a mass none.
         assert_eq!(
             &names[25..],
             [
@@ -553,7 +561,9 @@ mod tests {
                 "MM-TEML-SUREKLI",
                 "MM-TEML-RADYE",
                 "MM-CEPH-SILME",
-                "MM-HARP-TAS"
+                "MM-HARP-TAS",
+                "MM-XXXX-GOLGE",
+                "MM-XXXX-KUTLE"
             ]
         );
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");

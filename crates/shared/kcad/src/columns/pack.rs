@@ -1119,6 +1119,8 @@ impl Packer {
                     .unwrap_or_default()
                     .to_string(),
             ),
+            // A mass (docs/adr/8178): its fields as one JSON text.
+            Entity::Mass(e) => self.text(&serde_json::to_value(&e.mass).unwrap_or_default().to_string()),
             // A railing (docs/adr/8045 §3): its fields as one JSON text.
             Entity::Railing(e) => self.text(
                 &serde_json::to_value(&e.railing)

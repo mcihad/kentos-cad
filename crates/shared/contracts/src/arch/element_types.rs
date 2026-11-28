@@ -506,6 +506,7 @@ fn element_problem(e: &Entity) -> Problem {
         Entity::Column(x) => x.column.problem(),
         Entity::Beam(x) => x.beam.problem(),
         Entity::Slab(x) => x.slab.problem(),
+        Entity::Mass(x) => x.mass.problem(),
         Entity::Roof(x) => x.roof.problem(),
         Entity::Railing(x) => x.railing.problem(),
         Entity::Stair(x) => x.stair.problem(),

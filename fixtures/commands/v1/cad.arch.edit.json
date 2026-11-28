@@ -1312,6 +1312,874 @@
       ]
     },
     {
+      "name": "Değiştir: kütlenin adı, yüksekliği ve taban kot farkı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.masses.create",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": "Blok B",
+              "height": 21.0,
+              "offset": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "mass",
+                  "id": 10,
+                  "layerId": "cizim",
+                  "attrs": {},
+                  "parts": [
+                    {
+                      "outer": {
+                        "pts": [
+                          {
+                            "x": 0.0,
+                            "y": 60.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 60.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 72.0
+                          },
+                          {
+                            "x": 0.0,
+                            "y": 72.0
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "height": 21.0,
+                  "arch": {
+                    "level": "zemin"
+                  },
+                  "name": "Blok B",
+                  "offset": 0.5
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 21.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "name": "Blok B",
+                "offset": 0.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kütlenin katı; sıfır taban kot farkı yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.masses.create",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "offset": 3.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "offset": 3.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "kat-1",
+              "offset": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "mass",
+                  "id": 10,
+                  "layerId": "cizim",
+                  "attrs": {},
+                  "parts": [
+                    {
+                      "outer": {
+                        "pts": [
+                          {
+                            "x": 0.0,
+                            "y": 60.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 60.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 72.0
+                          },
+                          {
+                            "x": 0.0,
+                            "y": 72.0
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "height": 15.0,
+                  "arch": {
+                    "level": "kat-1"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0,
+                "arch": {
+                  "level": "kat-1"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: sıfır yükseklikli kütle reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.masses.create",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "height": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Kütlenin yüksekliği sıfırdan büyük, en çok 300 m olmalı; 0 verildi.",
+              "path": "uids[0].height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kütlede olmayan alan reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.masses.create",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 2.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "field_not_for_kind",
+              "message": "“width” alanı kütle nesnesinde yok.",
+              "path": "operation.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kütlenin boş adı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.masses.create",
+          "input": {
+            "layerId": "cizim",
+            "masses": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "mass",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 60.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 72.0
+                        },
+                        {
+                          "x": 0.0,
+                          "y": 72.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "height": 15.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "label": " "
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 80 karakter.",
+              "path": "uids[0].name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Değiştir: kirişin ölçüleri, hizası, kot farkı, numarası ve malzemesi",
       "steps": [
         {
@@ -11644,7 +12512,7 @@
             "status": "failed",
             "error": {
               "code": "no_entities",
-              "message": "Düzenlenecek aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk verilmedi. En az bir nesnenin kalıcı kimliğini verin.",
+              "message": "Düzenlenecek aks, kolon, kiriş, merdiven, rampa, çatı, korkuluk ya da kütle verilmedi. En az bir nesnenin kalıcı kimliğini verin.",
               "path": "uids"
             }
           },
@@ -11762,7 +12630,7 @@
             "status": "failed",
             "error": {
               "code": "not_arch_element",
-              "message": "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
+              "message": "Nesne aks, kolon, kiriş, merdiven, rampa, çatı, korkuluk ya da kütle değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
               "path": "uids[0]"
             }
           },

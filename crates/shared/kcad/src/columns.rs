@@ -182,7 +182,7 @@ const SOURCE_URL: u32 = 4;
 /// A point cloud file with a place in the drawing (docs/adr/5100): its 16 numbers follow its bounds.
 const SOURCE_POSE: u32 = 8;
 
-pub const KINDS: [&str; 34] = [
+pub const KINDS: [&str; 35] = [
     "point",
     "line",
     "polyline",
@@ -217,6 +217,7 @@ pub const KINDS: [&str; 34] = [
     "beam",
     "roof",
     "railing",
+    "mass",
 ];
 
 const COLOR: u32 = 1;
@@ -443,6 +444,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Beam(_) => 31,
         Entity::Roof(_) => 32,
         Entity::Railing(_) => 33,
+        Entity::Mass(_) => 34,
     }
 }
 

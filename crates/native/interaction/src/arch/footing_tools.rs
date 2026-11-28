@@ -301,7 +301,7 @@ impl FootingTool {
                 _ => false,
             },
             "E" => length(cx).map(|v| self.width = v).is_some(),
-            "B" if self.is_pad() => length(cx).map(|v| self.length = v).is_some(),
+            "U" if self.is_pad() => length(cx).map(|v| self.length = v).is_some(),
             "Y" => length(cx).map(|v| self.height = v).is_some(),
             // Any height: under the floor negative.
             "A" => cx
@@ -398,7 +398,7 @@ impl Tool for FootingTool {
             return Prompt::new(name, "konacağı yere ya da altına konacağı kolona tıklayın")
                 .option_with("Tür", "T", name)
                 .option_with("Genişlik", "E", n(self.width))
-                .option_with("Boy", "B", n(self.length))
+                .option_with("Uzunluk", "U", n(self.length))
                 .option_with("Yükseklik", "Y", n(self.height))
                 .option_with("Kattan yükseklik", "A", n(self.base))
                 .option_with("Açı", "D", n(self.turn.to_degrees()))
@@ -472,7 +472,7 @@ impl Tool for FootingTool {
             }
             let field = match ask {
                 Ask::Width => "E",
-                Ask::Length => "B",
+                Ask::Length => "U",
                 Ask::Height => "Y",
                 Ask::Base => "A",
                 Ask::Turn => "D",
@@ -497,7 +497,7 @@ impl Tool for FootingTool {
                 return true;
             }
             "E" => Some(Ask::Width),
-            "B" if pad => Some(Ask::Length),
+            "U" if pad => Some(Ask::Length),
             "Y" => Some(Ask::Height),
             "A" => Some(Ask::Base),
             "D" if pad => Some(Ask::Turn),
@@ -532,7 +532,7 @@ impl Tool for FootingTool {
         )];
         out.push(Setting::text("E", "Genişlik", f.length(self.width)));
         if self.is_pad() {
-            out.push(Setting::text("B", "Boy", f.length(self.length)));
+            out.push(Setting::text("U", "Uzunluk", f.length(self.length)));
         }
         out.push(Setting::text("Y", "Yükseklik", f.length(self.height)));
         if !self.is_pad() {

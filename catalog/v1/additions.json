@@ -2980,7 +2980,7 @@
       "id": "tool.footingPad",
       "title": "Tekil temel",
       "icon": "footingPad",
-      "description": "Tıklanan yere bir tekil temel koyar; bir kolona tıklanınca temeli kolonun altına ortalar ve kolonla döndürür. Genişlik (E), Boy (B), Yükseklik (Y: temelin kalınlığı), Kattan yükseklik (A: tabanının katın döşemesinden yüksekliği; altında eksi), Açı (D: kolonsuz temelin dönüşü), Numara (N: T101 gibi; her birinden sonra ilerler). 150 × 150 cm, 50 cm yükseklik ve −0,80 m ile başlar: tepesi döşemenin 30 cm altında. Kesitte, 3B'de ve IFC'de (IfcFooting, PAD_FOOTING) görünür; üstündeki kolon temelin tepesinde başlar. Etkin kata, MM-TEML-TEKIL katmanına yazılır.",
+      "description": "Tıklanan yere bir tekil temel koyar; bir kolona tıklanınca temeli kolonun altına ortalar ve kolonla döndürür. Genişlik (E), Uzunluk (U), Yükseklik (Y: temelin kalınlığı), Kattan yükseklik (A: tabanının katın döşemesinden yüksekliği; altında eksi), Açı (D: kolonsuz temelin dönüşü), Numara (N: T101 gibi; her birinden sonra ilerler). 150 × 150 cm, 50 cm yükseklik ve −0,80 m ile başlar: tepesi döşemenin 30 cm altında. Kesitte, 3B'de ve IFC'de (IfcFooting, PAD_FOOTING) görünür; üstündeki kolon temelin tepesinde başlar. Etkin kata, MM-TEML-TEKIL katmanına yazılır.",
       "aliases": [
         "TEKILTEMEL",
         "TEKİLTEMEL",
@@ -3466,6 +3466,22 @@
         "GÜNEŞGÖLGESİ",
         "GOLGEDIYAGRAMI",
         "GÖLGEDİYAGRAMI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.mass",
+      "title": "Kütle",
+      "short": "Kütle",
+      "icon": "mass",
+      "description": "Tasarımın kütlesini çizer: duvarları ve döşemeleri çizilmeden önceki hacmi, oturumu ve yüksekliğiyle bir prizma. Oturum (S) köşeleri tıklanarak (Enter, Kapat ya da ilk köşeye tıklama yazar), iki karşı köşesiyle dikdörtgen ya da tıklanan kapalı çizgiden, alandan veya daireden (yapı yaklaşma sınırı, başka bir çizimden alınmış oturum; yayları ve avluları korunur). Yükseklik (Y) değiştirilene kadar 9,00 m, Kot farkı (F) tabanın katın döşemesinden farkı, Ad (A) Blok A gibi. Önizlemede oturum alanı ve hacim yazar; Etkin kata, Kütle katmanına (MM-XXXX-KUTLE) tek geri alma adımında yazılır. Planda çerçevesi, kesitte kesik yüzü, 3B görünümde hacmi görünür ve güneşte gölge düşürür. Binanın elemanı değildir: IFC'ye, metraja ve denetime girmez.",
+      "aliases": [
+        "KUTLE",
+        "KÜTLE",
+        "KUTLECALISMASI",
+        "KÜTLEÇALIŞMASI"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -6130,6 +6146,7 @@
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
     "siteGround": "<path d=\"M2.5 14.5h15\"/><path d=\"M7.5 14.5V7h5v7.5\"/><path d=\"M2.5 17.5 7 15.5m6-2 4.5-3.5\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/>",
     "sunShadow": "<circle cx=\"4.5\" cy=\"4.5\" r=\"2\"/><path d=\"M4.5 1v.8M4.5 7.2V8M1 4.5h.8M7.2 4.5H8\" stroke-width=\"1\"/><path d=\"M1.5 16.5h17\"/><rect x=\"7.5\" y=\"8.5\" width=\"3.5\" height=\"8\"/><path d=\"M11 8.5 18 16.5H11z\" fill=\"currentColor\" fill-opacity=\".4\" stroke=\"none\"/>",
+    "mass": "<path d=\"M4 6.5 10 3.5l6 3-6 3z\" fill=\"currentColor\" fill-opacity=\".25\"/><path d=\"M4 6.5v8l6 3 6-3v-8M10 9.5v8\"/>",
     "groundLevel": "<circle cx=\"5\" cy=\"10\" r=\"2.2\"/><path d=\"M1.5 10h7M5 6.5v7\" stroke-width=\"1\"/><path d=\"M10.5 7.5h7M10.5 12.5h7\"/>",
     "colorPlanOff": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".5\"/><path d=\"M10 3.5v13\" stroke-width=\"1\"/><path d=\"M3.5 15.5 16.5 4.5\" stroke-width=\"1\"/>",
     "colorPlanUsage": "<rect x=\"2.5\" y=\"3.5\" width=\"7.5\" height=\"6.5\" fill=\"currentColor\" fill-opacity=\".45\" stroke=\"none\"/><rect x=\"10\" y=\"3.5\" width=\"7.5\" height=\"13\" fill=\"currentColor\" fill-opacity=\".18\" stroke=\"none\"/><rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\".5\"/><path d=\"M10 3.5v13M2.5 10h7.5\" stroke-width=\"1\"/>",

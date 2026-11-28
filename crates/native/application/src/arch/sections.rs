@@ -37,6 +37,8 @@ use sha2::{Digest, Sha256};
 mod frame;
 #[path = "sections/ground.rs"]
 mod ground;
+#[path = "sections/mass.rs"]
+mod mass;
 use frame::{SlabAt, beam, column};
 pub use frame::{MEMBER_ELEMENT, model, unjoined_model};
 
@@ -368,6 +370,7 @@ fn build(doc: &Document, joined: bool) -> Model {
         let owner = Some(uid.to_string());
         match e {
             Entity::Slab(s) => slab(&s.slab, &m.levels.clone(), owner, &voids, &mut m),
+            Entity::Mass(x) => mass::solid(&x.mass, &m.levels.clone(), owner, &mut m),
             Entity::Column(c) => column(&c.column, &slabs, &seats, owner, &mut m),
             Entity::Beam(b) => beam(doc, &b.beam, owner, &mut m),
             Entity::Roof(r) => roof(doc, r, owner, &mut m),
@@ -378,9 +381,7 @@ fn build(doc: &Document, joined: bool) -> Model {
             _ => {}
         }
     }
-    for rain in std::mem::take(&mut m.rain) {
-        rain_water(&rain, &mut m);
-    }
+    for rain in std::mem::take(&mut m.rain) { rain_water(&rain, &mut m); }
     if joined { frame::joins(doc, &mut m); }
     m
 }

@@ -46,6 +46,7 @@ pub(crate) fn object(
             && (has.beams || *kind != Kind::Beam)
             && (has.roofs || *kind != Kind::Roof)
             && (has.railing_objects || *kind != Kind::Railing)
+            && (has.module_versions || *kind != Kind::Mass)
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -101,6 +102,10 @@ pub(crate) fn object(
     // Nor a roof: it stands on the drawing's storeys (docs/adr/8044 §1).
     if kind == Kind::Roof && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında çatı olamaz"));
+    }
+    // Nor a mass: it stands on the drawing's storeys (docs/adr/8178).
+    if kind == Kind::Mass && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında kütle olamaz"));
     }
     // Nor a railing: it stands on the drawing's storeys (docs/adr/8045 §3).
     if kind == Kind::Railing && !has.uids {
@@ -386,6 +391,7 @@ pub(crate) fn object(
             "beam" if kind == Kind::Beam => f.beam = Some(json_part(r, "kirişin alanları")?.0),
             "roof" if kind == Kind::Roof => f.roof = Some(json_part(r, "çatının alanları")?.0),
             "railing" if kind == Kind::Railing => f.railing = Some(json_part(r, "korkuluğun alanları")?.0),
+            "mass" if kind == Kind::Mass => f.mass = Some(json_part(r, "kütlenin alanları")?.0),
             // Schema 78 (docs/adr/0342 §1): a space's parts and the rest of its fields.
             "parts" if kind == Kind::Space => {
                 let (v, _): (Vec<kentos_contracts::SpacePart>, usize) =

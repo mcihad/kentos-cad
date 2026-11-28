@@ -202,7 +202,7 @@ use kentos_native_application::{
 use kentos_native_application::{entities_drape, file_import_landxml};
 #[cfg(feature = "mod-arch")]
 use kentos_native_application::{
-    arch_edit, beams_create, columns_create, grids_create, railings_create, ramps_create,
+    arch_edit, beams_create, columns_create, grids_create, masses_create, railings_create, ramps_create,
     roofs_create, stairs_create,
 };
 use kentos_native_application::{

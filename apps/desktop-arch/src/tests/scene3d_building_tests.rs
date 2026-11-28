@@ -292,6 +292,101 @@ fn the_sun_lights_the_building_by_the_shadow_tool_s_place_and_steps_its_hours() 
 
 /// The section building with a 1 m square room drawn about the centre of its first rectangular room, on that room's
 /// storey.
+/// A drawing of `masses` on Zemin kat and 1. kat (3 m each) and nothing else.
+fn with_masses(masses: Vec<serde_json::Value>) -> kentos_commands::DocumentSnapshotV2 {
+    let mut snapshot = serde_json::json!({
+        "format": "kentos.document", "version": 2, "name": "Kütle", "origin": {"x": 0.0, "y": 0.0},
+        "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
+            "plotScale": 100.0, "workspace": "cad", "cadWork": "architecture",
+            "arch": {"levels": [{"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0},
+                {"id": "k1", "name": "1. kat", "elevation": 3.0, "height": 3.0}]}},
+        "layers": [{"id": "0", "name": "0", "type": "layer", "visible": true, "locked": false, "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}],
+        "activeLayer": "0", "styles": {"items": [], "categories": []}, "uids": [], "entities": []
+    });
+    for (i, mut e) in masses.into_iter().enumerate() {
+        e["id"] = serde_json::json!(i + 1);
+        e["layerId"] = serde_json::json!("0");
+        e["attrs"] = serde_json::json!({});
+        snapshot["entities"].as_array_mut().unwrap().push(e);
+        snapshot["uids"].as_array_mut().unwrap().push(serde_json::json!(format!("0192f5a1-7242-7000-8000-{:012x}", i + 1)));
+    }
+    serde_json::from_value(snapshot).expect("a drawing")
+}
+
+/// The drawn walls' extent: their points, half a width out.
+fn snap_walls(snap: &kentos_commands::DocumentSnapshotV2) -> [f64; 4] {
+    snap.entities.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |acc, e| {
+        let Entity::Wall(w) = e else { return acc };
+        let half = w.wall.width / 2.0;
+        w.wall.pts.iter().fold(acc, |[a, b, c, d], p| [a.min(p.x - half), b.min(p.y - half), c.max(p.x + half), d.max(p.y + half)])
+    })
+}
+
+/// Kütle (docs/adr/8178): a massing study alone opens in 3D, each mass a body of its own under its name, from its
+/// bottom to its top, a round one's arcs in points; beside a building the masses join its bodies while the IFC file
+/// holds none of them.
+#[test]
+fn masses_open_in_3d_each_a_body_and_join_a_building_s_bodies_outside_its_ifc_file() {
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let block = serde_json::json!({"kind": "mass", "name": "Blok A", "height": 12.0, "offset": -1.5, "arch": {"level": "k1"},
+        "parts": [{"outer": {"pts": [p(0.0, 0.0), p(20.0, 0.0), p(20.0, 16.0), p(0.0, 16.0)]},
+                   "holes": [{"pts": [p(6.0, 5.0), p(14.0, 5.0), p(14.0, 11.0), p(6.0, 11.0)]}]}]});
+    let tower = serde_json::json!({"kind": "mass", "height": 30.0,
+        "parts": [{"outer": {"pts": [p(33.0, 8.0), p(27.0, 8.0)], "bulges": [1.0, 1.0]}}]});
+    let mut app = open(with_masses(vec![block.clone(), tower]));
+    let _ = app.update(Message::Run("scene3d.view"));
+    let b = app.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).expect("masses alone are a model to look at");
+    let input = b.viewer.view().expect("shown").input();
+    let masses: Vec<_> = input.bodies.iter().filter(|x| input.objects[x.object].category == Category::Mass).collect();
+    assert_eq!(masses.len(), 2, "a body each");
+    // The drawing's own, not an underlay's: their own part and colour, opaque, casting shadows.
+    assert!(masses.iter().all(|x| !input.is_apart(x.object)), "not apart");
+    assert!(app.scene3d_window.as_ref().expect("the window").scene_parts().contains(&parts::MASS));
+    let names: Vec<&str> = masses.iter().map(|x| input.objects[x.object].label.as_str()).collect();
+    assert_eq!(names, ["Blok A", "Kütle"], "by its name, else Kütle");
+    let heights = |x: &kentos_model_view::BodyIn| {
+        let zs: Vec<f64> = x.positions.iter().map(|q| q[2]).collect();
+        (zs.iter().copied().fold(f64::MAX, f64::min), zs.iter().copied().fold(f64::MIN, f64::max))
+    };
+    assert_eq!(heights(masses[0]), (1.5, 13.5), "1. kat's floor at 3 m, 1.5 m under it, 12 m high");
+    assert_eq!(masses[0].positions.len(), 16, "its 4 corners and its courtyard's 4, below and above");
+    let round = masses[1];
+    assert!(round.positions.len() > 32, "the circle in points: {}", round.positions.len());
+    assert!(round.positions.iter().all(|q| ((q[0] - 30.0).hypot(q[1] - 8.0) - 3.0).abs() < 1e-6), "on its circle");
+    // Beside the section building: one body more in the view, none more in the file.
+    let mut alone = open(building());
+    let _ = alone.update(Message::Run("scene3d.view"));
+    let (bodies, in_file) = (shown_bodies(&alone).0, bodies_in_the_file(&mut alone));
+    let mut snap = building();
+    let id = snap.entities.iter().map(|e| e.base().id).max().unwrap_or(0) + 1;
+    let mut mass = block;
+    mass["id"] = serde_json::json!(id);
+    mass["layerId"] = serde_json::json!("0");
+    mass["attrs"] = serde_json::json!({});
+    snap.entities.push(serde_json::from_value(mass).expect("a mass"));
+    let mut uid = [0x33u8; 16];
+    uid[15] = 0x01;
+    snap.uids.push(kentos_commands::EntityId(uid));
+    let mut app = open(snap);
+    let _ = app.update(Message::Run("scene3d.view"));
+    assert_eq!(shown_bodies(&app).0, bodies + 1, "the building's bodies and the mass");
+    // In the drawing's frame as the building is: the walls' bodies stand where the walls are drawn.
+    let b = app.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).expect("a building");
+    let input = b.viewer.view().expect("shown").input();
+    let bounds = |of: Category| {
+        input.bodies.iter().filter(|x| input.objects[x.object].category == of).flat_map(|x| x.positions.iter()).fold(
+            [f64::MAX, f64::MAX, f64::MIN, f64::MIN],
+            |[a, b, c, d], q| [a.min(q[0]), b.min(q[1]), c.max(q[0]), d.max(q[1])],
+        )
+    };
+    assert_eq!(bounds(Category::Mass), [0.0, 0.0, 20.0, 16.0], "the mass where it is drawn");
+    let drawn = snap_walls(&building());
+    let shown = bounds(Category::Wall);
+    assert!(drawn.iter().zip(shown).all(|(d, s)| (d - s).abs() < 0.5), "walls drawn {drawn:?}, shown {shown:?}");
+    assert_eq!(bodies_in_the_file(&mut app), in_file, "the IFC file as without it");
+}
+
 fn with_an_overlapping_room() -> (kentos_commands::DocumentSnapshotV2, String, String) {
     let mut snapshot = building();
     let at = snapshot

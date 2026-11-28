@@ -2834,7 +2834,7 @@ codes! {
     /// Two grids that do not cross.
     GRIDS_PARALLEL = "grids_parallel", Failed, false, "İki aks kesişmiyor (paralel ya da yayları ayrık); kolon onların kesişimine konamaz.";
     /// An object no architectural element command takes.
-    NOT_ARCH_ELEMENT = "not_arch_element", Failed, false, "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil.";
+    NOT_ARCH_ELEMENT = "not_arch_element", Failed, false, "Nesne aks, kolon, kiriş, merdiven, rampa, çatı, korkuluk ya da kütle değil.";
     /// A field the object's kind does not have.
     FIELD_NOT_FOR_KIND = "field_not_for_kind", Failed, false, "Verilen alan bu nesnenin türünde yok (örneğin aksın genişliği, kolonun etiketi dışında kolonun rıhtı).";
     /// An object in both of a command's yes and no lists (`cad.arch.performance` `exits`, docs/adr/8124).

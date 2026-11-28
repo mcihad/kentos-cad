@@ -104,12 +104,98 @@ fn has_building(doc: &Document) -> bool {
                 | Entity::Stair(_)
                 | Entity::Ramp(_)
                 | Entity::Railing(_)
+                | Entity::Mass(_)
         )
     })
 }
 
+/// How the viewer keys a mass (docs/adr/8178): `kutle:<its id>`, beside the drawing's GlobalIds.
+const MASS_OWNER: &str = "kutle:";
+
+/// The drawing's masses as a model of their own (docs/adr/8178): no IFC element, the file read back holds none, yet a
+/// massing study is looked at in 3D first. Each a prism over its footprint from its bottom to its top, in the drawing's
+/// metres as the underlays stand; none without a mass.
+fn masses(doc: &Document) -> Option<Input> {
+    use kentos_geometry_core::vec2::Vec2 as P;
+    use kentos_model_view::ObjectIn;
+    let levels: Vec<(String, f64)> = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.elevation)).collect())
+        .unwrap_or_default();
+    let floor = |id: Option<&str>| id.and_then(|id| levels.iter().find(|l| l.0 == id)).map_or(0.0, |l| l.1);
+    let mut objects =
+        vec![ObjectIn { key: String::new(), class: "Kütleler".into(), label: "Kütleler".into(), category: Category::Project, parent: None, storey: None }];
+    let mut bodies = Vec::new();
+    for (uid, e) in doc.entities_with_uids() {
+        let Entity::Mass(m) = e else { continue };
+        let (bottom, top) = m.mass.span(floor(m.mass.arch.level.as_deref()));
+        let object = objects.len();
+        let label = m.mass.name.clone().unwrap_or_else(|| "Kütle".into());
+        objects.push(ObjectIn { key: uid.to_string(), class: "Kütle".into(), label, category: Category::Mass, parent: Some(0), storey: None });
+        for part in &m.mass.parts {
+            let mut pts: Vec<P> = Vec::new();
+            let mut rings = Vec::new();
+            for (k, r) in std::iter::once(&part.outer).chain(&part.holes).enumerate() {
+                // Its arcs in points, as the section model's prism (a round tower's two half circles).
+                let corners: Vec<P> = r.pts.iter().map(|q| P::new(q.x, q.y)).collect();
+                let mut ring = kentos_geometry_core::entity::polygon_ring(&corners, r.bulges.as_deref());
+                if ring.len() > 1 && ring.first() == ring.last() {
+                    ring.pop();
+                }
+                if ring.len() < 3 {
+                    continue;
+                }
+                // The outer ring counter-clockwise, a courtyard clockwise: every side faces out of the solid.
+                let twice: f64 = (0..ring.len())
+                    .map(|i| {
+                        let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
+                        a.x * b.y - b.x * a.y
+                    })
+                    .sum();
+                if (twice > 0.0) != (k == 0) {
+                    ring.reverse();
+                }
+                let start = pts.len();
+                pts.extend(ring);
+                rings.push(start..pts.len());
+            }
+            if rings.first().is_none_or(|r| r.start != 0) || pts.is_empty() {
+                continue;
+            }
+            let mut flat = Vec::new();
+            kentos_geometry_core::triangulate::triangulate_into(&pts, &rings, &mut flat);
+            let n = pts.len() as u32;
+            let positions: Vec<[f64; 3]> =
+                pts.iter().map(|q| [q.x, q.y, bottom]).chain(pts.iter().map(|q| [q.x, q.y, top])).collect();
+            let mut triangles: Vec<[u32; 3]> = Vec::new();
+            for t in flat.chunks_exact(3) {
+                // The top faces up, the bottom down, whatever way the triangulation turned.
+                let (a, mut b, mut c) = (t[0], t[1], t[2]);
+                let (pa, pb, pc) = (pts[a as usize], pts[b as usize], pts[c as usize]);
+                if (pb.x - pa.x) * (pc.y - pa.y) - (pb.y - pa.y) * (pc.x - pa.x) < 0.0 {
+                    std::mem::swap(&mut b, &mut c);
+                }
+                triangles.push([a, c, b]);
+                triangles.push([a + n, b + n, c + n]);
+            }
+            for r in &rings {
+                let (a, b) = (r.start as u32, r.end as u32);
+                for i in a..b {
+                    let j = if i + 1 == b { a } else { i + 1 };
+                    triangles.push([i, j, j + n]);
+                    triangles.push([i, j + n, i + n]);
+                }
+            }
+            bodies.push(BodyIn { object, positions: Arc::new(positions), triangles });
+        }
+    }
+    (objects.len() > 1).then(|| Input { title: "Kütleler".into(), objects, bodies, not_shown: Vec::new(), apart: None })
+}
+
 /// Makes the viewer's input of `doc` (a reading copy) and of the underlays shown: the model the export would write
-/// now, read back, with its bodies; none when stopped.
+/// now, read back, with its bodies, and the drawing's masses beside it; none when stopped.
 fn make(doc: &Document, underlays: &[Shown], stop: &AtomicBool) -> Option<Result<Made, String>> {
     let (building, _) = kentos_native_application::arch_ifc::building(doc, "", APPLICATION);
     let name = format!("{}.ifc", building.file);
@@ -122,11 +208,17 @@ fn make(doc: &Document, underlays: &[Shown], stop: &AtomicBool) -> Option<Result
             )));
         }
     };
-    if !read.input.bodies.iter().any(|b| !read.input.objects[b.object].category.is_volume()) {
+    // A massing study alone (docs/adr/8178) is something to look at too.
+    let masses = masses(doc);
+    if masses.is_none() && !read.input.bodies.iter().any(|b| !read.input.objects[b.object].category.is_volume()) {
         return Some(Err(NO_BUILDING.to_owned()));
     }
     let facts = vec![(read.model.summary.schema.clone(), crate::ifc_viewer::schema_tip(&read.model))];
     let mut input = read.input;
+    // The masses are the drawing's own (its part, its colour, its shadows), not an underlay's.
+    if let Some(m) = masses {
+        input.join(m, MASS_OWNER);
+    }
     let mut parts = vec![Part::Drawing { from: 0, bytes: read.bytes, model: read.model }];
     for (id, name, loaded) in underlays {
         if stop.load(Ordering::Relaxed) {
